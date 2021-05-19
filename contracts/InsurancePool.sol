@@ -24,9 +24,11 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
                             // = 1: active
                             // = 2: redemption only
     // User address => LP quantity
-    mapping(address=>uint256) balances;
+    mapping(address=>uint256) _balances;
     // User address => Freeze LP data
     mapping(address=>Frozen) frozenIns;
+
+    mapping (address => mapping (address => uint256)) _allowed;
     struct Frozen {
         uint256 amount;                         // Frozen quantity
         uint256 time;                           // Freezing time
@@ -53,6 +55,8 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
     event Destroy(uint256 amount, address account);
     event Issuance(uint256 amount, address account);
     event Negative(uint256 amount, uint256 allValue);
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(address indexed owner, address indexed spender, uint256 value);
 
     /// @dev Initialization method
     /// @param factoryAddress PTokenFactory address
@@ -110,7 +114,7 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
     /// @param add user address
     /// @return personal LP
     function getBalances(address add) external view returns(uint256) {
-        return balances[add];
+        return _balances[add];
     }
 
     /// @dev View rate
@@ -198,7 +202,7 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
     /// @return redeemable LP
     function getRedemptionAmount(address add) external view returns (uint256) {
         Frozen memory frozenInfo = frozenIns[add];
-        uint256 balanceSelf = balances[add];
+        uint256 balanceSelf = _balances[add];
         if (now > frozenInfo.time) {
             return balanceSelf;
         } else {
@@ -439,7 +443,7 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
         // Destroy LP
         destroy(amount, address(msg.sender));
         // Judgment to freeze LP
-        require(balances[address(msg.sender)] >= frozenInfo.amount, "Log:InsurancePool:frozen");
+        require(_balances[address(msg.sender)] >= frozenInfo.amount, "Log:InsurancePool:frozen");
     	
     	// Transfer out assets, priority transfer of the underlying assets, if the underlying assets are insufficient, transfer ptoken
     	if (ETHINS) {
@@ -514,8 +518,8 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
     /// @param account destroy address
     function destroy(uint256 amount, 
                      address account) private {
-        require(balances[account] >= amount, "Log:InsurancePool:!destroy");
-        balances[account] = balances[account].sub(amount);
+        require(_balances[account] >= amount, "Log:InsurancePool:!destroy");
+        _balances[account] = _balances[account].sub(amount);
         totalSupply = totalSupply.sub(amount);
         emit Destroy(amount, account);
     }
@@ -525,9 +529,66 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
     /// @param account additional issuance address
     function issuance(uint256 amount, 
                       address account) private {
-        balances[account] = balances[account].add(amount);
+        _balances[account] = _balances[account].add(amount);
         totalSupply = totalSupply.add(amount);
         emit Issuance(amount, account);
+    }
+
+    function transfer(address to, uint256 value) public returns (bool) 
+    {
+        // Update redemption time
+        updateLatestTime();
+
+        // Thaw LP
+        Frozen storage frozenInfo = frozenIns[address(msg.sender)];
+        if (now > frozenInfo.time) {
+            frozenInfo.amount = 0;
+        }
+        _transfer(msg.sender, to, value);
+
+        // Judgment to freeze LP
+        require(_balances[address(msg.sender)] >= frozenInfo.amount, "Log:InsurancePool:frozen");
+        return true;
+    }
+
+    function approve(address spender, uint256 value) public returns (bool) 
+    {
+        require(spender != address(0));
+        _allowed[msg.sender][spender] = value;
+        emit Approval(msg.sender, spender, value);
+        return true;
+    }
+
+    function transferFrom(address from, address to, uint256 value) public returns (bool) 
+    {
+        _allowed[from][msg.sender] = _allowed[from][msg.sender].sub(value);
+        _transfer(from, to, value);
+        emit Approval(from, msg.sender, _allowed[from][msg.sender]);
+        return true;
+    }
+
+    function increaseAllowance(address spender, uint256 addedValue) public returns (bool) 
+    {
+        require(spender != address(0));
+
+        _allowed[msg.sender][spender] = _allowed[msg.sender][spender].add(addedValue);
+        emit Approval(msg.sender, spender, _allowed[msg.sender][spender]);
+        return true;
+    }
+
+    function decreaseAllowance(address spender, uint256 subtractedValue) public returns (bool) 
+    {
+        require(spender != address(0));
+
+        _allowed[msg.sender][spender] = _allowed[msg.sender][spender].sub(subtractedValue);
+        emit Approval(msg.sender, spender, _allowed[msg.sender][spender]);
+        return true;
+    }
+
+    function _transfer(address from, address to, uint256 value) internal {
+        _balances[from] = _balances[from].sub(value);
+        _balances[to] = _balances[to].add(value);
+        emit Transfer(from, to, value);
     }
 
     function addETH() public payable {}
