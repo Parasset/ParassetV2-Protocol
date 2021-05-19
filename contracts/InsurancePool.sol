@@ -4,9 +4,8 @@ pragma solidity ^0.6.12;
 import "./lib/SafeMath.sol";
 import './lib/TransferHelper.sol';
 import './lib/SafeERC20.sol';
-import "./iface/IERC20.sol";
 import "./iface/IInsurancePool.sol";
-import "./PToken.sol";
+import "./iface/IParasset.sol";
 import "./iface/IPTokenFactory.sol";
 import "./lib/ReentrancyGuard.sol";
 
@@ -218,10 +217,10 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
     	uint256 inputTokenDec = 18;
     	uint256 outputTokenDec = 18;
     	if (inputToken != address(0x0)) {
-    		inputTokenDec = IERC20(inputToken).decimals();
+    		inputTokenDec = ERC20(inputToken).decimals();
     	}
     	if (outputToken != address(0x0)) {
-    		outputTokenDec = IERC20(outputToken).decimals();
+    		outputTokenDec = ERC20(outputToken).decimals();
     	}
     	return inputTokenAmount.mul(10**outputTokenDec).div(10**inputTokenDec);
     }
@@ -338,7 +337,7 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
         if (pTokenBalance < pTokenAmount) {
             // Insufficient ptoken balance,
             uint256 subNum = pTokenAmount.sub(pTokenBalance);
-            PToken(PTOKEN_ADDRESS).issuance(subNum, address(this));
+            IParasset(PTOKEN_ADDRESS).issuance(subNum, address(this));
             insNegative = insNegative.add(subNum);
         }
     	ERC20(PTOKEN_ADDRESS).safeTransfer(address(msg.sender), pTokenAmount);
@@ -466,7 +465,7 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
     /// @dev Destroy ptoken, update negative ledger
     /// @param amount quantity destroyed
     function destroyPToken(uint256 amount) override public onlyMortgagePool {
-    	PToken pErc20 = PToken(PTOKEN_ADDRESS);
+    	IParasset pErc20 = IParasset(PTOKEN_ADDRESS);
     	uint256 pTokenBalance = pErc20.balanceOf(address(this));
     	if (pTokenBalance >= amount) {
     		pErc20.destroy(amount, address(this));
@@ -481,7 +480,7 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
 
     function eliminate() override public {
 
-    	PToken pErc20 = PToken(PTOKEN_ADDRESS);
+    	IParasset pErc20 = IParasset(PTOKEN_ADDRESS);
         // negative ledger
     	uint256 negative = insNegative;
         // ptoken balance
@@ -537,11 +536,4 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
         ERC20(tokenAddress).safeTransferFrom(address(msg.sender), address(this), amount);
     }
 
-    // function takeOutERC20(address token, uint256 amount, address to) public onlyGovernance {
-    //     ERC20(token).safeTransfer(address(to), amount);
-    // }
-
-    // function takeOutETH(uint256 amount, address to) public onlyGovernance {
-    //     TransferHelper.safeTransferETH(address(to), amount);
-    // }
 }

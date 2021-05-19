@@ -2,8 +2,9 @@
 pragma solidity ^0.6.12;
 
 import "./PToken.sol";
+import "./iface/IPTokenFactory.sol";
 
-contract PTokenFactory {
+contract PTokenFactory is IPTokenFactory {
 
 	// Governance address
 	address public governance;
@@ -47,21 +48,21 @@ contract PTokenFactory {
 
     /// @dev View governance address
     /// @return governance address
-    function getGovernance() public view returns(address) {
+    function getGovernance() override public view returns(address) {
         return governance;
     }
 
     /// @dev View ptoken operation permissions
     /// @param contractAddress contract address
     /// @return bool
-    function getPTokenOperator(address contractAddress) public view returns(bool) {
+    function getPTokenOperator(address contractAddress) override public view returns(bool) {
     	return allowAddress[contractAddress];
     }
 
     /// @dev View ptoken operation permissions
     /// @param pToken ptoken verification
     /// @return bool
-    function getPTokenAuthenticity(address pToken) public view returns(bool) {
+    function getPTokenAuthenticity(address pToken) override public view returns(bool) {
     	return pTokenMapping[pToken];
     }
 

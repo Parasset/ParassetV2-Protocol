@@ -6,7 +6,6 @@ import "./PToken.sol";
 import "./lib/SafeMath.sol";
 import './lib/TransferHelper.sol';
 import './lib/SafeERC20.sol';
-import "./iface/IERC20.sol";
 import "./iface/IInsurancePool.sol";
 import "./iface/IPTokenFactory.sol";
 import "./iface/IPriceController.sol";
@@ -162,11 +161,11 @@ contract MortgagePool is ReentrancyGuard {
     	uint256 inputTokenDec = 18;
     	uint256 outputTokenDec = 18;
     	if (inputToken != address(0x0)) {
-    		inputTokenDec = IERC20(inputToken).decimals();
+    		inputTokenDec = ERC20(inputToken).decimals();
     	}
 
     	if (outputToken != address(0x0)) {
-    		outputTokenDec = IERC20(outputToken).decimals();
+    		outputTokenDec = ERC20(outputToken).decimals();
     	}
     	return inputTokenAmount.mul(10**outputTokenDec).div(10**inputTokenDec);
     }
@@ -625,14 +624,5 @@ contract MortgagePool is ReentrancyGuard {
                                                                     uint256 pTokenPrice) {
         (tokenPrice, pTokenPrice) = quary.getPriceForPToken{value:priceValue}(mortgageToken, uToken, msg.sender);   
     }
-
-
-    // function takeOutERC20(address token, uint256 amount, address to) public onlyGovernance {
-    //     ERC20(token).safeTransfer(address(to), amount);
-    // }
-
-    // function takeOutETH(uint256 amount, address to) public onlyGovernance {
-    //     TransferHelper.safeTransferETH(address(to), amount);
-    // }
 
 }

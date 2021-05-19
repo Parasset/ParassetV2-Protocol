@@ -3,11 +3,12 @@ pragma solidity ^0.6.12;
 pragma experimental ABIEncoderV2;
 
 import "./iface/INestPriceFacade.sol";
+import "./iface/IPriceController.sol";
 import "./iface/INTokenController.sol";
 import "./lib/SafeMath.sol";
-import "./iface/IERC20.sol";
+import './lib/SafeERC20.sol';
 
-contract PriceController {
+contract PriceController is IPriceController {
 	using SafeMath for uint256;
 
 	// Nest price contract
@@ -44,10 +45,10 @@ contract PriceController {
     	uint256 inputTokenDec = 18;
     	uint256 outputTokenDec = 18;
     	if (inputToken != address(0x0)) {
-    		inputTokenDec = IERC20(inputToken).decimals();
+    		inputTokenDec = ERC20(inputToken).decimals();
     	}
     	if (outputToken != address(0x0)) {
-    		outputTokenDec = IERC20(outputToken).decimals();
+    		outputTokenDec = ERC20(outputToken).decimals();
     	}
     	return inputTokenAmount.mul(10**outputTokenDec).div(10**inputTokenDec);
     }
@@ -60,7 +61,7 @@ contract PriceController {
     /// @return pTokenPrice PToken price(1 ETH = ? pToken)
     function getPriceForPToken(address token, 
                                address uToken,
-                               address payback) public payable returns (uint256 tokenPrice, 
+                               address payback) override public payable returns (uint256 tokenPrice, 
                                                                         uint256 pTokenPrice) {
         if (token == address(0x0)) {
             // The mortgage asset is ETH，get ERC20-ETH price
