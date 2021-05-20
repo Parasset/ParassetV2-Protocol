@@ -62,6 +62,7 @@ contract MortgagePool is ReentrancyGuard {
         pTokenFactory = IPTokenFactory(factoryAddress);
         governance = pTokenFactory.getGovernance();
         config.flag = 0;
+        config.oneYear_block = 2400000;
     }
 
     //---------modifier---------
@@ -137,21 +138,22 @@ contract MortgagePool is ReentrancyGuard {
                                                                 uint256 mortgageRate, 
                                                                 uint256 maxSubM, 
                                                                 uint256 maxAddP) {
-        PersonalLedger memory pLedger = ledgerList[mortgageToken].ledger[address(owner)];
+        address mToken = mortgageToken;
+        PersonalLedger memory pLedger = ledgerList[mToken].ledger[address(owner)];
         if (pLedger.mortgageAssets == 0 && pLedger.parassetAssets == 0) {
             return (0,0,0,0);
         }
         uint256 pTokenPrice = getDecimalConversion(config.underlyingToken_add, uTokenPrice, config.pToken_add);
         uint256 tokenPriceAmount = tokenPrice;
-        fee = getFee(pLedger.parassetAssets, pLedger.blockHeight, pLedger.rate, getMortgageRate(pLedger.mortgageAssets, pLedger.parassetAssets, tokenPriceAmount, pTokenPrice), 0);
+        fee = getFee(pLedger.parassetAssets, pLedger.blockHeight, pLedger.rate, getMortgageRate(pLedger.mortgageAssets, pLedger.parassetAssets, tokenPriceAmount, pTokenPrice), mortageConfig[mToken].r0);
         mortgageRate = getMortgageRate(pLedger.mortgageAssets, pLedger.parassetAssets.add(fee), tokenPriceAmount, pTokenPrice);
-        uint256 maxRateEther = maxRateNum.mul(1000);
-        if (mortgageRate >= maxRateEther) {
+        uint256 mRateNum = maxRateNum;
+        if (mortgageRate >= mRateNum) {
             maxSubM = 0;
             maxAddP = 0;
         } else {
-            maxSubM = pLedger.mortgageAssets.sub(pLedger.parassetAssets.mul(tokenPriceAmount).mul(100000).div(maxRateEther.mul(pTokenPrice)));
-            maxAddP = pLedger.mortgageAssets.mul(pTokenPrice).mul(maxRateEther).div(uint256(100000).mul(tokenPriceAmount)).sub(pLedger.parassetAssets);
+            maxSubM = pLedger.mortgageAssets.sub(pLedger.parassetAssets.mul(tokenPriceAmount).mul(100000).div(mRateNum.mul(pTokenPrice)));
+            maxAddP = pLedger.mortgageAssets.mul(pTokenPrice).mul(mRateNum).div(uint256(100000).mul(tokenPriceAmount)).sub(pLedger.parassetAssets);
         }
     }
     
@@ -375,7 +377,7 @@ contract MortgagePool is ReentrancyGuard {
         transferFee(pLedger, tokenPrice, pTokenPrice, morInfo.r0);
 
         // Additional ptoken issuance
-        uint256 pTokenAmount = amount.mul(pTokenPrice).mul(rate).div(tokenPrice.mul(100));
+        uint256 pTokenAmount = amount.mul(pTokenPrice).mul(rate).div(tokenPrice.mul(100000));
         PToken(config.pToken_add).issuance(pTokenAmount, address(msg.sender));
 
         // Update debt information
@@ -438,7 +440,7 @@ contract MortgagePool is ReentrancyGuard {
         require(pLedger.created, "Log:MortgagePool:!created");
 
     	// Get the price
-        (uint256 tokenPrice, uint256 pTokenPrice) = getPriceForPToken(mortgageToken, config, msg.value);
+        (uint256 tokenPrice, uint256 pTokenPrice) = getPriceForPToken(mortgageToken, msg.value);
 
         // Calculate the stability fee
         transferFee(pLedger, tokenPrice, pTokenPrice, morInfo.r0);
@@ -473,7 +475,7 @@ contract MortgagePool is ReentrancyGuard {
         require(pLedger.created, "Log:MortgagePool:!created");
 
         // Get the price
-        (uint256 tokenPrice, uint256 pTokenPrice) = getPriceForPToken(mortgageToken, config.underlyingToken_add, msg.value);
+        (uint256 tokenPrice, uint256 pTokenPrice) = getPriceForPToken(mortgageToken, msg.value);
 
         // Calculate the stability fee
         transferFee(pLedger, tokenPrice, pTokenPrice, morInfo.r0);
@@ -504,7 +506,7 @@ contract MortgagePool is ReentrancyGuard {
         require(pLedger.created, "Log:MortgagePool:!created");
 
         // Get the price
-        (uint256 tokenPrice, uint256 pTokenPrice) = getPriceForPToken(mortgageToken, config.underlyingToken_add, msg.value);
+        (uint256 tokenPrice, uint256 pTokenPrice) = getPriceForPToken(mortgageToken, msg.value);
 
         // Calculate the stability fee
         transferFee(pLedger, tokenPrice, pTokenPrice, morInfo.r0);
@@ -534,7 +536,7 @@ contract MortgagePool is ReentrancyGuard {
         require(amount > 0 && amount <= mortgageAssets, "Log:MortgagePool:!amount");
 
     	// Get the price
-    	(uint256 tokenPrice, uint256 pTokenPrice) = getPriceForPToken(mortgageToken, config.underlyingToken_add, msg.value);
+    	(uint256 tokenPrice, uint256 pTokenPrice) = getPriceForPToken(mortgageToken, msg.value);
         
         // Judging the liquidation line
         checkLine(pLedger, tokenPrice, pTokenPrice, morInfo.k, morInfo.r0);

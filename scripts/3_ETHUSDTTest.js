@@ -3,7 +3,7 @@ const { ethers } = require("hardhat");
 
 const {deployUSDT,deployNEST,deployNestQuery,deployNTokenController,deployPriceController,deployInsurancePool,depolyFactory,deployMortgagePool} = require("./normal-scripts.js")
 
-const {setInsurancePool,setMortgagePool,setAvg,setMaxRate,setLiquidationLine,setPriceController,setPTokenOperator,setFlag,setFlag2,setInfo,allow} = require("./normal-scripts.js")
+const {setInsurancePool,setMortgagePool,setAvg,setMaxRate,setK,setR0,setPriceController,setPTokenOperator,setFlag,setFlag2,setInfo,allow} = require("./normal-scripts.js")
 
 const {approve,createPtoken,coin,supplement,redemptionAll,decrease,increaseCoinage,reducedCoinage,exchangePTokenToUnderlying,exchangeUnderlyingToPToken,transfer,subscribeIns,redemptionIns} = require("./normal-scripts.js")
 
@@ -28,7 +28,7 @@ async function main() {
 
 	PriceController = await deployPriceController(NestQuery.address, NTokenController.address);
 
-	insurancePool = await deployInsurancePool(factory.address);
+	insurancePool = await deployInsurancePool(factory.address, "PA-1", "PA-1");
 
 	await approve(USDTContract.address, pool.address, USDT("999999"));
 
@@ -48,11 +48,15 @@ async function main() {
 
 	await setInfo(pool.address, USDTContract.address, USDTPToken);
 
-	await allow(pool.address, USDTPToken, ETHAddress);
+	await setInfo(insurancePool.address, USDTContract.address, USDTPToken);
 
-	await setMaxRate(pool.address, ETHAddress, "70");
+	await allow(pool.address, ETHAddress);
 
-	await setLiquidationLine(pool.address, ETHAddress, "84");
+	await setMaxRate(pool.address, ETHAddress, "70000");
+
+	await setK(pool.address, ETHAddress, "120000");
+
+	await setR0(pool.address, ETHAddress, "2000");
 
 	await approve(USDTPToken, pool.address, ETH("999999"));
 
@@ -61,49 +65,49 @@ async function main() {
 	await setPriceController(pool.address,PriceController.address);
 
 	console.log("====coin====");
-	await coin(pool.address, ETHAddress, USDTPToken, ETH("10"), "50", "10010000000000000000");
-	const ledger = await getLedger(pool.address, USDTPToken, ETHAddress, accounts[0].address);
+	await coin(pool.address, ETHAddress, ETH("10"), "50000", "10010000000000000000");
+	const ledger = await getLedger(pool.address, ETHAddress, accounts[0].address);
 	console.log("====coin over====");
 
-	await transfer(USDTContract.address, accounts[0].address, "1");
-	await getInfoRealTime(pool.address, ETHAddress, USDTPToken, ETH("1"), USDTPRICE, "70", accounts[0].address);
-	await setAvg(NestQuery.address,USDTContract.address, USDT("4"));
-	await transfer(USDTContract.address, accounts[0].address, "1");
-	await getInfoRealTime(pool.address, ETHAddress, USDTPToken, ETH("1"), USDT("4"), "70", accounts[0].address);
-	await transfer(USDTContract.address, accounts[0].address, "1");
-	await getInfoRealTime(pool.address, ETHAddress, USDTPToken, ETH("1"), USDT("4"), "70", accounts[0].address);
-	await transfer(USDTContract.address, accounts[0].address, "1");
-	await getInfoRealTime(pool.address, ETHAddress, USDTPToken, ETH("1"), USDT("4"), "70", accounts[0].address);
-	await transfer(USDTContract.address, accounts[0].address, "1");
-	await getInfoRealTime(pool.address, ETHAddress, USDTPToken, ETH("1"), USDT("4"), "70", accounts[0].address);
-	await transfer(USDTContract.address, accounts[0].address, "1");
-	await getInfoRealTime(pool.address, ETHAddress, USDTPToken, ETH("1"), USDT("4"), "70", accounts[0].address);
-	await transfer(USDTContract.address, accounts[0].address, "1");
-	await getInfoRealTime(pool.address, ETHAddress, USDTPToken, ETH("1"), USDT("4"), "70", accounts[0].address);
+	// await transfer(USDTContract.address, accounts[0].address, "1");
+	// await getInfoRealTime(pool.address, ETHAddress, USDTPToken, ETH("1"), USDTPRICE, "70", accounts[0].address);
+	// await setAvg(NestQuery.address,USDTContract.address, USDT("4"));
+	// await transfer(USDTContract.address, accounts[0].address, "1");
+	// await getInfoRealTime(pool.address, ETHAddress, USDTPToken, ETH("1"), USDT("4"), "70", accounts[0].address);
+	// await transfer(USDTContract.address, accounts[0].address, "1");
+	// await getInfoRealTime(pool.address, ETHAddress, USDTPToken, ETH("1"), USDT("4"), "70", accounts[0].address);
+	// await transfer(USDTContract.address, accounts[0].address, "1");
+	// await getInfoRealTime(pool.address, ETHAddress, USDTPToken, ETH("1"), USDT("4"), "70", accounts[0].address);
+	// await transfer(USDTContract.address, accounts[0].address, "1");
+	// await getInfoRealTime(pool.address, ETHAddress, USDTPToken, ETH("1"), USDT("4"), "70", accounts[0].address);
+	// await transfer(USDTContract.address, accounts[0].address, "1");
+	// await getInfoRealTime(pool.address, ETHAddress, USDTPToken, ETH("1"), USDT("4"), "70", accounts[0].address);
+	// await transfer(USDTContract.address, accounts[0].address, "1");
+	// await getInfoRealTime(pool.address, ETHAddress, USDTPToken, ETH("1"), USDT("4"), "70", accounts[0].address);
 
 	console.log("====supplement====");
-	await supplement(pool.address, ETHAddress, USDTPToken, ETH("2"), "2010000000000000000");
-	await getLedger(pool.address, USDTPToken, ETHAddress, accounts[0].address);
+	await supplement(pool.address, ETHAddress, ETH("2"), "2010000000000000000");
+	await getLedger(pool.address, ETHAddress, accounts[0].address);
 	console.log("====supplement====");
-	await getInfoRealTime(pool.address, ETHAddress, USDTPToken, ETH("1"), USDTPRICE, "70", accounts[0].address);
+	await getInfoRealTime(pool.address, ETHAddress, ETH("1"), USDTPRICE, "70", accounts[0].address);
 
 	console.log("====decrease====");
-	await decrease(pool.address, ETHAddress, USDTPToken, ETH("1"), "10000000000000000");
-	await getLedger(pool.address, USDTPToken, ETHAddress, accounts[0].address);
+	await decrease(pool.address, ETHAddress, ETH("1"), "10000000000000000");
+	await getLedger(pool.address, ETHAddress, accounts[0].address);
 	console.log("====decrease====");
-	await getInfoRealTime(pool.address, ETHAddress, USDTPToken, ETH("1"), USDTPRICE, "70", accounts[0].address);
+	await getInfoRealTime(pool.address, ETHAddress, ETH("1"), USDTPRICE, "70", accounts[0].address);
 
 	console.log("====increaseCoinage====");
-	await increaseCoinage(pool.address, ETHAddress, USDTPToken, ETH("1"), "10000000000000000");
-	await getLedger(pool.address, USDTPToken, ETHAddress, accounts[0].address);
+	await increaseCoinage(pool.address, ETHAddress, ETH("1"), "10000000000000000");
+	await getLedger(pool.address, ETHAddress, accounts[0].address);
 	console.log("====increaseCoinage====");
-	await getInfoRealTime(pool.address, ETHAddress, USDTPToken, ETH("1"), USDTPRICE, "70", accounts[0].address);
+	await getInfoRealTime(pool.address, ETHAddress, ETH("1"), USDTPRICE, "70", accounts[0].address);
 
 	console.log("====reducedCoinage====");
-	await reducedCoinage(pool.address, ETHAddress, USDTPToken, ETH("1"), "10000000000000000");
-	await getLedger(pool.address, USDTPToken, ETHAddress, accounts[0].address);
+	await reducedCoinage(pool.address, ETHAddress, ETH("1"), "10000000000000000");
+	await getLedger(pool.address, ETHAddress, accounts[0].address);
 	console.log("====reducedCoinage====");
-	await getInfoRealTime(pool.address, ETHAddress, USDTPToken, ETH("1"), USDTPRICE, "70", accounts[0].address);
+	await getInfoRealTime(pool.address, ETHAddress, ETH("1"), USDTPRICE, "70", accounts[0].address);
 	
 	console.log("====approve====");
 	await approve(USDTContract.address, insurancePool.address, USDT("999999"));
@@ -111,24 +115,24 @@ async function main() {
 	console.log("====approve====");
 
 	console.log("====subscribeIns====");
-	await getBalances(insurancePool.address, USDTContract.address, accounts[0].address);
-	await subscribeIns(insurancePool.address, USDTContract.address, USDT(2), 0);
-	await getBalances(insurancePool.address, USDTContract.address, accounts[0].address);
+	await getBalances(insurancePool.address, accounts[0].address);
+	await subscribeIns(insurancePool.address, USDT(2), 0);
+	await getBalances(insurancePool.address, accounts[0].address);
 	console.log("====subscribeIns====");
 
-	console.log("====exchangePTokenToUnderlying====");
-	await ERC20Balance(USDTPToken, insurancePool.address);
-	await exchangePTokenToUnderlying(insurancePool.address, USDTPToken, ETH("1"));
-	await ERC20Balance(USDTPToken, insurancePool.address);
-	console.log("====exchangePTokenToUnderlying====");
+	// console.log("====exchangePTokenToUnderlying====");
+	// await ERC20Balance(USDTPToken, insurancePool.address);
+	// await exchangePTokenToUnderlying(insurancePool.address, USDTPToken, ETH("1"));
+	// await ERC20Balance(USDTPToken, insurancePool.address);
+	// console.log("====exchangePTokenToUnderlying====");
 
-	console.log("====exchangeUnderlyingToPToken====");
-	await ERC20Balance(USDTContract.address, insurancePool.address);
-	await ERC20Balance(USDTPToken, accounts[0].address);
-	await exchangeUnderlyingToPToken(insurancePool.address, USDTContract.address, USDT("1000"), 0);
-	await ERC20Balance(USDTContract.address, insurancePool.address);
-	await ERC20Balance(USDTPToken, accounts[0].address);
-	console.log("====exchangeUnderlyingToPToken====");
+	// console.log("====exchangeUnderlyingToPToken====");
+	// await ERC20Balance(USDTContract.address, insurancePool.address);
+	// await ERC20Balance(USDTPToken, accounts[0].address);
+	// await exchangeUnderlyingToPToken(insurancePool.address, USDTContract.address, USDT("1000"), 0);
+	// await ERC20Balance(USDTContract.address, insurancePool.address);
+	// await ERC20Balance(USDTPToken, accounts[0].address);
+	// console.log("====exchangeUnderlyingToPToken====");
 
 
 	// await ERC20Balance(USDTContract.address, insurancePool.address);

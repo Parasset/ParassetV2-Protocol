@@ -84,9 +84,9 @@ exports.deployMortgagePool = async function (factory) {
     return pool;
 }
 
-exports.deployInsurancePool = async function (factory) {
+exports.deployInsurancePool = async function (factory, name, sysbol) {
 	const InsurancePool = await hre.ethers.getContractFactory("InsurancePool");
-    const pool = await InsurancePool.deploy(factory);
+    const pool = await InsurancePool.deploy(factory, name, sysbol);
     await pool.deployed();
     const tx = pool.deployTransaction;
     await tx.wait(1);
@@ -109,7 +109,7 @@ exports.setMortgagePool = async function (insurancePool, add) {
 }
 
 exports.approve = async function (token, to, value) {
-	const ERC20Contract = await ethers.getContractAt("IERC20", token);
+	const ERC20Contract = await ethers.getContractAt("ERC20", token);
     const approve = await ERC20Contract.approve(to, value);
     await approve.wait(1);
     console.log(`>>> [APPROVE]: ${token} approve ${value} to ${to}`);
@@ -129,9 +129,9 @@ exports.setInfo = async function (mortgagePool, token, pToken) {
     console.log(`>>> [setInfo SUCCESS]`);
 }
 
-exports.allow = async function (mortgagePool, PToken, MToken) {
+exports.allow = async function (mortgagePool, MToken) {
 	const pool = await ethers.getContractAt("MortgagePool", mortgagePool);
-    const allow = await pool.setMortgageAllow(PToken, MToken, "1");
+    const allow = await pool.setMortgageAllow(MToken, "1");
     await allow.wait(1);
     console.log(`>>> [ALLOW SUCCESS]`);
 }
@@ -164,11 +164,18 @@ exports.setMaxRate = async function (mortgagePool, MToken, rate) {
     console.log(`>>> [setMaxRate SUCCESS]`);
 }
 
-exports.setLiquidationLine = async function (mortgagePool, MToken, num) {
+exports.setK = async function (mortgagePool, MToken, num) {
     const pool = await ethers.getContractAt("MortgagePool", mortgagePool);
-    const line = await pool.setLiquidationLine(MToken, num);
+    const line = await pool.setK(MToken, num);
     await line.wait(1);
-    console.log(`>>> [setLiquidationLine SUCCESS]`);
+    console.log(`>>> [setK SUCCESS]`);
+}
+
+exports.setR0 = async function (mortgagePool, MToken, num) {
+    const pool = await ethers.getContractAt("MortgagePool", mortgagePool);
+    const line = await pool.setR0(MToken, num);
+    await line.wait(1);
+    console.log(`>>> [setR0 SUCCESS]`);
 }
 
 exports.setPTokenOperator = async function(factory, add, allow) {
@@ -188,49 +195,39 @@ exports.setNTokenMapping = async function(controller, priceContract, token, nTok
     console.log(`>>> [SetNTokenMapping SUCCESS]`);
 }
 
-exports.coin = async function (mortgagePool, MToken, PToken, MTokenAmount, rate, valueNum) {
+exports.coin = async function (mortgagePool, MToken, MTokenAmount, rate, valueNum) {
 	const pool = await ethers.getContractAt("MortgagePool", mortgagePool);
-    const coin = await pool.coin(MToken, 
-                        PToken, 
-                        MTokenAmount, 
-                        rate, 
-                        { value: valueNum });
+    const coin = await pool.coin(MToken, MTokenAmount, rate, { value: valueNum });
     console.log(`>>> [COIN SUCCESS]`);
 }
 
-exports.supplement = async function(mortgagePool, MToken, PToken, MTokenAmount, valueNum) {
+exports.supplement = async function(mortgagePool, MToken, MTokenAmount, valueNum) {
 	const pool = await ethers.getContractAt("MortgagePool", mortgagePool);
-	const supplement = await pool.supplement(MToken, PToken, MTokenAmount, {value:valueNum});
+	const supplement = await pool.supplement(MToken, MTokenAmount, {value:valueNum});
 	console.log(`>>> [supplement SUCCESS], supplement:${MTokenAmount}`);
 }
 
-exports.decrease = async function(mortgagePool, MToken, PToken, MTokenAmount, valueNum) {
+exports.decrease = async function(mortgagePool, MToken, MTokenAmount, valueNum) {
 	const pool = await ethers.getContractAt("MortgagePool", mortgagePool);
-	const decrease = await pool.decrease(MToken, PToken, MTokenAmount, {value:valueNum});
+	const decrease = await pool.decrease(MToken, MTokenAmount, {value:valueNum});
 	console.log(`>>> [decrease SUCCESS], decrease:${MTokenAmount}`);
 }
 
-exports.increaseCoinage = async function(mortgagePool, MToken, PToken, PTokenAmount, valueNum) {
+exports.increaseCoinage = async function(mortgagePool, MToken, PTokenAmount, valueNum) {
 	const pool = await ethers.getContractAt("MortgagePool", mortgagePool);
-	const increaseCoinage = await pool.increaseCoinage(MToken, PToken, PTokenAmount, {value:valueNum});
+	const increaseCoinage = await pool.increaseCoinage(MToken, PTokenAmount, {value:valueNum});
 	console.log(`>>> [increaseCoinage SUCCESS], supplement:${PTokenAmount}`);
 }
 
-exports.reducedCoinage = async function(mortgagePool, MToken, PToken, PTokenAmount, valueNum) {
+exports.reducedCoinage = async function(mortgagePool, MToken, PTokenAmount, valueNum) {
 	const pool = await ethers.getContractAt("MortgagePool", mortgagePool);
-	const reducedCoinage = await pool.reducedCoinage(MToken, PToken, PTokenAmount, {value:valueNum});
+	const reducedCoinage = await pool.reducedCoinage(MToken, PTokenAmount, {value:valueNum});
 	console.log(`>>> [reducedCoinage SUCCESS], supplement:${PTokenAmount}`);
 }
 
-exports.redemptionAll = async function(mortgagePool, MToken, PToken) {
+exports.liquidation = async function(mortgagePool, MToken, account, amount, valueNum) {
 	const pool = await ethers.getContractAt("MortgagePool", mortgagePool);
-	const supplement = await pool.redemptionAll(MToken, PToken);
-	console.log(`>>> [redemption SUCCESS]`);
-}
-
-exports.liquidation = async function(mortgagePool, MToken, PToken, account, amount, valueNum) {
-	const pool = await ethers.getContractAt("MortgagePool", mortgagePool);
-	const supplement = await pool.liquidation(MToken, PToken, account, amount, {value:valueNum});
+	const supplement = await pool.liquidation(MToken, account, amount, {value:valueNum});
 	console.log(`>>> [liquidation SUCCESS]`);
 }
 
@@ -246,20 +243,20 @@ exports.exchangeUnderlyingToPToken = async function(insurancePool, token, amount
 	console.log(`>>> [exchange SUCCESS], exchange:${token}->${amount}`);
 }
 
-exports.subscribeIns = async function(insurancePool, token, amount, valueNum) {
+exports.subscribeIns = async function(insurancePool, amount, valueNum) {
 	const pool = await ethers.getContractAt("InsurancePool", insurancePool);
-	const subscribe = await pool.subscribeIns(token, amount, {value:valueNum});
-	console.log(`>>> [subscribeIns SUCCESS], subscribeIns:${token}->${amount}`);
+	const subscribe = await pool.subscribeIns(amount, {value:valueNum});
+	console.log(`>>> [subscribeIns SUCCESS], subscribeIns:${amount}`);
 }
 
-exports.redemptionIns = async function(insurancePool, token, amount) {
+exports.redemptionIns = async function(insurancePool, amount) {
 	const pool = await ethers.getContractAt("InsurancePool", insurancePool);
-	const redemption = await pool.redemptionIns(token, amount);
-	console.log(`>>> [redemption SUCCESS], redemption:${token}->${amount}`);
+	const redemption = await pool.redemptionIns(amount);
+	console.log(`>>> [redemption SUCCESS], redemption:${amount}`);
 }
 
 exports.transfer = async function(token, to, value) {
-	const ERC20Contract = await ethers.getContractAt("IERC20", token);
+	const ERC20Contract = await ethers.getContractAt("ERC20", token);
     const transfer = await ERC20Contract.transfer(to, value);
     console.log(`>>> [transfer]: ${token} transfer ${value} to ${to}`);
     console.log(`~~~区块号:${transfer.blockNumber}`);
@@ -272,16 +269,16 @@ exports.getTotalSupply = async function (insurancePool, token) {
     return totalSupply;
 }
 
-exports.getBalances = async function (insurancePool, token, add) {
+exports.getBalances = async function (insurancePool, add) {
 	const pool = await ethers.getContractAt("InsurancePool", insurancePool);
-    const balances = await pool.getBalances(token, add);
+    const balances = await pool.getBalances(add);
     console.log(">>>>>> balances =", balances.toString());
     return balances;
 }
 
-exports.getLedger = async function (mortgagePool, PToken, MToken, owner) {
+exports.getLedger = async function (mortgagePool, MToken, owner) {
 	const pool = await ethers.getContractAt("MortgagePool", mortgagePool);
-    const ledger = await pool.getLedger(PToken, MToken, owner);
+    const ledger = await pool.getLedger(MToken, owner);
     console.log(`>>>> 抵押资产数量:${ledger[0].toString()}`);
     console.log(`>>>> 债务数量:${ledger[1].toString()}`);
     console.log(`>>>> 最近操作区块号:${ledger[2].toString()}`);
@@ -290,9 +287,9 @@ exports.getLedger = async function (mortgagePool, PToken, MToken, owner) {
     return [ledger[0], ledger[1], ledger[2], ledger[3], ledger[4]];
 }
 
-exports.getInfoRealTime = async function (mortgagePool, MToken, PToken, tokenPrice, uTokenPrice, maxRateNum, owner) {
+exports.getInfoRealTime = async function (mortgagePool, MToken, tokenPrice, uTokenPrice, maxRateNum, owner) {
 	const pool = await ethers.getContractAt("MortgagePool", mortgagePool);
-    const info = await pool.getInfoRealTime(MToken, PToken, tokenPrice, uTokenPrice, maxRateNum, owner);
+    const info = await pool.getInfoRealTime(MToken, tokenPrice, uTokenPrice, maxRateNum, owner);
     console.log("~~~实时数据~~~")
     console.log(`~~~稳定费:${info[0].toString()}`);
     console.log(`~~~抵押率:${info[1].toString()}`);
@@ -315,7 +312,7 @@ exports.getInsNegative = async function(insurancePool, token) {
 }
 
 exports.ERC20Balance = async function (token, add) {
-	const ERC20Contract = await ethers.getContractAt("IERC20", token);
+	const ERC20Contract = await ethers.getContractAt("ERC20", token);
 	const balance = await ERC20Contract.balanceOf(add);
 	console.log(">>>>>> BALANCE =", balance.toString());
 }
