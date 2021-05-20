@@ -267,12 +267,13 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
         WAITCYCLE = num * 1 days;
     }
 
-    function setPtokenAddress(address add) public onlyGovernance {
-        PTOKEN_ADDRESS = address(0x0);
-    }
-
-    function setUnderlyingToken(address add) public onlyGovernance {
-        UNDERLYINGTOKEN_ADDRESS = add;
+    /// @dev Set the underlying asset and ptoken mapping and
+    /// @param uToken underlying asset address
+    /// @param pToken ptoken address
+    function setInfo(address uToken, 
+                     address pToken) public onlyGovernance {
+        PTOKEN_ADDRESS = pToken;
+        UNDERLYINGTOKEN_ADDRESS = uToken;
     }
 
     function setETHIns(bool isETHIns) public onlyGovernance {
