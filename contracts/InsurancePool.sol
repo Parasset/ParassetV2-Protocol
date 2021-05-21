@@ -23,11 +23,9 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
     uint8 public FLAG;      // = 0: pause
                             // = 1: active
                             // = 2: redemption only
-    // User address => LP quantity
-    mapping(address=>uint256) _balances;
     // User address => Freeze LP data
     mapping(address=>Frozen) frozenIns;
-
+    mapping(address=>uint256) _balances;
     mapping (address => mapping (address => uint256)) _allowed;
     struct Frozen {
         uint256 amount;                         // Frozen quantity
@@ -44,6 +42,26 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
     uint256 FEERATE = 2;
     bool ETHINS = false;
     
+    // struct Config {
+    //     // negative account funds
+    //     uint256 insNegative;
+    //     // latest redemption time
+    //     uint88 latestTime;
+    //     // Status
+    //     uint8 public FLAG;      // = 0: pause
+    //                             // = 1: active
+    //                             // = 2: redemption only
+    //     address pToken_address;
+    //     bool ETHINS = false;
+    //     uint88 REDEMPTIONCYCLE = 2 days;
+
+    //     address UNDERLYINGTOKEN_ADDRESS;
+    //     uint88 WAITCYCLE = 7 days;
+    //     uint8 FEERATE = 2;
+
+    //     address MORTGAGEPOOL;
+    // }
+
     // PTokenFactory address
     IPTokenFactory pTokenFactory;
     
@@ -372,6 +390,7 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
             require(msg.value == amount, "Log:InsurancePool:!msg.value");
             tokenBalance = address(this).balance.sub(amount);
     	} else {
+            require(msg.value == 0, "Log:InsurancePool:msg.value!=0");
             // Underlying asset conversion 18 decimals
             tokenBalance = getDecimalConversion(UNDERLYINGTOKEN_ADDRESS, ERC20(UNDERLYINGTOKEN_ADDRESS).balanceOf(address(this)), PTOKEN_ADDRESS);
     	}

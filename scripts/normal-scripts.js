@@ -157,6 +157,13 @@ exports.setFlag2 = async function(insurancePool, num) {
     console.log(`>>> [setFlag SUCCESS]`);
 }
 
+exports.setETHINS = async function(insurancePool) {
+    const pool = await ethers.getContractAt("InsurancePool", insurancePool);
+    const setETHIns = await pool.setETHIns(true);
+    await setETHIns.wait(1);
+    console.log(`>>> [setETHIns SUCCESS]`);
+}
+
 exports.setMaxRate = async function (mortgagePool, MToken, rate) {
 	const pool = await ethers.getContractAt("MortgagePool", mortgagePool);
     const maxRate = await pool.setMaxRate(MToken, rate);
@@ -231,16 +238,16 @@ exports.liquidation = async function(mortgagePool, MToken, account, amount, valu
 	console.log(`>>> [liquidation SUCCESS]`);
 }
 
-exports.exchangePTokenToUnderlying = async function(insurancePool, PToken, amount) {
+exports.exchangePTokenToUnderlying = async function(insurancePool, amount) {
 	const pool = await ethers.getContractAt("InsurancePool", insurancePool);
-	const exchange = await pool.exchangePTokenToUnderlying(PToken, amount);
-	console.log(`>>> [exchange SUCCESS], exchange:${PToken}->${amount}`);
+	const exchange = await pool.exchangePTokenToUnderlying(amount);
+	console.log(`>>> [exchange SUCCESS], exchange:${amount}`);
 }
 
-exports.exchangeUnderlyingToPToken = async function(insurancePool, token, amount, valueNum) {
+exports.exchangeUnderlyingToPToken = async function(insurancePool, amount, valueNum) {
 	const pool = await ethers.getContractAt("InsurancePool", insurancePool);
-	const exchange = await pool.exchangeUnderlyingToPToken(token, amount, {value:valueNum});
-	console.log(`>>> [exchange SUCCESS], exchange:${token}->${amount}`);
+	const exchange = await pool.exchangeUnderlyingToPToken(amount, {value:valueNum});
+	console.log(`>>> [exchange SUCCESS], exchange:${amount}`);
 }
 
 exports.subscribeIns = async function(insurancePool, amount, valueNum) {

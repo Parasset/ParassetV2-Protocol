@@ -3,7 +3,7 @@ const { ethers } = require("hardhat");
 
 const {deployUSDT,deployNEST,deployNestQuery,deployNTokenController,deployPriceController,deployInsurancePool,depolyFactory,deployMortgagePool} = require("./normal-scripts.js")
 
-const {setInsurancePool,setMortgagePool,setAvg,setMaxRate,setK,setR0,setPriceController,setPTokenOperator,setFlag,setFlag2,setInfo,allow} = require("./normal-scripts.js")
+const {setInsurancePool,setMortgagePool,setAvg,setMaxRate,setK,setETHINS,setR0,setPriceController,setPTokenOperator,setFlag,setFlag2,setInfo,allow} = require("./normal-scripts.js")
 
 const {approve,createPtoken,coin,supplement,redemptionAll,decrease,increaseCoinage,reducedCoinage,exchangePTokenToUnderlying,exchangeUnderlyingToPToken,transfer,subscribeIns,redemptionIns} = require("./normal-scripts.js")
 
@@ -55,6 +55,8 @@ async function main() {
 	await setMaxRate(pool.address, ETHAddress, "70000");
 
 	await setK(pool.address, ETHAddress, "120000");
+
+	// await setETHINS(insurancePool.address)
 
 	await setR0(pool.address, ETHAddress, "2000");
 
@@ -120,30 +122,30 @@ async function main() {
 	await getBalances(insurancePool.address, accounts[0].address);
 	console.log("====subscribeIns====");
 
-	// console.log("====exchangePTokenToUnderlying====");
-	// await ERC20Balance(USDTPToken, insurancePool.address);
-	// await exchangePTokenToUnderlying(insurancePool.address, USDTPToken, ETH("1"));
-	// await ERC20Balance(USDTPToken, insurancePool.address);
-	// console.log("====exchangePTokenToUnderlying====");
+	console.log("====exchangePTokenToUnderlying====");
+	await ERC20Balance(USDTPToken, insurancePool.address);
+	await exchangePTokenToUnderlying(insurancePool.address, ETH("1"));
+	await ERC20Balance(USDTPToken, insurancePool.address);
+	console.log("====exchangePTokenToUnderlying====");
 
-	// console.log("====exchangeUnderlyingToPToken====");
-	// await ERC20Balance(USDTContract.address, insurancePool.address);
-	// await ERC20Balance(USDTPToken, accounts[0].address);
-	// await exchangeUnderlyingToPToken(insurancePool.address, USDTContract.address, USDT("1000"), 0);
-	// await ERC20Balance(USDTContract.address, insurancePool.address);
-	// await ERC20Balance(USDTPToken, accounts[0].address);
-	// console.log("====exchangeUnderlyingToPToken====");
+	console.log("====exchangeUnderlyingToPToken====");
+	await ERC20Balance(USDTContract.address, insurancePool.address);
+	await ERC20Balance(USDTPToken, accounts[0].address);
+	await exchangeUnderlyingToPToken(insurancePool.address, USDT("1000"), 0);
+	await ERC20Balance(USDTContract.address, insurancePool.address);
+	await ERC20Balance(USDTPToken, accounts[0].address);
+	console.log("====exchangeUnderlyingToPToken====");
 
 
-	// await ERC20Balance(USDTContract.address, insurancePool.address);
-	// await ERC20Balance(USDTContract.address, accounts[0].address);
-	// await getBalances(insurancePool.address, USDTContract.address, accounts[0].address);
-	// await ERC20Balance(USDTPToken, insurancePool.address);
-	// await redemptionIns(insurancePool.address, USDTContract.address, ETH("2"));
-	// await ERC20Balance(USDTContract.address, insurancePool.address);
-	// await ERC20Balance(USDTContract.address, accounts[0].address);
-	// await getBalances(insurancePool.address, USDTContract.address, accounts[0].address);
-	// await ERC20Balance(USDTPToken, insurancePool.address);
+	await ERC20Balance(USDTContract.address, insurancePool.address);
+	await ERC20Balance(USDTContract.address, accounts[0].address);
+	await getBalances(insurancePool.address, USDTContract.address, accounts[0].address);
+	await ERC20Balance(USDTPToken, insurancePool.address);
+	await redemptionIns(insurancePool.address, ETH("2"));
+	await ERC20Balance(USDTContract.address, insurancePool.address);
+	await ERC20Balance(USDTContract.address, accounts[0].address);
+	await getBalances(insurancePool.address, USDTContract.address, accounts[0].address);
+	await ERC20Balance(USDTPToken, insurancePool.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

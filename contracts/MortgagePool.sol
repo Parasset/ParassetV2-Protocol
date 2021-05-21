@@ -344,7 +344,6 @@ contract MortgagePool is ReentrancyGuard {
     /// @dev Set governance address
     function setGovernance() public {
         governance = pTokenFactory.getGovernance();
-        require(governance != address(0x0), "Log:MortgagePool:0x0");
     }
 
     /// @dev Mortgage asset casting ptoken
