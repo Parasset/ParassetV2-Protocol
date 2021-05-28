@@ -15,44 +15,59 @@ contract MortgagePool is ReentrancyGuard {
 	using SafeMath for uint256;
 	using SafeERC20 for ERC20;
 
-    // Governance address
+    // governance address
 	address public _governance;
     Config config;
-    // Mortgage asset address => Mortgage config
+    // mortgage asset address => mortgage config
     mapping(address => MortgageInfo) mortageConfig;
-    // Mortgage asset address => ledger info
+    // mortgage asset address => ledger info
     mapping(address => MortageLeader) ledgerList;
-    // PriceController contract
+    // priceController contract
     IPriceController quary;
-    // Insurance pool contract
+    // insurance pool contract
     IInsurancePool insurancePool;
-    // PToken creation factory contract
+    // pToken creation factory contract
     IPTokenFactory pTokenFactory;
 
     struct MortgageInfo {
+        // allow mortgage
         bool mortgageAllow;
-        uint88 maxRate;    // 6位数, 0.75=75000
-        uint80 k;          // 6位数, 1.3=130000
-        uint80 r0;         // 6位数, 0.02=2000
+        // six digits, 0.75=75000
+        uint88 maxRate;
+        // six digits, 1.3=130000
+        uint80 k;
+        // six digits, 0.02=2000
+        uint80 r0;
     }
     struct MortageLeader {
-        mapping(address => PersonalLedger) ledger;    // Debt data
-        address[] ledgerArray;                      // Users who have created debt positions(address)
+        // debt data
+        mapping(address => PersonalLedger) ledger;
+        // users who have created debt positions(address)
+        address[] ledgerArray;
     }
     struct PersonalLedger {
-        uint256 mortgageAssets;         // Amount of mortgaged assets
-        uint256 parassetAssets;         // Amount of debt(Ptoken,Stability fee not included)
-        uint160 blockHeight;            // The block height of the last operation
-        uint88 rate;                    // Mortgage rate(Initial mortgage rate,Mortgage rate after the last operation)
-        bool created;                   // Is it created
+        // amount of mortgaged assets
+        uint256 mortgageAssets;
+        // amount of debt(Ptoken,Stability fee not included)      
+        uint256 parassetAssets;
+        // the block height of the last operation       
+        uint160 blockHeight;
+        // mortgage rate(Initial mortgage rate,Mortgage rate after the last operation)           
+        uint88 rate;
+        // is it created
+        bool created;
     }
     struct Config {
-        address pTokenAdd;             // PToken address
-        uint96 oneYearBlock;           // Amount of blocks produced in a year
-        address underlyingTokenAdd;    // UnderlyingToken address
-        uint96 flag;                    // = 0: pause
-                                        // = 1: active
-                                        // = 2: out only
+        // pToken address
+        address pTokenAdd;
+        // amount of blocks produced in a year            
+        uint96 oneYearBlock;
+        // underlyingToken address           
+        address underlyingTokenAdd;
+        // = 0: pause
+        // = 1: active
+        // = 2: out only  
+        uint96 flag;                    
     }
 
     event FeeValue(uint256 value);
@@ -136,10 +151,11 @@ contract MortgagePool is ReentrancyGuard {
                              uint256 tokenPrice, 
                              uint256 uTokenPrice,
                              uint88 maxRateNum,
-                             uint256 owner) public view returns(uint256 fee, 
-                                                                uint256 mortgageRate, 
-                                                                uint256 maxSubM, 
-                                                                uint256 maxAddP) {
+                             uint256 owner) 
+    public view returns(uint256 fee, 
+                        uint256 mortgageRate, 
+                        uint256 maxSubM, 
+                        uint256 maxAddP) {
         address mToken = mortgageToken;
         PersonalLedger memory pLedger = ledgerList[mToken].ledger[address(owner)];
         if (pLedger.mortgageAssets == 0 && pLedger.parassetAssets == 0) {
@@ -188,22 +204,17 @@ contract MortgagePool is ReentrancyGuard {
     /// @return rate Mortgage rate(Initial mortgage rate,Mortgage rate after the last operation)
     /// @return created is it created
     function getLedger(address mortgageToken,
-                       address owner) public view returns(uint256 mortgageAssets, 
-    		                                              uint256 parassetAssets, 
-    		                                              uint160 blockHeight,
-                                                          uint88 rate,
-                                                          bool created) {
+                       address owner) 
+    public view returns(uint256 mortgageAssets, 
+    		            uint256 parassetAssets, 
+    		            uint160 blockHeight,
+                        uint88 rate,
+                        bool created) {
     	PersonalLedger memory pLedger = ledgerList[mortgageToken].ledger[address(owner)];
     	return (pLedger.mortgageAssets, pLedger.parassetAssets, pLedger.blockHeight, pLedger.rate, pLedger.created);
     }
 
-    /// @dev View governance address
-    /// @return governance address
-    function getGovernance() external view returns(address) {
-        return _governance;
-    }
-
-    /// @dev View insurance pool address
+    /// @dev View the insurance pool address
     /// @return insurance pool address
     function getInsurancePool() external view returns(address) {
         return address(insurancePool);
@@ -257,14 +268,20 @@ contract MortgagePool is ReentrancyGuard {
         return ledgerList[mortgageToken].ledgerArray[index];
     }
 
+    /// @dev View the pToken address
+    /// @return pToken address
     function getPtokenAddress() external view returns(address) {
         return config.pTokenAdd;
     }
 
+    /// @dev View the underlyingToken address
+    /// @return underlyingToken address
     function getUnderlyingToken() external view returns(address) {
         return config.underlyingTokenAdd;
     }
 
+    /// @dev View the flag num
+    /// @return flag num
     function getFlag() external view returns(uint96) {
         return config.flag;
     }
@@ -320,7 +337,7 @@ contract MortgagePool is ReentrancyGuard {
 
     /// @dev Set the maximum mortgage rate
     /// @param mortgageToken mortgage asset address
-    /// @param num maximum mortgage rate(num = ? * 100)
+    /// @param num maximum mortgage rate(num = ? * 1000)
     function setMaxRate(address mortgageToken, 
                         uint88 num) public onlyGovernance {
         mortageConfig[mortgageToken].maxRate = num;
@@ -357,7 +374,7 @@ contract MortgagePool is ReentrancyGuard {
                   uint88 rate) public payable whenActive nonReentrant {
         MortgageInfo memory morInfo = mortageConfig[mortgageToken];
     	require(morInfo.mortgageAllow, "Log:MortgagePool:!mortgageAllow");
-        require(rate > 0 && rate <= morInfo.maxRate, "Log:MortgagePool:rate!=0");
+        require(rate > 0 && uint256(rate).mul(1000) <= morInfo.maxRate, "Log:MortgagePool:rate!=0");
         require(amount > 0, "Log:MortgagePool:amount!=0");
     	PersonalLedger storage pLedger = ledgerList[mortgageToken].ledger[address(msg.sender)];
         uint256 parassetAssets = pLedger.parassetAssets;
@@ -378,7 +395,7 @@ contract MortgagePool is ReentrancyGuard {
         transferFee(pLedger, tokenPrice, pTokenPrice, morInfo.r0);
 
         // Additional ptoken issuance
-        uint256 pTokenAmount = amount.mul(pTokenPrice).mul(rate).div(tokenPrice.mul(100000));
+        uint256 pTokenAmount = amount.mul(pTokenPrice).mul(rate).div(tokenPrice.mul(100));
         IParasset(config.pTokenAdd).issuance(pTokenAmount, address(msg.sender));
 
         // Update debt information
@@ -587,7 +604,7 @@ contract MortgagePool is ReentrancyGuard {
                        uint256 tokenPrice, 
                        uint256 pTokenPrice, 
                        uint80 kValue,
-                       uint80 r0Value) private view {
+                       uint80 r0Value) public view {
         uint256 parassetAssets = pLedger.parassetAssets;
         uint256 mortgageAssets = pLedger.mortgageAssets;
         // The current mortgage rate cannot exceed the liquidation line

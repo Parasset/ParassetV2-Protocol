@@ -14,40 +14,48 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
 	using SafeMath for uint256;
 	using SafeERC20 for ERC20;
 
-	// Governance address
+	// governance address
 	address public _governance;
 	// negative account funds
 	uint256 public _insNegative;
 	// latest redemption time
     uint256 public _latestTime;
-    // Status
+    // status
     uint8 public _flag;      // = 0: pause
-                            // = 1: active
-                            // = 2: redemption only
-    // User address => Freeze LP data
+                             // = 1: active
+                             // = 2: redemption only
+    // user address => freeze LP data
     mapping(address => Frozen) frozenIns;
+    // user address => balances
     mapping(address => uint256) balances;
+    // trom address => to address => amount
     mapping(address => mapping (address => uint256)) allowed;
     struct Frozen {
-        uint256 amount;                         // Frozen quantity
-        uint256 time;                           // Freezing time
+        // frozen quantity
+        uint256 amount;
+        // freezing time                      
+        uint256 time;                           
     }
+    // pToken address
     address public _pTokenAddress;
+    // underlyingToken address
     address public _underlyingTokenAddress;
+    // mortgagePool address
     address public _mortgagePool;
-	// Redemption cycle, 2 days
+	// redemption cycle, 2 days
 	uint256 public _redemptionCycle = 2 days;
-	// Redemption duration, 7 days
+	// redemption duration, 7 days
 	uint256 public _waitCycle = 7 days;
-    // Rate(2/1000)
+    // rate(2/1000)
     uint256 public _feeRate = 2;
+    // is ETH insPool
     bool public _ethIns = false;
 
-    // PTokenFactory address
+    // pTokenFactory address
     IPTokenFactory pTokenFactory;
-    // Staking address
+    // staking address
     ILPStakingMiningPool lpStakingMiningPool;
-    
+
     uint256 public totalSupply = 0;                                        
     string public name = "";
     string public symbol = "";
@@ -93,31 +101,37 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
 
     //---------view---------
 
-    /// @dev View governance address
+    /// @dev View the governance address
     /// @return governance address
     function getGovernance() external view returns(address) {
         return _governance;
     }
 
-    /// @dev View total LP
+    /// @dev View the total LP
     /// @return total LP
     function getTotalSupply() external view returns(uint256) {
         return totalSupply;
     }
 
+    /// @dev View the pTokenFactory address
+    /// @return pTokenFactory address
     function getPTokenFactory() external view returns(address) {
         return address(pTokenFactory);
     }
 
+    /// @dev View the lpStakingMiningPool address
+    /// @return lpStakingMiningPool address
     function getLPStakingMiningPool() external view returns(address) {
         return address(lpStakingMiningPool);
     }
 
+    /// @dev View the all lp 
+    /// @return all lp 
     function getAllLP(address user) public view returns(uint256) {
         return balances[user].add(lpStakingMiningPool.getBalance(user));
     }
 
-    /// @dev View personal LP
+    /// @dev View the personal LP
     /// @param add user address
     /// @return personal LP
     function getBalances(address add) external view returns(uint256) {
@@ -127,8 +141,7 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
     /// @dev View redemption period, next time
     /// @return startTime start time
     /// @return endTime end time
-    function getRedemptionTime() external view returns(uint256 startTime, 
-                                                                    uint256 endTime) {
+    function getRedemptionTime() external view returns(uint256 startTime, uint256 endTime) {
         uint256 time = _latestTime;
         if (now > time) {
             uint256 subTime = now.sub(time).div(_waitCycle);
@@ -142,8 +155,7 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
     /// @dev View redemption period, this period
     /// @return startTime start time
     /// @return endTime end time
-    function getRedemptionTimeFront() external view returns(uint256 startTime, 
-                                                                         uint256 endTime) {
+    function getRedemptionTimeFront() external view returns(uint256 startTime, uint256 endTime) {
         uint256 time = _latestTime;
         if (now > time) {
             uint256 subTime = now.sub(time).div(_waitCycle);
@@ -257,8 +269,8 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
     /// @param pToken ptoken address
     function setInfo(address uToken, 
                      address pToken) public onlyGovernance {
-        _pTokenAddress = pToken;
         _underlyingTokenAddress = uToken;
+        _pTokenAddress = pToken;
     }
 
     function setETHIns(bool isETHIns) public onlyGovernance {
@@ -469,8 +481,8 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
     	}
     }
 
+    /// @dev Clear negative books
     function eliminate() override public {
-
     	IParasset pErc20 = IParasset(_pTokenAddress);
         // negative ledger
     	uint256 negative = _insNegative;

@@ -13,26 +13,38 @@ contract LPStakingMiningPool is ReentrancyGuard, ILPStakingMiningPool {
 
 	// ASET
     address public _rewardsToken;
-    // PA
+    // lp token address
     address public _stakingToken;
+    // governance
     address public _governance;
-
+    // recently operated block
     uint256 public _lastUpdateBlock;
+    // profit per share
     uint256 public _rewardPerTokenStored;
+    // revenue efficiency
     uint256 public _rewardRate;
+    // total locked position
     uint256 public _totalSupply;
+    // end block
     uint256 public _endBlock;
-
+    // user address => latest profit per share
     mapping(address => uint256) public userRewardPerTokenPaid;
+    // user address => income
     mapping(address => uint256) public rewards;
+    // user address => locked position
     mapping(address => uint256) public balances;
 
+    /// @dev Initialization method
+    /// @param rewardsToken rewardsToken address
+    /// @param stakingToken stakingToken address
 	constructor(address rewardsToken,
                 address stakingToken) public {
 		_rewardsToken = rewardsToken;
         _stakingToken = stakingToken;
 		_governance = msg.sender;
     }
+
+    //---------modifier---------
 
     modifier onlyGovernance() {
         require(msg.sender == _governance, "Log:InsurancePool:!gov");
@@ -49,6 +61,8 @@ contract LPStakingMiningPool is ReentrancyGuard, ILPStakingMiningPool {
         _;
     }
 
+    //---------view---------
+
     function getBalance(address user) override external view returns(uint256) {
     	return balances[user];
     }
@@ -59,28 +73,6 @@ contract LPStakingMiningPool is ReentrancyGuard, ILPStakingMiningPool {
     		return _endBlock;
     	}
     	return nowBlock;
-    }
-
-    function setGovernance(address add) external onlyGovernance {
-    	_governance = add; 
-    }
-
-    function addToken(address rewardsToken, uint256 tokenAmount, address from, uint256 rewardRate) external onlyGovernance {
-    	ERC20(rewardsToken).safeTransferFrom(from, address(this), tokenAmount);
-    	_lastUpdateBlock = block.number;
-    	_endBlock = tokenAmount.div(rewardRate).add(_lastUpdateBlock);
-    }
-
-    function subToken(address token, uint256 amount, address to) external onlyGovernance {
-        ERC20(token).safeTransfer(to, amount);
-    }
-
-    function setEndBlock(uint256 blockNum) external onlyGovernance {
-    	_endBlock = blockNum;
-    }
-
-    function setLastUpdateBlock(uint256 blockNum) external onlyGovernance {
-    	_lastUpdateBlock = blockNum;
     }
 
     function accrued() public view returns (uint256) {
@@ -104,6 +96,33 @@ contract LPStakingMiningPool is ReentrancyGuard, ILPStakingMiningPool {
         }
         return _rewardPerTokenStored.add(accrued().mul(1e18).div(_totalSupply));
     }
+
+    //---------governance----------
+
+    function setGovernance(address add) external onlyGovernance {
+    	_governance = add; 
+    }
+
+    function addToken(address rewardsToken, uint256 tokenAmount, address from, uint256 rewardRate) external onlyGovernance {
+    	ERC20(rewardsToken).safeTransferFrom(from, address(this), tokenAmount);
+    	_lastUpdateBlock = block.number;
+        _rewardRate = rewardRate;
+    	_endBlock = tokenAmount.div(rewardRate).add(_lastUpdateBlock);
+    }
+
+    function subToken(address token, uint256 amount, address to) external onlyGovernance {
+        ERC20(token).safeTransfer(to, amount);
+    }
+
+    function setEndBlock(uint256 blockNum) external onlyGovernance {
+    	_endBlock = blockNum;
+    }
+
+    function setLastUpdateBlock(uint256 blockNum) external onlyGovernance {
+    	_lastUpdateBlock = blockNum;
+    }
+
+    //---------transaction---------
 
     function stake(uint256 amount) external nonReentrant updateReward(msg.sender) {
         require(amount > 0, "Log:LPStakingMiningPool:!0");
