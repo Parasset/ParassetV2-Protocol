@@ -1,68 +1,47 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.6.12;
 
-import "./lib/SafeMath.sol";
-import './lib/TransferHelper.sol';
-import './lib/SafeERC20.sol';
 import "./iface/IInsurancePool.sol";
 import "./iface/IParasset.sol";
 import "./iface/IPTokenFactory.sol";
-import "./lib/ReentrancyGuard.sol";
 import "./iface/ILPStakingMiningPool.sol";
+import "./lib/ReentrancyGuard.sol";
+import "./lib/SafeMath.sol";
+import './lib/TransferHelper.sol';
+import './lib/SafeERC20.sol';
 
 contract InsurancePool is ReentrancyGuard, IInsurancePool {
 	using SafeMath for uint256;
 	using SafeERC20 for ERC20;
 
 	// Governance address
-	address public governance;
+	address public _governance;
 	// negative account funds
-	uint256 public insNegative;
+	uint256 public _insNegative;
 	// latest redemption time
-    uint256 public latestTime;
+    uint256 public _latestTime;
     // Status
-    uint8 public flag;      // = 0: pause
+    uint8 public _flag;      // = 0: pause
                             // = 1: active
                             // = 2: redemption only
     // User address => Freeze LP data
-    mapping(address=>Frozen) frozenIns;
-    mapping(address=>uint256) _balances;
-    mapping(address => mapping (address => uint256)) _allowed;
+    mapping(address => Frozen) frozenIns;
+    mapping(address => uint256) balances;
+    mapping(address => mapping (address => uint256)) allowed;
     struct Frozen {
         uint256 amount;                         // Frozen quantity
         uint256 time;                           // Freezing time
     }
-    address public pTokenAddress;
-    address public underlyingTokenAddress;
-    address public mortgagePool;
+    address public _pTokenAddress;
+    address public _underlyingTokenAddress;
+    address public _mortgagePool;
 	// Redemption cycle, 2 days
-	uint256 public redemptionCycle = 2 days;
+	uint256 public _redemptionCycle = 2 days;
 	// Redemption duration, 7 days
-	uint256 public waitCycle = 7 days;
+	uint256 public _waitCycle = 7 days;
     // Rate(2/1000)
-    uint256 public feeRate = 2;
-    bool public ethIns = false;
-
-    
-    // struct Config {
-    //     // negative account funds
-    //     uint256 insNegative;
-    //     // latest redemption time
-    //     uint88 latestTime;
-    //     // Status
-    //     uint8 public FLAG;      // = 0: pause
-    //                             // = 1: active
-    //                             // = 2: redemption only
-    //     address pToken_address;
-    //     bool ETHINS = false;
-    //     uint88 REDEMPTIONCYCLE = 2 days;
-
-    //     address UNDERLYINGTOKEN_ADDRESS;
-    //     uint88 WAITCYCLE = 7 days;
-    //     uint8 FEERATE = 2;
-
-    //     address MORTGAGEPOOL;
-    // }
+    uint256 public _feeRate = 2;
+    bool public _ethIns = false;
 
     // PTokenFactory address
     IPTokenFactory pTokenFactory;
@@ -84,31 +63,31 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
     /// @param factoryAddress PTokenFactory address
 	constructor (address factoryAddress, string memory _name, string memory _symbol) public {
         pTokenFactory = IPTokenFactory(factoryAddress);
-        governance = pTokenFactory.getGovernance();
+        _governance = pTokenFactory.getGovernance();
         name = _name;
         symbol = _symbol;
-        flag = 0;
+        _flag = 0;
     }
 
 	//---------modifier---------
 
     modifier onlyGovernance() {
-        require(msg.sender == governance, "Log:InsurancePool:!gov");
+        require(msg.sender == _governance, "Log:InsurancePool:!gov");
         _;
     }
 
     modifier onlyMortgagePool() {
-        require(msg.sender == address(mortgagePool), "Log:InsurancePool:!mortgagePool");
+        require(msg.sender == address(_mortgagePool), "Log:InsurancePool:!mortgagePool");
         _;
     }
 
     modifier whenActive() {
-        require(flag == 1, "Log:InsurancePool:!active");
+        require(_flag == 1, "Log:InsurancePool:!active");
         _;
     }
 
     modifier redemptionOnly() {
-        require(flag != 0, "Log:InsurancePool:!0");
+        require(_flag != 0, "Log:InsurancePool:!0");
         _;
     }
 
@@ -117,7 +96,7 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
     /// @dev View governance address
     /// @return governance address
     function getGovernance() external view returns(address) {
-        return governance;
+        return _governance;
     }
 
     /// @dev View total LP
@@ -130,15 +109,19 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
         return address(pTokenFactory);
     }
 
+    function getLPStakingMiningPool() external view returns(address) {
+        return address(lpStakingMiningPool);
+    }
+
     function getAllLP(address user) public view returns(uint256) {
-        return _balances[user].add(lpStakingMiningPool.getBalance(user));
+        return balances[user].add(lpStakingMiningPool.getBalance(user));
     }
 
     /// @dev View personal LP
     /// @param add user address
     /// @return personal LP
     function getBalances(address add) external view returns(uint256) {
-        return _balances[add];
+        return balances[add];
     }
 
     /// @dev View redemption period, next time
@@ -146,14 +129,14 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
     /// @return endTime end time
     function getRedemptionTime() external view returns(uint256 startTime, 
                                                                     uint256 endTime) {
-        uint256 time = latestTime;
+        uint256 time = _latestTime;
         if (now > time) {
-            uint256 subTime = now.sub(time).div(waitCycle);
-            startTime = time.add(waitCycle.mul(uint256(1).add(subTime)));
+            uint256 subTime = now.sub(time).div(_waitCycle);
+            startTime = time.add(_waitCycle.mul(uint256(1).add(subTime)));
         } else {
             startTime = time;
         }
-        endTime = startTime.add(redemptionCycle);
+        endTime = startTime.add(_redemptionCycle);
     }
 
     /// @dev View redemption period, this period
@@ -161,14 +144,14 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
     /// @return endTime end time
     function getRedemptionTimeFront() external view returns(uint256 startTime, 
                                                                          uint256 endTime) {
-        uint256 time = latestTime;
+        uint256 time = _latestTime;
         if (now > time) {
-            uint256 subTime = now.sub(time).div(waitCycle);
-            startTime = time.add(waitCycle.mul(subTime));
+            uint256 subTime = now.sub(time).div(_waitCycle);
+            startTime = time.add(_waitCycle.mul(subTime));
         } else {
-            startTime = time.sub(waitCycle);
+            startTime = time.sub(_waitCycle);
         }
-        endTime = startTime.add(redemptionCycle);
+        endTime = startTime.add(_redemptionCycle);
     }
 
     /// @dev View frozen LP and unfreeze time
@@ -196,7 +179,7 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
     /// @return redeemable LP
     function getRedemptionAmount(address add) external view returns (uint256) {
         Frozen memory frozenInfo = frozenIns[add];
-        uint256 balanceSelf = _balances[add];
+        uint256 balanceSelf = balances[add];
         if (now > frozenInfo.time) {
             return balanceSelf;
         } else {
@@ -228,37 +211,45 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
     /// @dev Set contract status
     /// @param num 0: pause, 1: active, 2: redemption only
     function setFlag(uint8 num) public onlyGovernance {
-        flag = num;
+        _flag = num;
     }
 
     /// @dev Set mortgage pool address
     function setMortgagePool(address add) public onlyGovernance {
-    	mortgagePool = add;
+    	_mortgagePool = add;
+    }
+
+    function setPTokenFactory(address add) public onlyGovernance {
+        pTokenFactory = IPTokenFactory(add);
+    }
+
+    function setLPStakingMiningPool(address add) public onlyGovernance {
+        lpStakingMiningPool = ILPStakingMiningPool(add);
     }
 
     /// @dev Set the latest redemption time
     function setLatestTime() public onlyGovernance {
-        latestTime = now.add(waitCycle);
+        _latestTime = now.add(_waitCycle);
     }
     function setLatestTime(uint256 num) public onlyGovernance {
-        latestTime = num;
+        _latestTime = num;
     }
 
     /// @dev Set the rate
     function setFeeRate(uint256 num) public onlyGovernance {
-        feeRate = num;
+        _feeRate = num;
     }
 
     /// @dev Set redemption cycle
     function setRedemptionCycle(uint256 num) public onlyGovernance {
         require(num > 0, "Log:InsurancePool:!zero");
-        redemptionCycle = num * 1 days;
+        _redemptionCycle = num * 1 days;
     }
 
     /// @dev Set redemption duration
     function setWaitCycle(uint256 num) public onlyGovernance {
         require(num > 0, "Log:InsurancePool:!zero");
-        waitCycle = num * 1 days;
+        _waitCycle = num * 1 days;
     }
 
     /// @dev Set the underlying asset and ptoken mapping and
@@ -266,19 +257,19 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
     /// @param pToken ptoken address
     function setInfo(address uToken, 
                      address pToken) public onlyGovernance {
-        pTokenAddress = pToken;
-        underlyingTokenAddress = uToken;
+        _pTokenAddress = pToken;
+        _underlyingTokenAddress = uToken;
     }
 
     function setETHIns(bool isETHIns) public onlyGovernance {
-        ethIns = isETHIns;
+        _ethIns = isETHIns;
     }
 
     //---------transaction---------
 
     /// @dev Set governance address
     function setGovernance() public {
-        governance = pTokenFactory.getGovernance();
+        _governance = pTokenFactory.getGovernance();
     }
 
     /// @dev Exchange: ptoken exchanges the underlying asset
@@ -288,20 +279,20 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
         require(amount > 0, "Log:InsurancePool:!amount");
 
         // Calculate the fee
-    	uint256 fee = amount.mul(feeRate).div(1000);
+    	uint256 fee = amount.mul(_feeRate).div(1000);
 
         // Transfer to the ptoken
-    	ERC20(pTokenAddress).safeTransferFrom(address(msg.sender), address(this), amount);
+    	ERC20(_pTokenAddress).safeTransferFrom(address(msg.sender), address(this), amount);
 
         // Calculate the amount of transferred underlying asset
-        uint256 uTokenAmount = getDecimalConversion(pTokenAddress, amount.sub(fee), underlyingTokenAddress);
+        uint256 uTokenAmount = getDecimalConversion(_pTokenAddress, amount.sub(fee), _underlyingTokenAddress);
         require(uTokenAmount > 0, "Log:InsurancePool:!uTokenAmount");
 
         // Transfer out underlying asset
-    	if (ethIns) {
+    	if (_ethIns) {
             TransferHelper.safeTransferETH(address(msg.sender), uTokenAmount);
     	} else {
-            ERC20(underlyingTokenAddress).safeTransfer(address(msg.sender), uTokenAmount);
+            ERC20(_underlyingTokenAddress).safeTransfer(address(msg.sender), uTokenAmount);
     	}
 
     	// Eliminate negative ledger
@@ -315,31 +306,31 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
         require(amount > 0, "Log:InsurancePool:!amount");
 
         // Calculate the fee
-    	uint256 fee = amount.mul(feeRate).div(1000);
+    	uint256 fee = amount.mul(_feeRate).div(1000);
 
         // Transfer to the underlying asset
-    	if (ethIns) {
+    	if (_ethIns) {
             // The underlying asset is ETH
             require(msg.value == amount, "Log:InsurancePool:!msg.value");
     	} else {
             // The underlying asset is ERC20
             require(msg.value == 0, "Log:InsurancePool:msg.value!=0");
-            ERC20(underlyingTokenAddress).safeTransferFrom(address(msg.sender), address(this), amount);
+            ERC20(_underlyingTokenAddress).safeTransferFrom(address(msg.sender), address(this), amount);
     	}
 
         // Calculate the amount of transferred ptokens
-        uint256 pTokenAmount = getDecimalConversion(underlyingTokenAddress, amount.sub(fee), pTokenAddress);
+        uint256 pTokenAmount = getDecimalConversion(_underlyingTokenAddress, amount.sub(fee), _pTokenAddress);
         require(pTokenAmount > 0, "Log:InsurancePool:!pTokenAmount");
 
         // Transfer out ptoken
-        uint256 pTokenBalance = ERC20(pTokenAddress).balanceOf(address(this));
+        uint256 pTokenBalance = ERC20(_pTokenAddress).balanceOf(address(this));
         if (pTokenBalance < pTokenAmount) {
             // Insufficient ptoken balance,
             uint256 subNum = pTokenAmount.sub(pTokenBalance);
-            IParasset(pTokenAddress).issuance(subNum, address(this));
-            insNegative = insNegative.add(subNum);
+            IParasset(_pTokenAddress).issuance(subNum, address(this));
+            _insNegative = _insNegative.add(subNum);
         }
-    	ERC20(pTokenAddress).safeTransfer(address(msg.sender), pTokenAmount);
+    	ERC20(_pTokenAddress).safeTransfer(address(msg.sender), pTokenAmount);
     }
 
     /// @dev Subscribe for insurance
@@ -358,17 +349,17 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
     	}
 
         // ptoken balance 
-    	uint256 pTokenBalance = ERC20(pTokenAddress).balanceOf(address(this));
+    	uint256 pTokenBalance = ERC20(_pTokenAddress).balanceOf(address(this));
         // underlying asset balance
         uint256 tokenBalance;
-    	if (ethIns) {
+    	if (_ethIns) {
             // The amount of ETH involved in the calculation does not include the transfer in this time
             require(msg.value == amount, "Log:InsurancePool:!msg.value");
             tokenBalance = address(this).balance.sub(amount);
     	} else {
             require(msg.value == 0, "Log:InsurancePool:msg.value!=0");
             // Underlying asset conversion 18 decimals
-            tokenBalance = getDecimalConversion(underlyingTokenAddress, ERC20(underlyingTokenAddress).balanceOf(address(this)), pTokenAddress);
+            tokenBalance = getDecimalConversion(_underlyingTokenAddress, ERC20(_underlyingTokenAddress).balanceOf(address(this)), _pTokenAddress);
     	}
 
         // Calculate LP
@@ -377,18 +368,18 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
         uint256 allBalance = tokenBalance.add(pTokenBalance);
     	if (insTotal != 0) {
             // Insurance pool assets must be greater than 0
-            require(allBalance > insNegative, "Log:InsurancePool:allBalanceNotEnough");
-            uint256 allValue = allBalance.sub(insNegative);
-    		insAmount = getDecimalConversion(underlyingTokenAddress, amount, pTokenAddress).mul(insTotal).div(allValue);
+            require(allBalance > _insNegative, "Log:InsurancePool:allBalanceNotEnough");
+            uint256 allValue = allBalance.sub(_insNegative);
+    		insAmount = getDecimalConversion(_underlyingTokenAddress, amount, _pTokenAddress).mul(insTotal).div(allValue);
     	} else {
             // The initial net value is 1
-            insAmount = getDecimalConversion(underlyingTokenAddress, amount, pTokenAddress);
+            insAmount = getDecimalConversion(_underlyingTokenAddress, amount, _pTokenAddress);
         }
 
     	// Transfer to the underlying asset(ERC20)
-    	if (!ethIns) {
+    	if (!_ethIns) {
     		require(msg.value == 0, "Log:InsurancePool:msg.value!=0");
-    		ERC20(underlyingTokenAddress).safeTransferFrom(address(msg.sender), address(this), amount);
+    		ERC20(_underlyingTokenAddress).safeTransferFrom(address(msg.sender), address(this), amount);
     	}
 
     	// Additional LP issuance
@@ -396,7 +387,7 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
 
     	// Freeze insurance LP
     	frozenInfo.amount = frozenInfo.amount.add(insAmount);
-    	frozenInfo.time = latestTime.add(waitCycle);
+    	frozenInfo.time = _latestTime.add(_waitCycle);
     }
 
     /// @dev Redemption insurance
@@ -409,8 +400,8 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
     	updateLatestTime();
 
         // Judging the redemption time
-        uint256 tokenTime = latestTime;
-    	require(now >= tokenTime.sub(waitCycle) && now <= tokenTime.sub(waitCycle).add(redemptionCycle), "Log:InsurancePool:!time");
+        uint256 tokenTime = _latestTime;
+    	require(now >= tokenTime.sub(_waitCycle) && now <= tokenTime.sub(_waitCycle).add(_redemptionCycle), "Log:InsurancePool:!time");
 
         // Thaw LP
     	Frozen storage frozenInfo = frozenIns[address(msg.sender)];
@@ -419,20 +410,20 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
     	}
     	
         // ptoken balance
-    	uint256 pTokenBalance = ERC20(pTokenAddress).balanceOf(address(this));
+    	uint256 pTokenBalance = ERC20(_pTokenAddress).balanceOf(address(this));
         // underlying asset balance
         uint256 tokenBalance;
-    	if (ethIns) {
+    	if (_ethIns) {
             tokenBalance = address(this).balance;
     	} else {
-    		tokenBalance = getDecimalConversion(underlyingTokenAddress, ERC20(underlyingTokenAddress).balanceOf(address(this)), pTokenAddress);
+    		tokenBalance = getDecimalConversion(_underlyingTokenAddress, ERC20(_underlyingTokenAddress).balanceOf(address(this)), _pTokenAddress);
     	}
 
         // Insurance pool assets must be greater than 0
         uint256 allBalance = tokenBalance.add(pTokenBalance);
-        require(allBalance > insNegative, "Log:InsurancePool:allBalanceNotEnough");
+        require(allBalance > _insNegative, "Log:InsurancePool:allBalanceNotEnough");
         // Calculated amount of assets
-    	uint256 allValue = allBalance.sub(insNegative);
+    	uint256 allValue = allBalance.sub(_insNegative);
     	uint256 insTotal = totalSupply;
     	uint256 underlyingAmount = amount.mul(allValue).div(insTotal);
 
@@ -442,22 +433,22 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
         require(getAllLP(address(msg.sender)) >= frozenInfo.amount, "Log:InsurancePool:frozen");
     	
     	// Transfer out assets, priority transfer of the underlying assets, if the underlying assets are insufficient, transfer ptoken
-    	if (ethIns) {
+    	if (_ethIns) {
             // ETH
             if (tokenBalance >= underlyingAmount) {
                 TransferHelper.safeTransferETH(address(msg.sender), underlyingAmount);
             } else {
                 TransferHelper.safeTransferETH(address(msg.sender), tokenBalance);
-                ERC20(pTokenAddress).safeTransfer(address(msg.sender), 
+                ERC20(_pTokenAddress).safeTransfer(address(msg.sender), 
                                            underlyingAmount.sub(tokenBalance));
             }
     	} else {
             // ERC20
             if (tokenBalance >= underlyingAmount) {
-                ERC20(underlyingTokenAddress).safeTransfer(address(msg.sender), getDecimalConversion(pTokenAddress, underlyingAmount, underlyingTokenAddress));
+                ERC20(_underlyingTokenAddress).safeTransfer(address(msg.sender), getDecimalConversion(_pTokenAddress, underlyingAmount, _underlyingTokenAddress));
             } else {
-                ERC20(underlyingTokenAddress).safeTransfer(address(msg.sender), getDecimalConversion(pTokenAddress, tokenBalance, underlyingTokenAddress));
-                ERC20(pTokenAddress).safeTransfer(address(msg.sender), underlyingAmount.sub(tokenBalance));
+                ERC20(_underlyingTokenAddress).safeTransfer(address(msg.sender), getDecimalConversion(_pTokenAddress, tokenBalance, _underlyingTokenAddress));
+                ERC20(_pTokenAddress).safeTransfer(address(msg.sender), underlyingAmount.sub(tokenBalance));
             }
     	}
     }
@@ -465,7 +456,7 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
     /// @dev Destroy ptoken, update negative ledger
     /// @param amount quantity destroyed
     function destroyPToken(uint256 amount) override public onlyMortgagePool {
-    	IParasset pErc20 = IParasset(pTokenAddress);
+    	IParasset pErc20 = IParasset(_pTokenAddress);
     	uint256 pTokenBalance = pErc20.balanceOf(address(this));
     	if (pTokenBalance >= amount) {
     		pErc20.destroy(amount, address(this));
@@ -473,39 +464,39 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
     		pErc20.destroy(pTokenBalance, address(this));
     		// 记录负账户
             uint256 subAmount = amount.sub(pTokenBalance);
-    		insNegative = insNegative.add(subAmount);
-            emit Negative(subAmount, insNegative);
+    		_insNegative = _insNegative.add(subAmount);
+            emit Negative(subAmount, _insNegative);
     	}
     }
 
     function eliminate() override public {
 
-    	IParasset pErc20 = IParasset(pTokenAddress);
+    	IParasset pErc20 = IParasset(_pTokenAddress);
         // negative ledger
-    	uint256 negative = insNegative;
+    	uint256 negative = _insNegative;
         // ptoken balance
     	uint256 pTokenBalance = pErc20.balanceOf(address(this)); 
     	if (negative > 0 && pTokenBalance > 0) {
     		if (negative >= pTokenBalance) {
                 // Increase negative ledger
                 pErc20.destroy(pTokenBalance, address(this));
-    			insNegative = insNegative.sub(pTokenBalance);
-                emit Negative(pTokenBalance, insNegative);
+    			_insNegative = _insNegative.sub(pTokenBalance);
+                emit Negative(pTokenBalance, _insNegative);
     		} else {
                 // negative ledger = 0
                 pErc20.destroy(negative, address(this));
-    			insNegative = 0;
-                emit Negative(insNegative, insNegative);
+    			_insNegative = 0;
+                emit Negative(negative, _insNegative);
     		}
     	}
     }
 
     /// @dev Update redemption time
     function updateLatestTime() public {
-        uint256 time = latestTime;
+        uint256 time = _latestTime;
     	if (now > time) {
-    		uint256 subTime = now.sub(time).div(waitCycle);
-    		latestTime = time.add(waitCycle.mul(uint256(1).add(subTime)));
+    		uint256 subTime = now.sub(time).div(_waitCycle);
+    		_latestTime = time.add(_waitCycle.mul(uint256(1).add(subTime)));
     	}
     }
 
@@ -514,8 +505,8 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
     /// @param account destroy address
     function destroy(uint256 amount, 
                      address account) private {
-        require(_balances[account] >= amount, "Log:InsurancePool:!destroy");
-        _balances[account] = _balances[account].sub(amount);
+        require(balances[account] >= amount, "Log:InsurancePool:!destroy");
+        balances[account] = balances[account].sub(amount);
         totalSupply = totalSupply.sub(amount);
         emit Destroy(amount, account);
     }
@@ -525,7 +516,7 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
     /// @param account additional issuance address
     function issuance(uint256 amount, 
                       address account) private {
-        _balances[account] = _balances[account].add(amount);
+        balances[account] = balances[account].add(amount);
         totalSupply = totalSupply.add(amount);
         emit Issuance(amount, account);
     }
@@ -552,16 +543,16 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
     function approve(address spender, uint256 value) public returns (bool) 
     {
         require(spender != address(0));
-        _allowed[msg.sender][spender] = value;
+        allowed[msg.sender][spender] = value;
         emit Approval(msg.sender, spender, value);
         return true;
     }
 
     function transferFrom(address from, address to, uint256 value) public returns (bool) 
     {
-        _allowed[from][msg.sender] = _allowed[from][msg.sender].sub(value);
+        allowed[from][msg.sender] = allowed[from][msg.sender].sub(value);
         _transfer(from, to, value);
-        emit Approval(from, msg.sender, _allowed[from][msg.sender]);
+        emit Approval(from, msg.sender, allowed[from][msg.sender]);
         return true;
     }
 
@@ -569,8 +560,8 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
     {
         require(spender != address(0));
 
-        _allowed[msg.sender][spender] = _allowed[msg.sender][spender].add(addedValue);
-        emit Approval(msg.sender, spender, _allowed[msg.sender][spender]);
+        allowed[msg.sender][spender] = allowed[msg.sender][spender].add(addedValue);
+        emit Approval(msg.sender, spender, allowed[msg.sender][spender]);
         return true;
     }
 
@@ -578,14 +569,14 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
     {
         require(spender != address(0));
 
-        _allowed[msg.sender][spender] = _allowed[msg.sender][spender].sub(subtractedValue);
-        emit Approval(msg.sender, spender, _allowed[msg.sender][spender]);
+        allowed[msg.sender][spender] = allowed[msg.sender][spender].sub(subtractedValue);
+        emit Approval(msg.sender, spender, allowed[msg.sender][spender]);
         return true;
     }
 
     function _transfer(address from, address to, uint256 value) internal {
-        _balances[from] = _balances[from].sub(value);
-        _balances[to] = _balances[to].add(value);
+        balances[from] = balances[from].sub(value);
+        balances[to] = balances[to].add(value);
         emit Transfer(from, to, value);
     }
 
