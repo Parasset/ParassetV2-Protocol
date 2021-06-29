@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity ^0.6.12;
+pragma solidity ^0.8.4;
 
-import "./lib/SafeMath.sol";
 import "./iface/IParasset.sol";
 import "./iface/IPTokenFactory.sol";
 
 contract PToken is IParasset {
-    using SafeMath for uint256;
 
     mapping (address => uint256) private _balances;
     mapping (address => mapping (address => uint256)) private _allowed;
@@ -88,7 +86,7 @@ contract PToken is IParasset {
 
     function transferFrom(address from, address to, uint256 value) override public returns (bool) 
     {
-        _allowed[from][msg.sender] = _allowed[from][msg.sender].sub(value);
+        _allowed[from][msg.sender] = _allowed[from][msg.sender] - value;
         _transfer(from, to, value);
         emit Approval(from, msg.sender, _allowed[from][msg.sender]);
         return true;
@@ -98,7 +96,7 @@ contract PToken is IParasset {
     {
         require(spender != address(0));
 
-        _allowed[msg.sender][spender] = _allowed[msg.sender][spender].add(addedValue);
+        _allowed[msg.sender][spender] = _allowed[msg.sender][spender] + addedValue;
         emit Approval(msg.sender, spender, _allowed[msg.sender][spender]);
         return true;
     }
@@ -107,27 +105,27 @@ contract PToken is IParasset {
     {
         require(spender != address(0));
 
-        _allowed[msg.sender][spender] = _allowed[msg.sender][spender].sub(subtractedValue);
+        _allowed[msg.sender][spender] = _allowed[msg.sender][spender] - subtractedValue;
         emit Approval(msg.sender, spender, _allowed[msg.sender][spender]);
         return true;
     }
 
     function _transfer(address from, address to, uint256 value) internal {
-        _balances[from] = _balances[from].sub(value);
-        _balances[to] = _balances[to].add(value);
+        _balances[from] = _balances[from] - value;
+        _balances[to] = _balances[to] + value;
         emit Transfer(from, to, value);
     }
 
     function destroy(uint256 amount, address account) override external onlyPool{
     	require(_balances[account] >= amount, "Log:PToken:!destroy");
-    	_balances[account] = _balances[account].sub(amount);
-    	_totalSupply = _totalSupply.sub(amount);
+    	_balances[account] = _balances[account] - amount;
+    	_totalSupply = _totalSupply - amount;
     	emit Transfer(account, address(0x0), amount);
     }
 
     function issuance(uint256 amount, address account) override external onlyPool{
-    	_balances[account] = _balances[account].add(amount);
-    	_totalSupply = _totalSupply.add(amount);
+    	_balances[account] = _balances[account] + amount;
+    	_totalSupply = _totalSupply + amount;
     	emit Transfer(address(0x0), account, amount);
     }
 }

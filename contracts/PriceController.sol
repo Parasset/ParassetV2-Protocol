@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity ^0.6.12;
+pragma solidity ^0.8.4;
 pragma experimental ABIEncoderV2;
 
 import "./iface/INestPriceFacade.sol";
 import "./iface/IPriceController.sol";
 import "./iface/INTokenController.sol";
-import "./lib/SafeMath.sol";
-import './lib/SafeERC20.sol';
+import "./iface/IERC20.sol";
 
 contract PriceController is IPriceController {
-	using SafeMath for uint256;
 
 	// Nest price contract
     INestPriceFacade nestPriceFacade;
@@ -45,12 +43,12 @@ contract PriceController is IPriceController {
     	uint256 inputTokenDec = 18;
     	uint256 outputTokenDec = 18;
     	if (inputToken != address(0x0)) {
-    		inputTokenDec = ERC20(inputToken).decimals();
+    		inputTokenDec = IERC20(inputToken).decimals();
     	}
     	if (outputToken != address(0x0)) {
-    		outputTokenDec = ERC20(outputToken).decimals();
+    		outputTokenDec = IERC20(outputToken).decimals();
     	}
-    	return inputTokenAmount.mul(10**outputTokenDec).div(10**inputTokenDec);
+    	return inputTokenAmount * (10**outputTokenDec) / (10**inputTokenDec);
     }
 
     /// @dev Get price
@@ -84,8 +82,9 @@ contract PriceController is IPriceController {
                 require(avg1 > 0 && avg2 > 0, "Log:PriceController:!avg4");
                 return (avg2, getDecimalConversion(uToken, avg1, address(0x0)));
             } else {
-                (,,uint256 avg1,) = nestPriceFacade.triggeredPriceInfo{value:uint256(msg.value).div(2)}(token, payback);
-                (,,uint256 avg2,) = nestPriceFacade.triggeredPriceInfo{value:uint256(msg.value).div(2)}(uToken, payback);
+                uint256 priceValue = uint256(msg.value) / 2;
+                (,,uint256 avg1,) = nestPriceFacade.triggeredPriceInfo{value:priceValue}(token, payback);
+                (,,uint256 avg2,) = nestPriceFacade.triggeredPriceInfo{value:priceValue}(uToken, payback);
                 require(avg1 > 0 && avg2 > 0, "Log:PriceController:!avg5");
                 return (avg1, getDecimalConversion(uToken, avg2, address(0x0)));
             }

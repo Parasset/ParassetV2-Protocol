@@ -1,19 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity ^0.6.12;
+pragma solidity ^0.8.4;
 pragma experimental ABIEncoderV2;
 
 import "./iface/IParasset.sol";
 import "./iface/IInsurancePool.sol";
 import "./iface/IPTokenFactory.sol";
 import "./iface/IPriceController.sol";
-import "./lib/SafeMath.sol";
 import './lib/TransferHelper.sol';
-import './lib/SafeERC20.sol';
 import "./lib/ReentrancyGuard.sol";
+import "./iface/IERC20.sol";
 
 contract MortgagePool is ReentrancyGuard {
-	using SafeMath for uint256;
-	using SafeERC20 for ERC20;
 
     // governance address
 	address public _governance;
@@ -113,11 +110,11 @@ contract MortgagePool is ReentrancyGuard {
                     uint256 nowRate,
                     uint80 r0Value) 
     public view returns(uint256) {
-        uint256 topOne = parassetAssets.mul(uint256(r0Value)).mul(block.number.sub(uint256(blockHeight)));
-        uint256 ratePlus = rate.add(nowRate);
-        uint256 topTwo = parassetAssets.mul(uint256(r0Value)).mul(block.number.sub(uint256(blockHeight))).mul(uint256(3).mul(ratePlus));
-    	uint256 bottom = uint256(config.oneYearBlock).mul(100000);
-    	return topOne.div(bottom).add(topTwo.div(bottom.mul(100000).mul(2)));
+        uint256 topOne = parassetAssets * uint256(r0Value) * (block.number - uint256(blockHeight));
+        uint256 ratePlus = rate + nowRate;
+        uint256 topTwo = parassetAssets * uint256(r0Value) * (block.number - uint256(blockHeight)) * uint256(3) * ratePlus;
+    	uint256 bottom = uint256(config.oneYearBlock) * 100000;
+    	return topOne / bottom + (topTwo / (bottom * 100000 * 2));
     }
 
     /// @dev Calculate the mortgage rate
@@ -134,7 +131,7 @@ contract MortgagePool is ReentrancyGuard {
         if (mortgageAssets == 0 || pTokenPrice == 0) {
             return 0;
         }
-    	return uint88(parassetAssets.mul(tokenPrice).mul(100000).div(pTokenPrice.mul(mortgageAssets)));
+    	return uint88(parassetAssets * tokenPrice * 100000 / (pTokenPrice * mortgageAssets));
     }
 
     /// @dev Get real-time data of the current debt warehouse
@@ -151,7 +148,7 @@ contract MortgagePool is ReentrancyGuard {
                              uint256 tokenPrice, 
                              uint256 uTokenPrice,
                              uint88 maxRateNum,
-                             uint256 owner) 
+                             address owner) 
     public view returns(uint256 fee, 
                         uint256 mortgageRate, 
                         uint256 maxSubM, 
@@ -164,14 +161,14 @@ contract MortgagePool is ReentrancyGuard {
         uint256 pTokenPrice = getDecimalConversion(config.underlyingTokenAdd, uTokenPrice, config.pTokenAdd);
         uint256 tokenPriceAmount = tokenPrice;
         fee = getFee(pLedger.parassetAssets, pLedger.blockHeight, pLedger.rate, getMortgageRate(pLedger.mortgageAssets, pLedger.parassetAssets, tokenPriceAmount, pTokenPrice), mortageConfig[mToken].r0);
-        mortgageRate = getMortgageRate(pLedger.mortgageAssets, pLedger.parassetAssets.add(fee), tokenPriceAmount, pTokenPrice);
+        mortgageRate = getMortgageRate(pLedger.mortgageAssets, pLedger.parassetAssets + fee, tokenPriceAmount, pTokenPrice);
         uint256 mRateNum = maxRateNum;
         if (mortgageRate >= mRateNum) {
             maxSubM = 0;
             maxAddP = 0;
         } else {
-            maxSubM = pLedger.mortgageAssets.sub(pLedger.parassetAssets.mul(tokenPriceAmount).mul(100000).div(mRateNum.mul(pTokenPrice)));
-            maxAddP = pLedger.mortgageAssets.mul(pTokenPrice).mul(mRateNum).div(uint256(100000).mul(tokenPriceAmount)).sub(pLedger.parassetAssets);
+            maxSubM = pLedger.mortgageAssets - (pLedger.parassetAssets * tokenPriceAmount * 100000 / (mRateNum * pTokenPrice));
+            maxAddP = pLedger.mortgageAssets * pTokenPrice * mRateNum / (100000 * tokenPriceAmount) - pLedger.parassetAssets;
         }
     }
     
@@ -186,13 +183,13 @@ contract MortgagePool is ReentrancyGuard {
     	uint256 inputTokenDec = 18;
     	uint256 outputTokenDec = 18;
     	if (inputToken != address(0x0)) {
-    		inputTokenDec = ERC20(inputToken).decimals();
+    		inputTokenDec = IERC20(inputToken).decimals();
     	}
 
     	if (outputToken != address(0x0)) {
-    		outputTokenDec = ERC20(outputToken).decimals();
+    		outputTokenDec = IERC20(outputToken).decimals();
     	}
-    	return inputTokenAmount.mul(10**outputTokenDec).div(10**inputTokenDec);
+    	return inputTokenAmount * (10**outputTokenDec) / (10**inputTokenDec);
     }
 
     /// @dev View debt warehouse data
@@ -374,7 +371,7 @@ contract MortgagePool is ReentrancyGuard {
                   uint88 rate) public payable whenActive nonReentrant {
         MortgageInfo memory morInfo = mortageConfig[mortgageToken];
     	require(morInfo.mortgageAllow, "Log:MortgagePool:!mortgageAllow");
-        require(rate > 0 && uint256(rate).mul(1000) <= morInfo.maxRate, "Log:MortgagePool:rate!=0");
+        require(rate > 0 && uint256(rate) * 1000 <= morInfo.maxRate, "Log:MortgagePool:rate!=0");
         require(amount > 0, "Log:MortgagePool:amount!=0");
     	PersonalLedger storage pLedger = ledgerList[mortgageToken].ledger[address(msg.sender)];
         uint256 parassetAssets = pLedger.parassetAssets;
@@ -384,23 +381,23 @@ contract MortgagePool is ReentrancyGuard {
         uint256 tokenPrice;
         uint256 pTokenPrice;
         if (mortgageToken != address(0x0)) {
-            ERC20(mortgageToken).safeTransferFrom(address(msg.sender), address(this), amount);
+            TransferHelper.safeTransferFrom(mortgageToken, address(msg.sender), address(this), amount);
             (tokenPrice, pTokenPrice) = getPriceForPToken(mortgageToken, msg.value);
         } else {
             require(msg.value >= amount, "Log:MortgagePool:!msg.value");
-            (tokenPrice, pTokenPrice) = getPriceForPToken(mortgageToken, uint256(msg.value).sub(amount));
+            (tokenPrice, pTokenPrice) = getPriceForPToken(mortgageToken, uint256(msg.value) - amount);
         }
 
         // Calculate the stability fee
         transferFee(pLedger, tokenPrice, pTokenPrice, morInfo.r0);
 
         // Additional ptoken issuance
-        uint256 pTokenAmount = amount.mul(pTokenPrice).mul(rate).div(tokenPrice.mul(100));
+        uint256 pTokenAmount = amount * pTokenPrice * rate / (tokenPrice * 100);
         IParasset(config.pTokenAdd).issuance(pTokenAmount, address(msg.sender));
 
         // Update debt information
-        pLedger.mortgageAssets = mortgageAssets.add(amount);
-        pLedger.parassetAssets = parassetAssets.add(pTokenAmount);
+        pLedger.mortgageAssets = mortgageAssets + amount;
+        pLedger.parassetAssets = parassetAssets + pTokenAmount;
         pLedger.blockHeight = uint160(block.number);
         pLedger.rate = getMortgageRate(pLedger.mortgageAssets, pLedger.parassetAssets, tokenPrice, pTokenPrice);
         emit LedgerLog(mortgageToken, pLedger.mortgageAssets, pLedger.parassetAssets, tokenPrice, pTokenPrice, pLedger.rate);
@@ -428,18 +425,18 @@ contract MortgagePool is ReentrancyGuard {
         uint256 tokenPrice;
         uint256 pTokenPrice;
         if (mortgageToken != address(0x0)) {
-            ERC20(mortgageToken).safeTransferFrom(address(msg.sender), address(this), amount);
+            TransferHelper.safeTransferFrom(mortgageToken, address(msg.sender), address(this), amount);
             (tokenPrice, pTokenPrice) = getPriceForPToken(mortgageToken, msg.value);
         } else {
             require(msg.value >= amount, "Log:MortgagePool:!msg.value");
-            (tokenPrice, pTokenPrice) = getPriceForPToken(mortgageToken, uint256(msg.value).sub(amount));
+            (tokenPrice, pTokenPrice) = getPriceForPToken(mortgageToken, uint256(msg.value) - amount);
         }
 
         // Calculate the stability fee
         transferFee(pLedger, tokenPrice, pTokenPrice, morInfo.r0);
 
         // Update debt information
-    	pLedger.mortgageAssets = mortgageAssets.add(amount);
+    	pLedger.mortgageAssets = mortgageAssets + amount;
     	pLedger.blockHeight = uint160(block.number);
         pLedger.rate = getMortgageRate(pLedger.mortgageAssets, parassetAssets, tokenPrice, pTokenPrice);
         emit LedgerLog(mortgageToken, pLedger.mortgageAssets, pLedger.parassetAssets, tokenPrice, pTokenPrice, pLedger.rate);
@@ -465,7 +462,7 @@ contract MortgagePool is ReentrancyGuard {
         transferFee(pLedger, tokenPrice, pTokenPrice, morInfo.r0);
 
         // Update debt information
-    	pLedger.mortgageAssets = mortgageAssets.sub(amount);
+    	pLedger.mortgageAssets = mortgageAssets - amount;
     	pLedger.blockHeight = uint160(block.number);
         pLedger.rate = getMortgageRate(pLedger.mortgageAssets, parassetAssets, tokenPrice, pTokenPrice);
         emit LedgerLog(mortgageToken, pLedger.mortgageAssets, pLedger.parassetAssets, tokenPrice, pTokenPrice, pLedger.rate);
@@ -475,7 +472,7 @@ contract MortgagePool is ReentrancyGuard {
 
     	// Transfer out mortgage assets
     	if (mortgageToken != address(0x0)) {
-    		ERC20(mortgageToken).safeTransfer(address(msg.sender), amount);
+            TransferHelper.safeTransfer(mortgageToken, address(msg.sender), amount);
     	} else {
             TransferHelper.safeTransferETH(address(msg.sender), amount);
     	}
@@ -501,7 +498,7 @@ contract MortgagePool is ReentrancyGuard {
         transferFee(pLedger, tokenPrice, pTokenPrice, morInfo.r0);
 
         // Update debt information
-        pLedger.parassetAssets = parassetAssets.add(amount);
+        pLedger.parassetAssets = parassetAssets + amount;
         pLedger.blockHeight = uint160(block.number);
         pLedger.rate = getMortgageRate(mortgageAssets, pLedger.parassetAssets, tokenPrice, pTokenPrice);
         emit LedgerLog(mortgageToken, pLedger.mortgageAssets, pLedger.parassetAssets, tokenPrice, pTokenPrice, pLedger.rate);
@@ -533,7 +530,7 @@ contract MortgagePool is ReentrancyGuard {
         transferFee(pLedger, tokenPrice, pTokenPrice, morInfo.r0);
 
         // Update debt information
-        pLedger.parassetAssets = parassetAssets.sub(amount);
+        pLedger.parassetAssets = parassetAssets - amount;
         pLedger.blockHeight = uint160(block.number);
         pLedger.rate = getMortgageRate(mortgageAssets, pLedger.parassetAssets, tokenPrice, pTokenPrice);
         emit LedgerLog(mortgageToken, pLedger.mortgageAssets, pLedger.parassetAssets, tokenPrice, pTokenPrice, pLedger.rate);
@@ -564,22 +561,22 @@ contract MortgagePool is ReentrancyGuard {
         checkLine(pLedger, tokenPrice, pTokenPrice, morInfo.k, morInfo.r0);
 
         // Calculate the amount of ptoken
-        uint256 pTokenAmount = amount.mul(pTokenPrice).mul(90).div(tokenPrice.mul(100));
+        uint256 pTokenAmount = amount * pTokenPrice * 90 / (tokenPrice * 100);
     	// Transfer to ptoken
-    	ERC20(config.pTokenAdd).safeTransferFrom(address(msg.sender), address(insurancePool), pTokenAmount);
+        TransferHelper.safeTransferFrom(config.pTokenAdd, address(msg.sender), address(insurancePool), pTokenAmount);
 
     	// Eliminate negative accounts
         insurancePool.eliminate();
 
         // Calculate the debt for destruction
-        uint256 offset = parassetAssets.mul(amount).div(mortgageAssets);
+        uint256 offset = parassetAssets * amount / mortgageAssets;
 
         // Destroy ptoken
     	insurancePool.destroyPToken(offset);
 
     	// Update debt information
-    	pLedger.mortgageAssets = mortgageAssets.sub(amount);
-        pLedger.parassetAssets = parassetAssets.sub(offset);
+    	pLedger.mortgageAssets = mortgageAssets - amount;
+        pLedger.parassetAssets = parassetAssets - offset;
         emit LedgerLog(mortgageToken, pLedger.mortgageAssets, pLedger.parassetAssets, tokenPrice, pTokenPrice, pLedger.rate);
         // MortgageAssets liquidation, mortgage rate and block number are not updated
         if (pLedger.mortgageAssets == 0) {
@@ -590,7 +587,7 @@ contract MortgagePool is ReentrancyGuard {
 
     	// Transfer out mortgage asset
     	if (mortgageToken != address(0x0)) {
-    		ERC20(mortgageToken).safeTransfer(address(msg.sender), amount);
+            TransferHelper.safeTransfer(mortgageToken, address(msg.sender), amount);
     	} else {
             TransferHelper.safeTransferETH(address(msg.sender), amount);
     	}
@@ -614,7 +611,7 @@ contract MortgagePool is ReentrancyGuard {
         if (parassetAssets > 0 && uint160(block.number) > blockHeight && blockHeight != 0) {
             fee = getFee(parassetAssets, blockHeight, pLedger.rate, mortgageRate, r0Value);
         }
-        require(parassetAssets.add(fee).mul(kValue).div(mortgageAssets.mul(100000)) < pTokenPrice.div(tokenPrice), "Log:MortgagePool:!liquidationLine");
+        require((parassetAssets + fee) * kValue / (mortgageAssets * 100000) < pTokenPrice / tokenPrice, "Log:MortgagePool:!liquidationLine");
     }
 
     function transferFee(PersonalLedger memory pLedger, uint256 tokenPrice, uint256 pTokenPrice, uint80 r0Value) private {
@@ -625,7 +622,7 @@ contract MortgagePool is ReentrancyGuard {
         if (parassetAssets > 0 && uint160(block.number) > blockHeight && blockHeight != 0) {
             uint256 fee = getFee(parassetAssets, blockHeight, rate, getMortgageRate(mortgageAssets, parassetAssets, tokenPrice, pTokenPrice), r0Value);
             // The stability fee is transferred to the insurance pool
-            ERC20(config.pTokenAdd).safeTransferFrom(address(msg.sender), address(insurancePool), fee);
+            TransferHelper.safeTransferFrom(config.pTokenAdd, address(msg.sender), address(insurancePool), fee);
             // Eliminate negative accounts
             insurancePool.eliminate();
             emit FeeValue(fee);

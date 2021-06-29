@@ -1,15 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity ^0.6.12;
+pragma solidity ^0.8.4;
 
-import "./lib/SafeMath.sol";
-import './lib/SafeERC20.sol';
 import './lib/TransferHelper.sol';
 import "./lib/ReentrancyGuard.sol";
 import "./iface/ILPStakingMiningPool.sol";
+import "./iface/IERC20.sol";
 
 contract LPStakingMiningPool is ReentrancyGuard, ILPStakingMiningPool {
-	using SafeMath for uint256;
-	using SafeERC20 for ERC20;
 
 	// ASET
     address public _rewardsToken;
@@ -79,22 +76,22 @@ contract LPStakingMiningPool is ReentrancyGuard, ILPStakingMiningPool {
         if (_lastUpdateBlock == 0) {
             return 0;
         }
-        return getBlock().sub(_lastUpdateBlock).mul(_rewardRate);
+        return (getBlock() - _lastUpdateBlock) * _rewardRate;
     }
 
     function earned(address account) public view returns (uint256) {
-        return balances[account].mul(_rewardPerTokenStored.sub(userRewardPerTokenPaid[account])).div(1e18).add(rewards[account]);
+        return balances[account] * (_rewardPerTokenStored - userRewardPerTokenPaid[account]) / 1e18 + rewards[account];
     }
 
     function estimatedIncome(address account) public view returns (uint256) {
-        return balances[account].mul(rewardPerToken().sub(userRewardPerTokenPaid[account])).div(1e18).add(rewards[account]);
+        return balances[account] * (rewardPerToken() - userRewardPerTokenPaid[account]) / 1e18 + rewards[account];
     }
 
     function rewardPerToken() public view returns (uint256) {
         if (_totalSupply == 0) {
             return _rewardPerTokenStored;
         }
-        return _rewardPerTokenStored.add(accrued().mul(1e18).div(_totalSupply));
+        return _rewardPerTokenStored + accrued() * 1e18 / _totalSupply;
     }
 
     //---------governance----------
@@ -104,14 +101,14 @@ contract LPStakingMiningPool is ReentrancyGuard, ILPStakingMiningPool {
     }
 
     function addToken(address rewardsToken, uint256 tokenAmount, address from, uint256 rewardRate) external onlyGovernance {
-    	ERC20(rewardsToken).safeTransferFrom(from, address(this), tokenAmount);
+    	TransferHelper.safeTransferFrom(rewardsToken, from, address(this), tokenAmount);
     	_lastUpdateBlock = block.number;
         _rewardRate = rewardRate;
-    	_endBlock = tokenAmount.div(rewardRate).add(_lastUpdateBlock);
+    	_endBlock = tokenAmount / rewardRate + _lastUpdateBlock;
     }
 
     function subToken(address token, uint256 amount, address to) external onlyGovernance {
-        ERC20(token).safeTransfer(to, amount);
+        TransferHelper.safeTransfer(token, to, amount);
     }
 
     function setEndBlock(uint256 blockNum) external onlyGovernance {
@@ -126,15 +123,15 @@ contract LPStakingMiningPool is ReentrancyGuard, ILPStakingMiningPool {
 
     function stake(uint256 amount) external nonReentrant updateReward(msg.sender) {
         require(amount > 0, "Log:LPStakingMiningPool:!0");
-    	_totalSupply = _totalSupply.add(amount);
-        balances[msg.sender] = balances[msg.sender].add(amount);
+    	_totalSupply = _totalSupply - amount;
+        balances[msg.sender] = balances[msg.sender] + amount;
         TransferHelper.safeTransferFrom(_stakingToken, msg.sender, address(this), amount);
     }
 
     function withdraw(uint256 amount) external nonReentrant updateReward(msg.sender) {
         require(amount > 0, "Log:LPStakingMiningPool:!0");
-        _totalSupply = _totalSupply.sub(amount);
-        balances[msg.sender] = balances[msg.sender].sub(amount);
+        _totalSupply = _totalSupply - amount;
+        balances[msg.sender] = balances[msg.sender] - amount;
     	TransferHelper.safeTransfer(_stakingToken, msg.sender, amount);
     }
 
@@ -147,7 +144,7 @@ contract LPStakingMiningPool is ReentrancyGuard, ILPStakingMiningPool {
     }
 
     function _safeAsetTransfer(address _to, uint256 _amount) internal returns (uint256) {
-        uint256 asetBal = ERC20(_rewardsToken).balanceOf(address(this));
+        uint256 asetBal = IERC20(_rewardsToken).balanceOf(address(this));
         if (_amount > asetBal) {
             _amount = asetBal;
         }

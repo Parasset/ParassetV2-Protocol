@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity ^0.6.12;
+pragma solidity ^0.8.4;
 pragma experimental ABIEncoderV2;
 
-import "../lib/AddressPayable.sol";
 import '../lib/TransferHelper.sol';
 
 contract NestQuery {
-    using address_make_payable for address;
 
 	mapping(address=>uint128) avg;
     // mapping(address=>uint256) latestPrice;
@@ -116,7 +114,7 @@ contract NestQuery {
     function _pay(address tokenAddress, uint fee, address paybackAddress) private {
         fee = fee * DIMI_ETHER;
         if (msg.value > fee) {
-            payable(paybackAddress).transfer(msg.value - fee);
+            TransferHelper.safeTransferETH(paybackAddress, msg.value - fee);
         } else {
             require(msg.value == fee, "NestPriceFacade:!fee");
         }

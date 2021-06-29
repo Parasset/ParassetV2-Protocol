@@ -15,6 +15,6 @@
     "chai": "^4.2.0",
     "ethereum-waffle": "^3.2.2",
     "ethers": "^5.0.32",
-    "hardhat": "^2.0.8"
+    "hardhat": "^2.4.1"
   }
 }
