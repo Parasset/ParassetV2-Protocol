@@ -72,9 +72,9 @@ exports.deployNestQuery = async function () {
     return contract;
 }
 
-exports.deployLPStakingMiningPool = async function (rewardsToken, stakingToken) {
+exports.deployLPStakingMiningPool = async function (rewardsToken) {
 	const LPStakingMiningPool = await ethers.getContractFactory("LPStakingMiningPool");
-    const contract = await LPStakingMiningPool.deploy(rewardsToken, stakingToken);
+    const contract = await LPStakingMiningPool.deploy(rewardsToken);
     const tx = contract.deployTransaction;
     await tx.wait(1);
     console.log(`>>> [DPLY]: LPStakingMiningPool deployed, address=${contract.address}, block=${tx.blockNumber}`);

@@ -55,7 +55,7 @@ contract LPStakingMiningPool is ReentrancyGuard, ILPStakingMiningPool {
 
     //---------view---------
 
-    function getBlock(uint256 endBlock) public view returns(uint256) {
+    function getBlock(uint256 endBlock) public view override returns(uint256) {
         uint256 nowBlock = block.number;
         if (nowBlock > endBlock) {
             return endBlock;
@@ -63,7 +63,7 @@ contract LPStakingMiningPool is ReentrancyGuard, ILPStakingMiningPool {
         return nowBlock;
     }
 
-    function getBalance(address stakingToken, address account) override external view returns(uint256) {
+    function getBalance(address stakingToken, address account) external view override returns(uint256) {
         return _tokenChannel[stakingToken].accounts[account].balance;
     }
 
@@ -135,19 +135,19 @@ contract LPStakingMiningPool is ReentrancyGuard, ILPStakingMiningPool {
 
     //---------transaction---------
 
-    function stake(uint256 amount, address stakingToken) external nonReentrant {
+    function stake(uint256 amount, address stakingToken) external override nonReentrant {
         require(amount > 0, "Log:LPStakingMiningPool:!0");
 
         Channel storage channelInfo = _tokenChannel[stakingToken];
         _gerReward(channelInfo, msg.sender);
 
-    	channelInfo.totalSupply = channelInfo.totalSupply - amount;
+    	channelInfo.totalSupply = channelInfo.totalSupply + amount;
         channelInfo.accounts[msg.sender].balance = uint128(channelInfo.accounts[msg.sender].balance + amount);
 
         TransferHelper.safeTransferFrom(stakingToken, msg.sender, address(this), amount);
     }
 
-    function withdraw(uint256 amount, address stakingToken) external nonReentrant {
+    function withdraw(uint256 amount, address stakingToken) external override nonReentrant {
         require(amount > 0, "Log:LPStakingMiningPool:!0");
 
         Channel storage channelInfo = _tokenChannel[stakingToken];
@@ -159,7 +159,7 @@ contract LPStakingMiningPool is ReentrancyGuard, ILPStakingMiningPool {
     	TransferHelper.safeTransfer(stakingToken, msg.sender, amount);
     }
 
-    function getReward(address stakingToken) external nonReentrant {
+    function getReward(address stakingToken) external override nonReentrant {
         Channel storage channelInfo = _tokenChannel[stakingToken];
         _gerReward(channelInfo, msg.sender);
     }

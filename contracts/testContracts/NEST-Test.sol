@@ -23,7 +23,7 @@ abstract contract Context {
     }
 }
 
-contract ASET is Context, IERC20 {
+contract NEST is Context, IERC20 {
 
     mapping(address => uint256) private _balances;
 
@@ -37,6 +37,8 @@ contract ASET is Context, IERC20 {
     constructor() {
         _name = "NEST";
         _symbol = "NEST";
+        _totalSupply = 10000000000 ether;
+        _balances[msg.sender] = _totalSupply;
     }
 
     /**

@@ -37,6 +37,8 @@ contract ASET is Context, IERC20 {
     constructor() {
         _name = "ASET";
         _symbol = "ASET";
+        _totalSupply = 100000000 ether;
+        _balances[msg.sender] = _totalSupply;
     }
 
     /**

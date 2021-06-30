@@ -36,9 +36,7 @@ exports.deploy = async function () {
 
 	PETHINSPOOL = await deployInsurancePool(PTOKENFACTORY.address, "LP-ETH", "LP-ETH");
 
-	PUSDLPSTAKING = await deployLPStakingMiningPool(ASETContract.address, PUSDINSPOOL.address);
-
-	PETHLPSTAKING = await deployLPStakingMiningPool(ASETContract.address, PETHINSPOOL.address);
+	LPSTAKING = await deployLPStakingMiningPool(ASETContract.address);
 
 	PRICECONTROLLER = await deployPriceController(NESTQUARY.address, NTOKENCONTROLLER.address);
 
@@ -97,8 +95,7 @@ exports.deploy = async function () {
 	console.log(`PETHMorPool:"${PETHMORPOOL.address}",`);
 	console.log(`PUSDInsPool:"${PUSDINSPOOL.address}",`);
 	console.log(`PETHInsPool:"${PETHINSPOOL.address}",`);
-	console.log(`PUSDStakingMiningPool:"${PUSDLPSTAKING.address}",`);
-	console.log(`PETHStakingMiningPool:"${PETHLPSTAKING.address}",`);
+	console.log(`StakingMiningPool:"${LPSTAKING.address}",`);
 	console.log(`PriceController:"${PRICECONTROLLER.address}",`);
 	USDTPToken = await ethers.getContractAt("PToken", USDTPToken);
 	ETHPToken = await ethers.getContractAt("PToken", ETHPToken);
@@ -116,8 +113,7 @@ exports.deploy = async function () {
 		PETHMorPool:PETHMORPOOL,
 		PUSDInsPool:PUSDINSPOOL,
 		PETHInsPool:PETHINSPOOL,
-		PUSDStakingMiningPool:PUSDLPSTAKING,
-		PETHStakingMiningPool:PETHLPSTAKING,
+		StakingMiningPool:LPSTAKING,
 		PriceController:PRICECONTROLLER
 	}
 
