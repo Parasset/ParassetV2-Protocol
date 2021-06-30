@@ -37,9 +37,12 @@ contract PriceController is IPriceController {
     /// @param inputTokenAmount Amount of token
     /// @param outputToken Converted token
     /// @return stability Amount of outputToken
-    function getDecimalConversion(address inputToken, 
-    	                          uint256 inputTokenAmount, 
-    	                          address outputToken) public view returns(uint256) {
+    function getDecimalConversion(
+        address inputToken, 
+        uint256 inputTokenAmount, 
+        address outputToken
+    ) public view returns(uint256) 
+    {
     	uint256 inputTokenDec = 18;
     	uint256 outputTokenDec = 18;
     	if (inputToken != address(0x0)) {
@@ -57,10 +60,12 @@ contract PriceController is IPriceController {
     /// @param payback return address of excess fee
     /// @return tokenPrice Mortgage asset price(1 ETH = ? token)
     /// @return pTokenPrice PToken price(1 ETH = ? pToken)
-    function getPriceForPToken(address token, 
-                               address uToken,
-                               address payback) override public payable returns (uint256 tokenPrice, 
-                                                                        uint256 pTokenPrice) {
+    function getPriceForPToken(
+        address token, 
+        address uToken,
+        address payback
+    ) override public payable returns (uint256 tokenPrice, uint256 pTokenPrice) 
+    {
         if (token == address(0x0)) {
             // The mortgage asset is ETH，get ERC20-ETH price
             (,,uint256 avg,) = nestPriceFacade.triggeredPriceInfo{value:msg.value}(uToken, payback);

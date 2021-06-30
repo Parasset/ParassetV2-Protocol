@@ -53,9 +53,13 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
     // staking address
     ILPStakingMiningPool lpStakingMiningPool;
 
-    uint256 public totalSupply = 0;                                        
+    // ERC20 - totalSupply
+    uint256 public totalSupply = 0;
+    // ERC20 - name                                     
     string public name = "";
+    // ERC20 - symbol
     string public symbol = "";
+    // ERC20 - decimals
     uint8 public decimals = 18;
 
     event Destroy(uint256 amount, address account);
@@ -125,7 +129,7 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
     /// @dev View the all lp 
     /// @return all lp 
     function getAllLP(address user) public view returns(uint256) {
-        return balances[user] + lpStakingMiningPool.getBalance(user);
+        return balances[user] + lpStakingMiningPool.getBalance(address(this), user);
     }
 
     /// @dev View the personal LP
@@ -201,9 +205,11 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
     /// @param inputTokenAmount Amount of token
     /// @param outputToken Converted token
     /// @return stability Amount of outputToken
-    function getDecimalConversion(address inputToken, 
-    	                          uint256 inputTokenAmount, 
-    	                          address outputToken) public view returns(uint256) {
+    function getDecimalConversion(
+        address inputToken, 
+        uint256 inputTokenAmount, 
+        address outputToken
+    ) public view returns(uint256) {
     	uint256 inputTokenDec = 18;
     	uint256 outputTokenDec = 18;
     	if (inputToken != address(0x0)) {
@@ -264,8 +270,7 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
     /// @dev Set the underlying asset and ptoken mapping and
     /// @param uToken underlying asset address
     /// @param pToken ptoken address
-    function setInfo(address uToken, 
-                     address pToken) public onlyGovernance {
+    function setInfo(address uToken, address pToken) public onlyGovernance {
         _underlyingTokenAddress = uToken;
         _pTokenAddress = pToken;
     }

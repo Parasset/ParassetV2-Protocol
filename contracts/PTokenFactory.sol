@@ -68,14 +68,14 @@ contract PTokenFactory is IPTokenFactory {
 
     /// @dev View ptoken list length
     /// @return ptoken list length
-    function getPTokenNum() public view returns(uint256) {
+    function getPTokenNum() override public view returns(uint256) {
     	return pTokenList.length;
     }
 
     /// @dev View ptoken address
     /// @param index array subscript
     /// @return ptoken address
-    function getPTokenAddress(uint256 index) public view returns(address) {
+    function getPTokenAddress(uint256 index) override public view returns(address) {
     	return pTokenList[index];
     }
 

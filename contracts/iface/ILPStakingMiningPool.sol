@@ -2,5 +2,5 @@
 pragma solidity ^0.8.4;
 
 interface ILPStakingMiningPool {
-	function getBalance(address user) external view returns(uint256);
+	function getBalance(address stakingToken, address account) external view returns(uint256);
 }
