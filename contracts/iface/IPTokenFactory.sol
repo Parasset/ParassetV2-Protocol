@@ -15,13 +15,4 @@ interface IPTokenFactory {
     /// @param pToken ptoken verification
     /// @return bool
     function getPTokenAuthenticity(address pToken) external view returns(bool);
-
-    /// @dev View ptoken list length
-    /// @return ptoken list length
-    function getPTokenNum() external view returns(uint256);
-
-    /// @dev View ptoken address
-    /// @param index array subscript
-    /// @return ptoken address
-    function getPTokenAddress(uint256 index) external view returns(address);
 }

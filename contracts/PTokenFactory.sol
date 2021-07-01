@@ -7,25 +7,25 @@ import "./iface/IPTokenFactory.sol";
 contract PTokenFactory is IPTokenFactory {
 
 	// Governance address
-	address public governance;
+	address public _governance;
 	// contract address => bool, ptoken operation permissions
-	mapping(address=>bool) allowAddress;
+	mapping(address=>bool) _allowAddress;
 	// ptoken address => bool, ptoken verification
-	mapping(address=>bool) pTokenMapping;
-    // ptoken list
-	address[] pTokenList;
+	mapping(address=>bool) _pTokenMapping;
+    // 
+    mapping(address=>bool) _governanceList;
 
     event createLog(address pTokenAddress);
     event pTokenOperator(address contractAddress, bool allow);
 
 	constructor () public {
-        governance = msg.sender;
+        _governance = msg.sender;
     }
 
     //---------modifier---------
 
     modifier onlyGovernance() {
-        require(msg.sender == governance, "Log:PTokenFactory:!gov");
+        require(msg.sender == _governance, "Log:PTokenFactory:!gov");
         _;
     }
 
@@ -49,43 +49,37 @@ contract PTokenFactory is IPTokenFactory {
     /// @dev View governance address
     /// @return governance address
     function getGovernance() override public view returns(address) {
-        return governance;
+        return _governance;
     }
 
     /// @dev View ptoken operation permissions
     /// @param contractAddress contract address
     /// @return bool
     function getPTokenOperator(address contractAddress) override public view returns(bool) {
-    	return allowAddress[contractAddress];
+    	return _allowAddress[contractAddress];
     }
 
     /// @dev View ptoken operation permissions
     /// @param pToken ptoken verification
     /// @return bool
     function getPTokenAuthenticity(address pToken) override public view returns(bool) {
-    	return pTokenMapping[pToken];
+    	return _pTokenMapping[pToken];
     }
 
-    /// @dev View ptoken list length
-    /// @return ptoken list length
-    function getPTokenNum() override public view returns(uint256) {
-    	return pTokenList.length;
-    }
-
-    /// @dev View ptoken address
-    /// @param index array subscript
-    /// @return ptoken address
-    function getPTokenAddress(uint256 index) override public view returns(address) {
-    	return pTokenList[index];
+    /// @dev View governance rights
+    /// @param add address to be tested
+    /// @return bool
+    function checkGovernance(address add) public view returns(bool) {
+        return _governanceList[add];
     }
 
     //---------governance----------
 
     /// @dev Set governance address
     /// @param add new governance address
-    function setGovernance(address add) public onlyGovernance {
-    	require(add != address(0x0), "Log:PTokenFactory:0x0");
-    	governance = add;
+    function setGovernance(address add) public {
+        require(checkGovernance(msg.sender), "Log:PTokenFactory:checkGovernance");
+    	_governance = add;
     }
 
     /// @dev Set governance address
@@ -93,16 +87,23 @@ contract PTokenFactory is IPTokenFactory {
     /// @param allow bool
     function setPTokenOperator(address contractAddress, 
                                bool allow) public onlyGovernance {
-        allowAddress[contractAddress] = allow;
+        _allowAddress[contractAddress] = allow;
         emit pTokenOperator(contractAddress, allow);
+    }
+
+    /// @dev Add Governance
+    /// @param add contract address
+    /// @param allow bool
+    function setGovernanceList(address add, bool allow) public {
+        require(checkGovernance(msg.sender), "Log:PTokenFactory:checkGovernance");
+        _governanceList[add] = allow;
     }
 
     /// @dev Create PToken
     /// @param name token name
     function createPtoken(string memory name) public onlyGovernance {
     	PToken pToken = new PToken(strConcat("PToken_", name), strConcat("P", name));
-    	pTokenMapping[address(pToken)] = true;
-    	pTokenList.push(address(pToken));
+    	_pTokenMapping[address(pToken)] = true;
     	emit createLog(address(pToken));
     }
 }

@@ -10,23 +10,23 @@ import "./iface/IERC20.sol";
 contract PriceController is IPriceController {
 
 	// Nest price contract
-    INestPriceFacade nestPriceFacade;
+    INestPriceFacade _nestPriceFacade;
     // NTokenController
-    INTokenController ntokenController;
+    INTokenController _ntokenController;
 
     /// @dev Initialization method
-    /// @param _nestPriceFacade Nest price contract
-    /// @param _ntokenController NTokenController
-	constructor (address _nestPriceFacade, address _ntokenController) public {
-		nestPriceFacade = INestPriceFacade(_nestPriceFacade);
-        ntokenController = INTokenController(_ntokenController);
+    /// @param nestPriceFacade Nest price contract
+    /// @param ntokenController NTokenController
+	constructor (address nestPriceFacade, address ntokenController) public {
+		_nestPriceFacade = INestPriceFacade(nestPriceFacade);
+        _ntokenController = INTokenController(ntokenController);
     }
 
     /// @dev Is it a token-ntoken price pair
     /// @param tokenOne token address(USDT,HBTC...)
     /// @param tokenTwo ntoken address(NEST,NHBTC...)
     function checkNToken(address tokenOne, address tokenTwo) public view returns(bool) {
-        if (ntokenController.getNTokenAddress(tokenOne) == tokenTwo) {
+        if (_ntokenController.getNTokenAddress(tokenOne) == tokenTwo) {
             return true;
         }
         return false;
@@ -41,8 +41,7 @@ contract PriceController is IPriceController {
         address inputToken, 
         uint256 inputTokenAmount, 
         address outputToken
-    ) public view returns(uint256) 
-    {
+    ) public view returns(uint256) {
     	uint256 inputTokenDec = 18;
     	uint256 outputTokenDec = 18;
     	if (inputToken != address(0x0)) {
@@ -64,32 +63,34 @@ contract PriceController is IPriceController {
         address token, 
         address uToken,
         address payback
-    ) override public payable returns (uint256 tokenPrice, uint256 pTokenPrice) 
-    {
+    ) override public payable returns (
+        uint256 tokenPrice, 
+        uint256 pTokenPrice
+    ) {
         if (token == address(0x0)) {
             // The mortgage asset is ETH，get ERC20-ETH price
-            (,,uint256 avg,) = nestPriceFacade.triggeredPriceInfo{value:msg.value}(uToken, payback);
+            (,,uint256 avg,) = _nestPriceFacade.triggeredPriceInfo{value:msg.value}(uToken, payback);
             require(avg > 0, "Log:PriceController:!avg1");
             return (1 ether, getDecimalConversion(uToken, avg, address(0x0)));
         } else if (uToken == address(0x0)) {
             // The underlying asset is ETH，get ERC20-ETH price
-            (,,uint256 avg,) = nestPriceFacade.triggeredPriceInfo{value:msg.value}(token, payback);
+            (,,uint256 avg,) = _nestPriceFacade.triggeredPriceInfo{value:msg.value}(token, payback);
             require(avg > 0, "Log:PriceController:!avg2");
             return (getDecimalConversion(uToken, avg, address(0x0)), 1 ether);
         } else {
             // Get ERC20-ERC20 price
             if (checkNToken(token, uToken)) {
-                (,,uint256 avg1,,,,uint256 avg2,) = nestPriceFacade.triggeredPriceInfo2{value:msg.value}(token, payback);
+                (,,uint256 avg1,,,,uint256 avg2,) = _nestPriceFacade.triggeredPriceInfo2{value:msg.value}(token, payback);
                 require(avg1 > 0 && avg2 > 0, "Log:PriceController:!avg3");
                 return (avg1, getDecimalConversion(uToken, avg2, address(0x0)));
             } else if (checkNToken(uToken, token)) {
-                (,,uint256 avg1,,,,uint256 avg2,) = nestPriceFacade.triggeredPriceInfo2{value:msg.value}(uToken, payback);
+                (,,uint256 avg1,,,,uint256 avg2,) = _nestPriceFacade.triggeredPriceInfo2{value:msg.value}(uToken, payback);
                 require(avg1 > 0 && avg2 > 0, "Log:PriceController:!avg4");
                 return (avg2, getDecimalConversion(uToken, avg1, address(0x0)));
             } else {
                 uint256 priceValue = uint256(msg.value) / 2;
-                (,,uint256 avg1,) = nestPriceFacade.triggeredPriceInfo{value:priceValue}(token, payback);
-                (,,uint256 avg2,) = nestPriceFacade.triggeredPriceInfo{value:priceValue}(uToken, payback);
+                (,,uint256 avg1,) = _nestPriceFacade.triggeredPriceInfo{value:priceValue}(token, payback);
+                (,,uint256 avg2,) = _nestPriceFacade.triggeredPriceInfo{value:priceValue}(uToken, payback);
                 require(avg1 > 0 && avg2 > 0, "Log:PriceController:!avg5");
                 return (avg1, getDecimalConversion(uToken, avg2, address(0x0)));
             }

@@ -85,6 +85,36 @@ contract LPStakingMiningPool is ReentrancyGuard, ILPStakingMiningPool {
                 channelInfo.totalSupply);
     }
 
+    function getAccountReward(address stakingToken, address account) external view override returns(uint256) {
+        Channel storage channelInfo = _tokenChannel[stakingToken];
+        (,,uint256 userReward) = calcReward(channelInfo, account);
+        return userReward;
+    }
+
+    function calcReward(
+        Channel storage channelInfo,
+        address account
+    ) private view returns(
+        uint32 _nowBlock, 
+        uint96 _rewardPerTokenStored, 
+        uint256 _userReward
+    ) {
+        uint256 nowBlock = getBlock(channelInfo.endBlock);
+        uint256 totalSupply = channelInfo.totalSupply;
+        uint256 rewardPerTokenStored = channelInfo.rewardPerTokenStored;
+        uint256 lastUpdateBlock = channelInfo.lastUpdateBlock;
+        uint256 accrued = (lastUpdateBlock == 0 ? 0 : (nowBlock - lastUpdateBlock) * channelInfo.rewardRate);
+
+        _nowBlock = uint32(nowBlock);
+        _rewardPerTokenStored = (totalSupply == 0 ? 
+                                uint96(rewardPerTokenStored) : 
+                                uint96(rewardPerTokenStored + accrued * 1e18 / totalSupply));
+        _userReward = channelInfo.accounts[account].balance 
+                      * (_rewardPerTokenStored 
+                      - channelInfo.accounts[account].userRewardPerTokenPaid)
+                      / 1e18;
+    }
+
     function getAccountInfo(
         address stakingToken, 
         address account
@@ -125,12 +155,15 @@ contract LPStakingMiningPool is ReentrancyGuard, ILPStakingMiningPool {
         TransferHelper.safeTransfer(token, to, amount);
     }
 
-    function setEndBlock(uint32 blockNum, address stakingToken) external onlyGovernance {
-    	_tokenChannel[stakingToken].endBlock = blockNum;
-    }
-
-    function setLastUpdateBlock(uint32 blockNum, address stakingToken) external onlyGovernance {
-    	_tokenChannel[stakingToken].lastUpdateBlock = blockNum;
+    function setChannelInfo(
+        uint32 lastUpdateBlock, 
+        uint32 endBlock, 
+        uint96 rewardRate,
+        address stakingToken
+    ) external onlyGovernance {
+        _tokenChannel[stakingToken].lastUpdateBlock = lastUpdateBlock;
+        _tokenChannel[stakingToken].endBlock = endBlock;
+        _tokenChannel[stakingToken].rewardRate = rewardRate;
     }
 
     //---------transaction---------
@@ -165,28 +198,17 @@ contract LPStakingMiningPool is ReentrancyGuard, ILPStakingMiningPool {
     }
 
     function _gerReward(Channel storage channelInfo, address to) private {
-        uint256 nowBlock = getBlock(channelInfo.endBlock);
-        uint256 totalSupply = channelInfo.totalSupply;
-        uint256 rewardPerTokenStored = channelInfo.rewardPerTokenStored;
-        uint256 lastUpdateBlock = channelInfo.lastUpdateBlock;
-        uint256 accrued = (lastUpdateBlock == 0 ? 0 : (nowBlock - lastUpdateBlock) * channelInfo.rewardRate);
+        (uint32 lastUpdateBlock, uint96 rewardPerTokenStored, uint256 userReward) = calcReward(channelInfo, to);
 
-        channelInfo.rewardPerTokenStored = (totalSupply == 0 ? 
-                                           uint96(rewardPerTokenStored) : 
-                                           uint96(rewardPerTokenStored + accrued * 1e18 / totalSupply));
-        channelInfo.lastUpdateBlock = uint32(nowBlock);
+        channelInfo.rewardPerTokenStored = rewardPerTokenStored;
+        channelInfo.lastUpdateBlock = lastUpdateBlock;
 
         if (to != address(0)) {
-            Account storage account = channelInfo.accounts[to];
-            uint256 userReward = account.balance 
-                                 * (channelInfo.rewardPerTokenStored 
-                                 - account.userRewardPerTokenPaid)
-                                 / 1e18;
             if (userReward > 0) {
                 // transfer ASET
                 _safeAsetTransfer(to, userReward);
             }
-            account.userRewardPerTokenPaid = channelInfo.rewardPerTokenStored;
+            channelInfo.accounts[to].userRewardPerTokenPaid = rewardPerTokenStored;
         }
     }
 
