@@ -5,13 +5,12 @@ import './lib/TransferHelper.sol';
 import "./lib/ReentrancyGuard.sol";
 import "./iface/ILPStakingMiningPool.sol";
 import "./iface/IERC20.sol";
+import "./ParassetBase.sol";
 
-contract LPStakingMiningPool is ReentrancyGuard, ILPStakingMiningPool {
+contract LPStakingMiningPool is ParassetBase, ReentrancyGuard, ILPStakingMiningPool {
 
 	// ASET
     address public _rewardsToken;
-    // governance
-    address public _governance;
     
     // token => channel info
     mapping(address => Channel) _tokenChannel;
@@ -39,22 +38,11 @@ contract LPStakingMiningPool is ReentrancyGuard, ILPStakingMiningPool {
         uint128 userRewardPerTokenPaid;
     }
 
-    /// @dev Initialization method
-    /// @param rewardsToken rewardsToken address
-	constructor(address rewardsToken) public {
-		_rewardsToken = rewardsToken;
-		_governance = msg.sender;
-    }
-
-    //---------modifier---------
-
-    modifier onlyGovernance() {
-        require(msg.sender == _governance, "Log:LPStakingMiningPool:!gov");
-        _;
-    }
-
     //---------view---------
 
+    /// @dev Get the endBlock
+    /// @param endBlock block number at the end of this mining cycle
+    /// @return actual ending block number
     function getBlock(uint256 endBlock) public view override returns(uint256) {
         uint256 nowBlock = block.number;
         if (nowBlock > endBlock) {
@@ -70,7 +58,7 @@ contract LPStakingMiningPool is ReentrancyGuard, ILPStakingMiningPool {
     function getChannelInfo(
         address stakingToken
     ) 
-    external view returns (
+    external view override returns (
         uint256 lastUpdateBlock, 
         uint256 endBlock, 
         uint256 rewardRate, 
@@ -130,8 +118,8 @@ contract LPStakingMiningPool is ReentrancyGuard, ILPStakingMiningPool {
 
     //---------governance----------
 
-    function setGovernance(address add) external onlyGovernance {
-    	_governance = add; 
+    function setRewardsToken(address add) external onlyGovernance {
+        _rewardsToken = add;
     }
 
     function addToken(
@@ -212,8 +200,7 @@ contract LPStakingMiningPool is ReentrancyGuard, ILPStakingMiningPool {
         }
     }
 
-
-    function _safeAsetTransfer(address to, uint256 amount) internal returns (uint256) {
+    function _safeAsetTransfer(address to, uint256 amount) private returns (uint256) {
         uint256 asetBal = IERC20(_rewardsToken).balanceOf(address(this));
         if (amount > asetBal) {
             amount = asetBal;

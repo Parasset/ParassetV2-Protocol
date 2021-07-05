@@ -2,32 +2,20 @@
 pragma solidity ^0.8.4;
 
 import "./PToken.sol";
+import "./ParassetBase.sol";
 import "./iface/IPTokenFactory.sol";
 
-contract PTokenFactory is IPTokenFactory {
+contract PTokenFactory is ParassetBase, IPTokenFactory {
 
-	// Governance address
-	address public _governance;
+    // Governance contract
+    address public _owner;
 	// contract address => bool, ptoken operation permissions
 	mapping(address=>bool) _allowAddress;
 	// ptoken address => bool, ptoken verification
 	mapping(address=>bool) _pTokenMapping;
-    // 
-    mapping(address=>bool) _governanceList;
 
     event createLog(address pTokenAddress);
     event pTokenOperator(address contractAddress, bool allow);
-
-	constructor () public {
-        _governance = msg.sender;
-    }
-
-    //---------modifier---------
-
-    modifier onlyGovernance() {
-        require(msg.sender == _governance, "Log:PTokenFactory:!gov");
-        _;
-    }
 
     //---------view---------
 
@@ -47,9 +35,9 @@ contract PTokenFactory is IPTokenFactory {
     }
 
     /// @dev View governance address
-    /// @return governance address
+    /// @return governance address for PToken
     function getGovernance() override public view returns(address) {
-        return _governance;
+        return _owner;
     }
 
     /// @dev View ptoken operation permissions
@@ -66,20 +54,12 @@ contract PTokenFactory is IPTokenFactory {
     	return _pTokenMapping[pToken];
     }
 
-    /// @dev View governance rights
-    /// @param add address to be tested
-    /// @return bool
-    function checkGovernance(address add) public view returns(bool) {
-        return _governanceList[add];
-    }
-
     //---------governance----------
 
-    /// @dev Set governance address
-    /// @param add new governance address
-    function setGovernance(address add) public {
-        require(checkGovernance(msg.sender), "Log:PTokenFactory:checkGovernance");
-    	_governance = add;
+    /// @dev Set owner address
+    /// @param add new owner address
+    function setOwner(address add) public onlyGovernance {
+    	_owner = add;
     }
 
     /// @dev Set governance address
@@ -89,14 +69,6 @@ contract PTokenFactory is IPTokenFactory {
                                bool allow) public onlyGovernance {
         _allowAddress[contractAddress] = allow;
         emit pTokenOperator(contractAddress, allow);
-    }
-
-    /// @dev Add Governance
-    /// @param add contract address
-    /// @param allow bool
-    function setGovernanceList(address add, bool allow) public {
-        require(checkGovernance(msg.sender), "Log:PTokenFactory:checkGovernance");
-        _governanceList[add] = allow;
     }
 
     /// @dev Create PToken

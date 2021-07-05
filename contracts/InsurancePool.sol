@@ -3,19 +3,17 @@ pragma solidity ^0.8.4;
 
 import "./iface/IInsurancePool.sol";
 import "./iface/IParasset.sol";
-import "./iface/IPTokenFactory.sol";
 import "./iface/ILPStakingMiningPool.sol";
+import "./iface/IERC20.sol";
 import "./lib/ReentrancyGuard.sol";
 import './lib/TransferHelper.sol';
-import "./iface/IERC20.sol";
+import "./ParassetBase.sol";
 
-contract InsurancePool is ReentrancyGuard, IInsurancePool {
+contract InsurancePool is ParassetBase, ReentrancyGuard, IInsurancePool {
 
-	// governance address
-	address public _governance;
-	// negative account funds
-	uint256 public _insNegative;
-	// latest redemption time
+    // negative account funds
+    uint256 public _insNegative;
+    // latest redemption time
     uint256 public _latestTime;
     // status
     uint8 public _flag;      // = 0: pause
@@ -48,8 +46,6 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
     // is ETH insPool
     bool public _ethIns = false;
 
-    // pTokenFactory address
-    IPTokenFactory pTokenFactory;
     // staking address
     ILPStakingMiningPool lpStakingMiningPool;
 
@@ -68,22 +64,7 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint256 value);
 
-    /// @dev Initialization method
-    /// @param factoryAddress PTokenFactory address
-	constructor (address factoryAddress, string memory _name, string memory _symbol) public {
-        pTokenFactory = IPTokenFactory(factoryAddress);
-        _governance = pTokenFactory.getGovernance();
-        name = _name;
-        symbol = _symbol;
-        _flag = 0;
-    }
-
 	//---------modifier---------
-
-    modifier onlyGovernance() {
-        require(msg.sender == _governance, "Log:InsurancePool:!gov");
-        _;
-    }
 
     modifier onlyMortgagePool() {
         require(msg.sender == address(_mortgagePool), "Log:InsurancePool:!mortgagePool");
@@ -102,22 +83,10 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
 
     //---------view---------
 
-    /// @dev View the governance address
-    /// @return governance address
-    function getGovernance() external view returns(address) {
-        return _governance;
-    }
-
     /// @dev View the total LP
     /// @return total LP
     function getTotalSupply() external view returns(uint256) {
         return totalSupply;
-    }
-
-    /// @dev View the pTokenFactory address
-    /// @return pTokenFactory address
-    function getPTokenFactory() external view returns(address) {
-        return address(pTokenFactory);
     }
 
     /// @dev View the lpStakingMiningPool address
@@ -223,46 +192,47 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
 
     //---------governance----------
 
+    function setTokenInfo(string memory _name, string memory _symbol) external onlyGovernance {
+        name = _name;
+        symbol = _symbol;
+    }
+
     /// @dev Set contract status
     /// @param num 0: pause, 1: active, 2: redemption only
-    function setFlag(uint8 num) public onlyGovernance {
+    function setFlag(uint8 num) external onlyGovernance {
         _flag = num;
     }
 
     /// @dev Set mortgage pool address
-    function setMortgagePool(address add) public onlyGovernance {
+    function setMortgagePool(address add) external onlyGovernance {
     	_mortgagePool = add;
     }
 
-    function setPTokenFactory(address add) public onlyGovernance {
-        pTokenFactory = IPTokenFactory(add);
-    }
-
-    function setLPStakingMiningPool(address add) public onlyGovernance {
+    function setLPStakingMiningPool(address add) external onlyGovernance {
         lpStakingMiningPool = ILPStakingMiningPool(add);
     }
 
     /// @dev Set the latest redemption time
-    function setLatestTime() public onlyGovernance {
+    function setLatestTime() external onlyGovernance {
         _latestTime = block.timestamp + _waitCycle;
     }
-    function setLatestTime(uint256 num) public onlyGovernance {
+    function setLatestTime(uint256 num) external onlyGovernance {
         _latestTime = num;
     }
 
     /// @dev Set the rate
-    function setFeeRate(uint256 num) public onlyGovernance {
+    function setFeeRate(uint256 num) external onlyGovernance {
         _feeRate = num;
     }
 
     /// @dev Set redemption cycle
-    function setRedemptionCycle(uint256 num) public onlyGovernance {
+    function setRedemptionCycle(uint256 num) external onlyGovernance {
         require(num > 0, "Log:InsurancePool:!zero");
         _redemptionCycle = num * 1 days;
     }
 
     /// @dev Set redemption duration
-    function setWaitCycle(uint256 num) public onlyGovernance {
+    function setWaitCycle(uint256 num) external onlyGovernance {
         require(num > 0, "Log:InsurancePool:!zero");
         _waitCycle = num * 1 days;
     }
@@ -270,21 +240,16 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
     /// @dev Set the underlying asset and ptoken mapping and
     /// @param uToken underlying asset address
     /// @param pToken ptoken address
-    function setInfo(address uToken, address pToken) public onlyGovernance {
+    function setInfo(address uToken, address pToken) external onlyGovernance {
         _underlyingTokenAddress = uToken;
         _pTokenAddress = pToken;
     }
 
-    function setETHIns(bool isETHIns) public onlyGovernance {
+    function setETHIns(bool isETHIns) external onlyGovernance {
         _ethIns = isETHIns;
     }
 
     //---------transaction---------
-
-    /// @dev Set governance address
-    function setGovernance() public {
-        _governance = pTokenFactory.getGovernance();
-    }
 
     /// @dev Exchange: ptoken exchanges the underlying asset
     /// @param amount amount of ptoken
@@ -534,43 +499,26 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
         emit Issuance(amount, account);
     }
 
-    function transfer(address to, uint256 value) public returns (bool) 
-    {
-        // // Update redemption time
-        // updateLatestTime();
-
-        // // Thaw LP
-        // Frozen storage frozenInfo = frozenIns[address(msg.sender)];
-        // if (block.timestamp > frozenInfo.time) {
-        //     frozenInfo.amount = 0;
-        // }
+    function transfer(address to, uint256 value) public returns (bool) {
         _transfer(msg.sender, to, value);
-
-        // // Judgment to freeze LP
-        // if (to != address(lpStakingMiningPool)) {
-        //     require(getAllLP(address(msg.sender)) >= frozenInfo.amount, "Log:InsurancePool:frozen");
-        // }
         return true;
     }
 
-    function approve(address spender, uint256 value) public returns (bool) 
-    {
+    function approve(address spender, uint256 value) public returns (bool) {
         require(spender != address(0));
         allowed[msg.sender][spender] = value;
         emit Approval(msg.sender, spender, value);
         return true;
     }
 
-    function transferFrom(address from, address to, uint256 value) public returns (bool) 
-    {
+    function transferFrom(address from, address to, uint256 value) public returns (bool) {
         allowed[from][msg.sender] = allowed[from][msg.sender] - value;
         _transfer(from, to, value);
         emit Approval(from, msg.sender, allowed[from][msg.sender]);
         return true;
     }
 
-    function increaseAllowance(address spender, uint256 addedValue) public returns (bool) 
-    {
+    function increaseAllowance(address spender, uint256 addedValue) public returns (bool) {
         require(spender != address(0));
 
         allowed[msg.sender][spender] = allowed[msg.sender][spender] + addedValue;
@@ -578,8 +526,7 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
         return true;
     }
 
-    function decreaseAllowance(address spender, uint256 subtractedValue) public returns (bool) 
-    {
+    function decreaseAllowance(address spender, uint256 subtractedValue) public returns (bool) {
         require(spender != address(0));
 
         allowed[msg.sender][spender] = allowed[msg.sender][spender] - subtractedValue;
@@ -588,9 +535,22 @@ contract InsurancePool is ReentrancyGuard, IInsurancePool {
     }
 
     function _transfer(address from, address to, uint256 value) internal {
+        // // Update redemption time
+        // updateLatestTime();
+
+        // // Thaw LP
+        // Frozen storage frozenInfo = frozenIns[address(msg.sender)];
+        // if (block.timestamp > frozenInfo.time) {
+        //     frozenInfo.amount = 0;
+        // }
+
         balances[from] = balances[from] - value;
         balances[to] = balances[to] + value;
         emit Transfer(from, to, value);
+
+        // if (to != address(lpStakingMiningPool)) {
+        //     require(getAllLP(address(msg.sender)) >= frozenInfo.amount, "Log:InsurancePool:frozen");
+        // }
     }
 
     function addETH() public payable {}

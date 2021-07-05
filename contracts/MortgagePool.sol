@@ -4,27 +4,23 @@ pragma experimental ABIEncoderV2;
 
 import "./iface/IParasset.sol";
 import "./iface/IInsurancePool.sol";
-import "./iface/IPTokenFactory.sol";
 import "./iface/IPriceController.sol";
+import "./iface/IERC20.sol";
 import './lib/TransferHelper.sol';
 import "./lib/ReentrancyGuard.sol";
-import "./iface/IERC20.sol";
+import "./ParassetBase.sol";
 
-contract MortgagePool is ReentrancyGuard {
+contract MortgagePool is ParassetBase, ReentrancyGuard {
 
-    // governance address
-	address public _governance;
     Config _config;
     // mortgage asset address => mortgage config
-    mapping(address => MortgageInfo) _mortageConfig;
+    mapping(address=>MortgageInfo) _mortageConfig;
     // mortgage asset address => ledger info
-    mapping(address => MortageLeader) _ledgerList;
+    mapping(address=>MortageLeader) _ledgerList;
     // priceController contract
     IPriceController _quary;
     // insurance pool contract
     IInsurancePool _insurancePool;
-    // pToken creation factory contract
-    IPTokenFactory _pTokenFactory;
 
     struct MortgageInfo {
         // allow mortgage
@@ -70,21 +66,7 @@ contract MortgagePool is ReentrancyGuard {
     event FeeValue(uint256 value);
     event LedgerLog(address mToken, uint256 mTokenAmount, uint256 pTokenAmount, uint256 tokenPrice, uint256 pTokenPrice, uint88 rate);
 
-    /// @dev Initialization method
-    /// @param factoryAddress PToken creation factory contract
-	constructor (address factoryAddress) public {
-        _pTokenFactory = IPTokenFactory(factoryAddress);
-        _governance = _pTokenFactory.getGovernance();
-        _config.flag = 0;
-        _config.oneYearBlock = 2400000;
-    }
-
     //---------modifier---------
-
-    modifier onlyGovernance() {
-        require(msg.sender == _governance, "Log:MortgagePool:!gov");
-        _;
-    }
 
     modifier whenActive() {
         require(_config.flag == 1, "Log:MortgagePool:!active");
@@ -367,11 +349,6 @@ contract MortgagePool is ReentrancyGuard {
     }
 
     //---------transaction---------
-
-    /// @dev Set governance address
-    function setGovernance() public {
-        _governance = _pTokenFactory.getGovernance();
-    }
 
     /// @dev Mortgage asset casting ptoken
     /// @param mortgageToken mortgage asset address
