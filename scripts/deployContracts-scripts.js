@@ -1,87 +1,130 @@
-const hre = require("hardhat");
-const { ethers } = require("hardhat");
+const { ethers, upgrades } = require("hardhat");
 
-const {deployUSDT,deployNEST,deployASET,depolyFactory,createPtoken,getPTokenAddress,deployNestQuery,deployNTokenController,setNTokenMapping,setAvg,ETH,USDT} = require("./normal-scripts.js")
-const {deployMortgagePool,deployInsurancePool,deployPriceController,setPTokenOperator,setPriceController,setInsurancePool,setMortgagePool,setFlag,setFlag2,setETHINS,allow} = require("./normal-scripts.js")
-const {setMaxRate,setK,setR0,setInfo,deployLPStakingMiningPool} = require("./normal-scripts.js")
+const {ETHdec,USDTdec} = require("./normal-scripts.js")
 
 exports.deploy = async function () {
 
 	const accounts = await ethers.getSigners();
 	const ETHAddress = "0x0000000000000000000000000000000000000000";
+
+	const USDT = await ethers.getContractFactory("USDT");
+	const NEST = await ethers.getContractFactory("NEST");
+	const ASET = await ethers.getContractFactory("ASET");
+	const ParassetGovernance = await ethers.getContractFactory("ParassetGovernance");
+	const PTokenFactory = await hre.ethers.getContractFactory("PTokenFactory");
+	const NestQuery = await ethers.getContractFactory("NestQuery");
+	const NTokenController = await ethers.getContractFactory("NTokenController");
+	const MortgagePool = await ethers.getContractFactory("MortgagePool");
+	const InsurancePool = await hre.ethers.getContractFactory("InsurancePool");
+	const LPStakingMiningPool = await ethers.getContractFactory("LPStakingMiningPool");
+	const PriceController = await ethers.getContractFactory("PriceController");
+
+
 	// deploy USDT
-	USDTContract = await deployUSDT();
+	const USDTContract = await USDT.deploy();
+	console.log(`1. USDT.deploy() + "${USDTContract.address}"`);
 	// deploy NEST
-	NESTContract = await deployNEST();
+	const NESTContract = await NEST.deploy();
+	console.log(`2. NEST.deploy() + "${NESTContract.address}"`);
 	// deploy ASET
-	ASETContract = await deployASET();
-	// deploy USDT
-	PTOKENFACTORY = await depolyFactory();
+	const ASETContract = await ASET.deploy();
+	console.log(`3. ASET.deploy() + "${ASETContract.address}"`);
+	// deploy Governance
+	const GovernanceContract = await ParassetGovernance.deploy();
+	console.log(`4. ParassetGovernance + "${GovernanceContract.address}"`);
+	// deploy Factory
+	const PTOKENFACTORY = await upgrades.deployProxy(PTokenFactory, [GovernanceContract.address], { initializer: 'initialize' });
+	console.log(`5. PTOKENFACTORY + "${PTOKENFACTORY.address}"`);
 	// create PUSD
-	await createPtoken(PTOKENFACTORY.address, "USD");
+	await PTOKENFACTORY.createPtoken("USD");
+	console.log(`6. createPtoken success-USD"`);
 	// create PETH
-	await createPtoken(PTOKENFACTORY.address, "ETH");
-	USDTPToken = await getPTokenAddress(PTOKENFACTORY.address, "0");
-	ETHPToken = await getPTokenAddress(PTOKENFACTORY.address, "1");
+	await PTOKENFACTORY.createPtoken("ETH");
+	console.log(`7. createPtoken success-ETH"`);
+
+	sleep(5000);
+	USDTPToken = await PTOKENFACTORY.getPTokenAddress("0");
+	console.log(`8. USDTPToken + "${USDTPToken.address}"`);
+	ETHPToken = await PTOKENFACTORY.getPTokenAddress("1");
+	console.log(`9. ETHPToken + "${ETHPToken.address}"`);
+
 	// deploy nestQuary
-	NESTQUARY = await deployNestQuery();
+	NESTQUARY = await NestQuery.deploy();
+	console.log(`10. NESTQUARY + ${NESTQUARY.address}`);
 	// deploy ntokenController
-	NTOKENCONTROLLER = await deployNTokenController();
+	NTOKENCONTROLLER = await NTokenController.deploy();
+	console.log(`11. NTOKENCONTROLLER + "${NTOKENCONTROLLER.address}"`);
 
-	PUSDMORPOOL = await deployMortgagePool(PTOKENFACTORY.address);
+	PUSDMORPOOL = await upgrades.deployProxy(MortgagePool, [GovernanceContract.address], { initializer: 'initialize' });
+	console.log(`12. PUSDMORPOOL + "${PUSDMORPOOL.address}"`);
+	PETHMORPOOL = await upgrades.deployProxy(MortgagePool, [GovernanceContract.address], { initializer: 'initialize' });
+	console.log(`13. PETHMORPOOL + "${PETHMORPOOL.address}"`);
 
-	PETHMORPOOL = await deployMortgagePool(PTOKENFACTORY.address);
+	PUSDINSPOOL = await upgrades.deployProxy(InsurancePool, [GovernanceContract.address], { initializer: 'initialize' });
+	console.log(`14. PUSDINSPOOL + "${PUSDINSPOOL.address}"`);
+	PETHINSPOOL = await upgrades.deployProxy(InsurancePool, [GovernanceContract.address], { initializer: 'initialize' });
+	console.log(`15. PETHINSPOOL + "${PETHINSPOOL.address}"`);
 
-	PUSDINSPOOL = await deployInsurancePool(PTOKENFACTORY.address, "LP-USD", "LP-USD");
+	LPSTAKING = await upgrades.deployProxy(LPStakingMiningPool, [GovernanceContract.address], { initializer: 'initialize' });
+	console.log(`16. LPSTAKING + "${LPSTAKING.address}"`);
+	PRICECONTROLLER = await PriceController.deploy(NESTQUARY.address, NTOKENCONTROLLER.address);
+	console.log(`17. PRICECONTROLLER + "${PRICECONTROLLER.address}"`);
 
-	PETHINSPOOL = await deployInsurancePool(PTOKENFACTORY.address, "LP-ETH", "LP-ETH");
-
-	LPSTAKING = await deployLPStakingMiningPool(ASETContract.address);
-
-	PRICECONTROLLER = await deployPriceController(NESTQUARY.address, NTOKENCONTROLLER.address);
-
-	await setNTokenMapping(NTOKENCONTROLLER.address, NESTQUARY.address, USDTContract.address, NESTContract.address);
-	await setAvg(NESTQUARY.address,USDTContract.address, USDT("2"));
-	await setAvg(NESTQUARY.address,NESTContract.address, ETH("3"));
-
-	await setPTokenOperator(PTOKENFACTORY.address, PUSDMORPOOL.address, "1");
-	await setPTokenOperator(PTOKENFACTORY.address, PETHMORPOOL.address, "1");
-	await setPTokenOperator(PTOKENFACTORY.address, PUSDINSPOOL.address, "1");
-	await setPTokenOperator(PTOKENFACTORY.address, PETHINSPOOL.address, "1");
-
-	await setPriceController(PUSDMORPOOL.address,PRICECONTROLLER.address);
-
-	await setETHINS(PETHINSPOOL.address);
-
-	await setInsurancePool(PUSDMORPOOL.address, PUSDINSPOOL.address);
-	await setInsurancePool(PETHMORPOOL.address, PETHINSPOOL.address);
-	await setMortgagePool(PUSDINSPOOL.address, PUSDMORPOOL.address);
-	await setMortgagePool(PETHINSPOOL.address, PETHMORPOOL.address);
-
-	await setFlag(PUSDMORPOOL.address, "1");
-	await setFlag(PETHMORPOOL.address, "1");
-	await setFlag2(PUSDINSPOOL.address, "1");
-	await setFlag2(PETHINSPOOL.address, "1");
-
-	await allow(PUSDMORPOOL.address, ETHAddress);
-	await allow(PUSDMORPOOL.address, NESTContract.address);
-	await allow(PETHMORPOOL.address, NESTContract.address);
-
-	await setMaxRate(PUSDMORPOOL.address, ETHAddress, "70000");
-	await setMaxRate(PUSDMORPOOL.address, NESTContract.address, "40000");
-	await setMaxRate(PETHMORPOOL.address, NESTContract.address, "40000");
-
-	await setK(PUSDMORPOOL.address, ETHAddress, "120000");
-	await setK(PUSDMORPOOL.address, NESTContract.address, "130000");
-	await setK(PETHMORPOOL.address, NESTContract.address, "130000");
-
-	await setR0(PUSDMORPOOL.address, ETHAddress, "2000");
-	await setR0(PUSDMORPOOL.address, NESTContract.address, "2000");
-	await setR0(PETHMORPOOL.address, NESTContract.address, "2000");
-
-	await setInfo(PUSDMORPOOL.address, USDTContract.address, USDTPToken);
-	await setInfo(PUSDINSPOOL.address, USDTContract.address, USDTPToken);
-
+	// set ntokenmapping-test
+	await NTOKENCONTROLLER.setNTokenMapping(USDTContract.address, NESTContract.address);
+	console.log(`18. NTOKENCONTROLLER.setNTokenMapping`);
+	// set price-test
+	await NESTQUARY.setAvg(USDTContract.address, USDTdec("2"));
+	await NESTQUARY.setAvg(NESTContract.address, ETHdec("3"));
+	await NESTQUARY.setNTokenMapping(USDTContract.address, NESTContract.address);
+	console.log(`19. NESTQUARY.setAvg`);
+	// set ptoken allow
+	await PTOKENFACTORY.setPTokenOperator(PUSDMORPOOL.address, "1");
+	await PTOKENFACTORY.setPTokenOperator(PETHMORPOOL.address, "1");
+	await PTOKENFACTORY.setPTokenOperator(PUSDINSPOOL.address, "1");
+	await PTOKENFACTORY.setPTokenOperator(PETHINSPOOL.address, "1");
+	console.log(`20. PTOKENFACTORY.setPTokenOperator`);
+	// set ins&mor mapping
+	await PUSDMORPOOL.setInsurancePool(PUSDINSPOOL.address);
+	await PETHMORPOOL.setInsurancePool(PETHINSPOOL.address);
+	await PUSDINSPOOL.setMortgagePool(PUSDMORPOOL.address);
+	await PETHINSPOOL.setMortgagePool(PETHMORPOOL.address);
+	console.log(`21. ins&mor mapping`);
+	// set pricecontroller address
+	await PUSDMORPOOL.setPriceController(PRICECONTROLLER.address);
+	await PETHMORPOOL.setPriceController(PRICECONTROLLER.address);
+	console.log(`22. setPriceController`);
+	// set mor config
+	await PUSDMORPOOL.setConfig(USDTPToken, "2400000", USDTContract.address, "1");
+	await PETHMORPOOL.setConfig(ETHPToken, "2400000", ETHAddress, "1");
+	console.log(`23. setConfig`);
+	// start ins and set ETHINS
+	await PETHINSPOOL.setETHIns(true);
+	await PETHINSPOOL.setFlag(1);
+	await PUSDINSPOOL.setFlag(1);
+	await PETHINSPOOL.setTokenInfo("LP-USD", "LP-USD");
+	await PUSDINSPOOL.setTokenInfo("LP-USD", "LP-USD");
+	await PETHINSPOOL.setInfo(ETHAddress, ETHPToken);
+	await PUSDINSPOOL.setInfo(USDTContract.address, USDTPToken);
+	console.log(`24. start ins`);
+	// set mor token info
+	await PUSDMORPOOL.setMortgageAllow(ETHAddress, true);
+	await PUSDMORPOOL.setMaxRate(ETHAddress, "70000");
+	await PUSDMORPOOL.setK(ETHAddress, "120000");
+	await PUSDMORPOOL.setR0(ETHAddress, "2000");
+	await PUSDMORPOOL.setMortgageAllow(NESTContract.address, true);
+	await PUSDMORPOOL.setMaxRate(NESTContract.address, "40000");
+	await PUSDMORPOOL.setK(NESTContract.address, "130000");
+	await PUSDMORPOOL.setR0(NESTContract.address, "2000");
+	console.log(`25. PUSDMORPOOL token info`);
+	await PETHMORPOOL.setMortgageAllow(NESTContract.address, true);
+	await PETHMORPOOL.setMaxRate(NESTContract.address, "40000");
+	await PETHMORPOOL.setK(NESTContract.address, "130000");
+	await PETHMORPOOL.setR0(NESTContract.address, "2000");
+	console.log(`26. PETHMORPOOL token info`);
+	// set reward token
+	await LPSTAKING.setRewardsToken(ASETContract.address);
+	console.log(`27. LPSTAKING.setRewardsToken`);
 
 	console.log(`USDTContract:"${USDTContract.address}",`);
 	console.log(`NESTContract:"${NESTContract.address}",`);
@@ -118,4 +161,15 @@ exports.deploy = async function () {
 	}
 
 	return contracts;
+}
+
+function sleep(numberMillis) {
+	var now = new Date();
+	var exitTime = now.getTime() + numberMillis;
+	while (true) {
+		now = new Date();
+		if (now.getTime() > exitTime){
+			return;
+		}
+	}
 }

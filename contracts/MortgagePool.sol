@@ -5,12 +5,10 @@ pragma experimental ABIEncoderV2;
 import "./iface/IParasset.sol";
 import "./iface/IInsurancePool.sol";
 import "./iface/IPriceController.sol";
-import "./iface/IERC20.sol";
 import './lib/TransferHelper.sol';
-import "./lib/ReentrancyGuard.sol";
 import "./ParassetBase.sol";
 
-contract MortgagePool is ParassetBase, ReentrancyGuard {
+contract MortgagePool is ParassetBase {
 
     Config _config;
     // mortgage asset address => mortgage config
@@ -159,28 +157,6 @@ contract MortgagePool is ParassetBase, ReentrancyGuard {
         }
     }
     
-    /// @dev Uniform accuracy
-    /// @param inputToken Initial token
-    /// @param inputTokenAmount Amount of token
-    /// @param outputToken Converted token
-    /// @return stability Amount of outputToken
-    function getDecimalConversion(
-        address inputToken, 
-        uint256 inputTokenAmount, 
-        address outputToken
-    ) public view returns(uint256) {
-    	uint256 inputTokenDec = 18;
-    	uint256 outputTokenDec = 18;
-    	if (inputToken != address(0x0)) {
-    		inputTokenDec = IERC20(inputToken).decimals();
-    	}
-
-    	if (outputToken != address(0x0)) {
-    		outputTokenDec = IERC20(outputToken).decimals();
-    	}
-    	return inputTokenAmount * (10**outputTokenDec) / (10**inputTokenDec);
-    }
-
     /// @dev View debt warehouse data
     /// @param mortgageToken mortgage asset address
     /// @param owner debt owner
@@ -277,6 +253,11 @@ contract MortgagePool is ParassetBase, ReentrancyGuard {
 
     //---------governance----------
 
+    /// @dev Set mortgage pool parameters
+    /// @param pTokenAdd pToken address
+    /// @param oneYear number of blocks in a year
+    /// @param underlyingTokenAdd underlying asset address
+    /// @param flag current state of the contract
     function setConfig(
         address pTokenAdd, 
         uint96 oneYear, 

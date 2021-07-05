@@ -4,12 +4,10 @@ pragma solidity ^0.8.4;
 import "./iface/IInsurancePool.sol";
 import "./iface/IParasset.sol";
 import "./iface/ILPStakingMiningPool.sol";
-import "./iface/IERC20.sol";
-import "./lib/ReentrancyGuard.sol";
 import './lib/TransferHelper.sol';
 import "./ParassetBase.sol";
 
-contract InsurancePool is ParassetBase, ReentrancyGuard, IInsurancePool {
+contract InsurancePool is ParassetBase, IInsurancePool {
 
     // negative account funds
     uint256 public _insNegative;
@@ -38,31 +36,43 @@ contract InsurancePool is ParassetBase, ReentrancyGuard, IInsurancePool {
     // mortgagePool address
     address public _mortgagePool;
 	// redemption cycle, 2 days
-	uint256 public _redemptionCycle = 2 days;
+	uint256 public _redemptionCycle;
 	// redemption duration, 7 days
-	uint256 public _waitCycle = 7 days;
+	uint256 public _waitCycle;
     // rate(2/1000)
-    uint256 public _feeRate = 2;
+    uint256 public _feeRate;
     // is ETH insPool
-    bool public _ethIns = false;
+    bool public _ethIns;
 
     // staking address
     ILPStakingMiningPool lpStakingMiningPool;
 
     // ERC20 - totalSupply
-    uint256 public totalSupply = 0;
+    uint256 public totalSupply;
     // ERC20 - name                                     
-    string public name = "";
+    string public name;
     // ERC20 - symbol
-    string public symbol = "";
+    string public symbol;
     // ERC20 - decimals
-    uint8 public decimals = 18;
+    uint8 public decimals;
 
     event Destroy(uint256 amount, address account);
     event Issuance(uint256 amount, address account);
     event Negative(uint256 amount, uint256 allValue);
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint256 value);
+
+    function initialize(address governance) public override {
+        super.initialize(governance);
+        _redemptionCycle = 2 days;
+        _waitCycle = 7 days;
+        _feeRate = 2;
+        _ethIns = false;
+        totalSupply = 0;
+        name = "";
+        symbol = "";
+        decimals = 18;
+    }
 
 	//---------modifier---------
 
@@ -169,29 +179,11 @@ contract InsurancePool is ParassetBase, ReentrancyGuard, IInsurancePool {
         }
     }
 
-	/// @dev Uniform accuracy
-    /// @param inputToken Initial token
-    /// @param inputTokenAmount Amount of token
-    /// @param outputToken Converted token
-    /// @return stability Amount of outputToken
-    function getDecimalConversion(
-        address inputToken, 
-        uint256 inputTokenAmount, 
-        address outputToken
-    ) public view returns(uint256) {
-    	uint256 inputTokenDec = 18;
-    	uint256 outputTokenDec = 18;
-    	if (inputToken != address(0x0)) {
-    		inputTokenDec = IERC20(inputToken).decimals();
-    	}
-    	if (outputToken != address(0x0)) {
-    		outputTokenDec = IERC20(outputToken).decimals();
-    	}
-    	return inputTokenAmount * (10**outputTokenDec) / (10**inputTokenDec);
-    }
-
     //---------governance----------
 
+    /// @dev Set token name
+    /// @param _name token name
+    /// @param _symbol token symbol
     function setTokenInfo(string memory _name, string memory _symbol) external onlyGovernance {
         name = _name;
         symbol = _symbol;
@@ -208,6 +200,7 @@ contract InsurancePool is ParassetBase, ReentrancyGuard, IInsurancePool {
     	_mortgagePool = add;
     }
 
+    /// @dev Set the staking contract address
     function setLPStakingMiningPool(address add) external onlyGovernance {
         lpStakingMiningPool = ILPStakingMiningPool(add);
     }

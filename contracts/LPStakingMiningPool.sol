@@ -2,12 +2,12 @@
 pragma solidity ^0.8.4;
 
 import './lib/TransferHelper.sol';
-import "./lib/ReentrancyGuard.sol";
+// import "./lib/ReentrancyGuard.sol";
 import "./iface/ILPStakingMiningPool.sol";
 import "./iface/IERC20.sol";
 import "./ParassetBase.sol";
 
-contract LPStakingMiningPool is ParassetBase, ReentrancyGuard, ILPStakingMiningPool {
+contract LPStakingMiningPool is ParassetBase, ILPStakingMiningPool {
 
 	// ASET
     address public _rewardsToken;
@@ -50,7 +50,7 @@ contract LPStakingMiningPool is ParassetBase, ReentrancyGuard, ILPStakingMiningP
         }
         return nowBlock;
     }
-
+    
     function getBalance(address stakingToken, address account) external view override returns(uint256) {
         return _tokenChannel[stakingToken].accounts[account].balance;
     }
