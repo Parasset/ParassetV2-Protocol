@@ -51,10 +51,21 @@ contract LPStakingMiningPool is ParassetBase, ILPStakingMiningPool {
         return nowBlock;
     }
     
+    /// @dev Get the amount of locked funds
+    /// @param stakingToken staking token address
+    /// @param account user address
+    /// @return the amount of locked staked token
     function getBalance(address stakingToken, address account) external view override returns(uint256) {
         return _tokenChannel[stakingToken].accounts[account].balance;
     }
 
+    /// @dev Get the lock channel information
+    /// @param stakingToken staking token address
+    /// @return lastUpdateBlock the height of the recently operated block
+    /// @return endBlock mining end block
+    /// @return rewardRate mining efficiency per block
+    /// @return rewardPerTokenStored receivable mine per share
+    /// @return totalSupply total locked position
     function getChannelInfo(
         address stakingToken
     ) 
@@ -73,10 +84,30 @@ contract LPStakingMiningPool is ParassetBase, ILPStakingMiningPool {
                 channelInfo.totalSupply);
     }
 
+    /// @dev Get the estimated number of receivables
+    /// @param stakingToken staking token address
+    /// @param account user address
+    /// @return the estimated number of receivables
     function getAccountReward(address stakingToken, address account) external view override returns(uint256) {
         Channel storage channelInfo = _tokenChannel[stakingToken];
         (,,uint256 userReward) = calcReward(channelInfo, account);
         return userReward;
+    }
+
+    /// @dev Get the account data
+    /// @param stakingToken staking token address
+    /// @param account user address
+    /// @return balance the amount of locked staked token
+    /// @return userRewardPerTokenPaid receivable mine per share
+    function getAccountInfo(
+        address stakingToken, 
+        address account
+    ) external view returns(
+        uint256 balance, 
+        uint256 userRewardPerTokenPaid
+    ) {
+        Account memory accountInfo = _tokenChannel[stakingToken].accounts[account];
+        return (accountInfo.balance, accountInfo.userRewardPerTokenPaid);
     }
 
     function calcReward(
@@ -103,25 +134,18 @@ contract LPStakingMiningPool is ParassetBase, ILPStakingMiningPool {
                       / 1e18;
     }
 
-    function getAccountInfo(
-        address stakingToken, 
-        address account
-    ) 
-    external view returns(
-        uint256 balance, 
-        uint256 userRewardPerTokenPaid
-    ) {
-        Account memory accountInfo = _tokenChannel[stakingToken].accounts[account];
-        return (accountInfo.balance, accountInfo.userRewardPerTokenPaid);
-    }
-
-
     //---------governance----------
 
+    /// @dev Set up mining token
     function setRewardsToken(address add) external onlyGovernance {
         _rewardsToken = add;
     }
 
+    /// @dev Increase mining token (open mining)
+    /// @param tokenAmount increase the number of token
+    /// @param from mining token transfer address
+    /// @param rewardRate mining efficiency per block
+    /// @param stakingToken staking token address
     function addToken(
         uint256 tokenAmount, 
         address from, 
@@ -135,14 +159,19 @@ contract LPStakingMiningPool is ParassetBase, ILPStakingMiningPool {
     	channelInfo.endBlock = uint32(tokenAmount / rewardRate + block.number);
     }
 
-    function subToken(
-        address token, 
-        uint256 amount, 
-        address to
-    ) external onlyGovernance {
-        TransferHelper.safeTransfer(token, to, amount);
-    }
+    // function subToken(
+    //     address token, 
+    //     uint256 amount, 
+    //     address to
+    // ) external onlyGovernance {
+    //     TransferHelper.safeTransfer(token, to, amount);
+    // }
 
+    /// @dev Set the lock channel information
+    /// @param lastUpdateBlock the height of the recently operated block
+    /// @param endBlock mining end block
+    /// @param rewardRate mining efficiency per block
+    /// @param stakingToken staking token address
     function setChannelInfo(
         uint32 lastUpdateBlock, 
         uint32 endBlock, 
@@ -156,6 +185,9 @@ contract LPStakingMiningPool is ParassetBase, ILPStakingMiningPool {
 
     //---------transaction---------
 
+    /// @dev Stake
+    /// @param amount amount of stake token
+    /// @param stakingToken staking token address
     function stake(uint256 amount, address stakingToken) external override nonReentrant {
         require(amount > 0, "Log:LPStakingMiningPool:!0");
 
@@ -168,6 +200,9 @@ contract LPStakingMiningPool is ParassetBase, ILPStakingMiningPool {
         TransferHelper.safeTransferFrom(stakingToken, msg.sender, address(this), amount);
     }
 
+    /// @dev Withdraw
+    /// @param amount amount of stake token
+    /// @param stakingToken staking token address
     function withdraw(uint256 amount, address stakingToken) external override nonReentrant {
         require(amount > 0, "Log:LPStakingMiningPool:!0");
 
@@ -180,6 +215,8 @@ contract LPStakingMiningPool is ParassetBase, ILPStakingMiningPool {
     	TransferHelper.safeTransfer(stakingToken, msg.sender, amount);
     }
 
+    /// @dev Receive income
+    /// @param stakingToken staking token address
     function getReward(address stakingToken) external override nonReentrant {
         Channel storage channelInfo = _tokenChannel[stakingToken];
         _gerReward(channelInfo, msg.sender);

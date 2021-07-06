@@ -493,6 +493,7 @@ contract MortgagePool is ParassetBase {
         // Get the price
         (uint256 tokenPrice, uint256 pTokenPrice) = getPriceForPToken(mortgageToken, msg.value);
 
+        TransferHelper.safeTransferFrom(_config.pTokenAdd, address(msg.sender), address(_insurancePool), amount);
         // Calculate the stability fee
         transferFee(pLedger, tokenPrice, pTokenPrice, morInfo.r0);
 
@@ -513,7 +514,8 @@ contract MortgagePool is ParassetBase {
     function liquidation(
         address mortgageToken,
         address account,
-        uint256 amount) public payable outOnly nonReentrant {
+        uint256 amount
+    ) public payable outOnly nonReentrant {
         MortgageInfo memory morInfo = _mortageConfig[mortgageToken];
     	require(morInfo.mortgageAllow, "Log:MortgagePool:!mortgageAllow");
     	PersonalLedger storage pLedger = _ledgerList[mortgageToken].ledger[address(account)];
