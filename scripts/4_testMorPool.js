@@ -19,10 +19,15 @@ async function main() {
 	await NESTContract.approve(PUSDMorPool.address, ETHdec(9999999));
 	await PUSDMorPool.coin(NESTContract.address, ETHdec(10), 39, {value:priceFee});
 	ledger = await getLedger(PUSDMorPool.address, NESTContract.address, accounts[0].address);
+
+	if (ledger[0] * 2 / 3 * 0.39 == ledger[1]) {
+		console.log("true");
+	} else {console.log("wrong");}
+	
 	mortgageRate = await PUSDMorPool.getMortgageRate(ledger[0], ledger[1], ETHdec(3), ETHdec(2));
 	console.log(`mortgageRate:${mortgageRate}`);
 	await getInfoRealTime(PUSDMorPool.address, NESTContract.address, ETHdec(3), USDTdec(2), 40000, accounts[0].address);
-
+	
 	await PUSDMorPool.supplement(NESTContract.address, ETHdec(10), {value:priceFee});
 	ledger = await getLedger(PUSDMorPool.address, NESTContract.address, accounts[0].address);
 	mortgageRate = await PUSDMorPool.getMortgageRate(ledger[0], ledger[1], ETHdec(3), ETHdec(2));

@@ -56,16 +56,16 @@ contract InsurancePool is ParassetBase, IInsurancePool {
     // ERC20 - decimals
     uint8 public decimals;
 
-    event Destroy(uint256 amount, address account);
-    event Issuance(uint256 amount, address account);
+    // event Destroy(uint256 amount, address account);
+    // event Issuance(uint256 amount, address account);
     event Negative(uint256 amount, uint256 allValue);
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint256 value);
 
     function initialize(address governance) public override {
         super.initialize(governance);
-        _redemptionCycle = 2 days;
-        _waitCycle = 7 days;
+        _redemptionCycle = 15 minutes;
+        _waitCycle = 30 minutes;
         _feeRate = 2;
         _ethIns = false;
         totalSupply = 0;
@@ -337,7 +337,7 @@ contract InsurancePool is ParassetBase, IInsurancePool {
         // Calculate LP
     	uint256 insAmount = 0;
     	uint256 insTotal = totalSupply;
-        uint256 allBalance = tokenBalance - pTokenBalance;
+        uint256 allBalance = tokenBalance + pTokenBalance;
     	if (insTotal != 0) {
             // Insurance pool assets must be greater than 0
             require(allBalance > _insNegative, "Log:InsurancePool:allBalanceNotEnough");
@@ -479,7 +479,8 @@ contract InsurancePool is ParassetBase, IInsurancePool {
         require(balances[account] >= amount, "Log:InsurancePool:!destroy");
         balances[account] = balances[account] - amount;
         totalSupply = totalSupply - amount;
-        emit Destroy(amount, account);
+        // emit Destroy(amount, account);
+        emit Transfer(account, address(0x0), amount);
     }
 
     /// @dev Additional LP issuance
@@ -489,7 +490,8 @@ contract InsurancePool is ParassetBase, IInsurancePool {
                       address account) private {
         balances[account] = balances[account] + amount;
         totalSupply = totalSupply + amount;
-        emit Issuance(amount, account);
+        // emit Issuance(amount, account);
+        emit Transfer(address(0x0), account, amount);
     }
 
     function transfer(address to, uint256 value) public returns (bool) {
@@ -528,22 +530,22 @@ contract InsurancePool is ParassetBase, IInsurancePool {
     }
 
     function _transfer(address from, address to, uint256 value) internal {
-        // // Update redemption time
-        // updateLatestTime();
+        // Update redemption time
+        updateLatestTime();
 
-        // // Thaw LP
-        // Frozen storage frozenInfo = frozenIns[address(msg.sender)];
-        // if (block.timestamp > frozenInfo.time) {
-        //     frozenInfo.amount = 0;
-        // }
+        // Thaw LP
+        Frozen storage frozenInfo = frozenIns[address(msg.sender)];
+        if (block.timestamp > frozenInfo.time) {
+            frozenInfo.amount = 0;
+        }
 
         balances[from] = balances[from] - value;
         balances[to] = balances[to] + value;
         emit Transfer(from, to, value);
 
-        // if (to != address(lpStakingMiningPool)) {
-        //     require(getAllLP(address(msg.sender)) >= frozenInfo.amount, "Log:InsurancePool:frozen");
-        // }
+        if (to != address(lpStakingMiningPool)) {
+            require(getAllLP(address(msg.sender)) >= frozenInfo.amount, "Log:InsurancePool:frozen");
+        }
     }
 
     function addETH() public payable {}
