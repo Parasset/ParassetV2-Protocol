@@ -17,11 +17,13 @@ async function main() {
 	// await USDTToken.approve(PUSDIns.address, USDTdec("9999999999"));
 	// console.log("approve success");
 
-	await PUSDIns.subscribeIns(USDTdec("10"));
-	console.log("subscribeIns success");
+	// await PUSDIns.subscribeIns(USDTdec("10"));
+	// console.log("subscribeIns success");
 
-	await PUSDIns.exchangePTokenToUnderlying(ETHdec("1"));
-	console.log("exchangePTokenToUnderlying success");
+	// await PUSDIns.exchangePTokenToUnderlying(ETHdec("1"));
+	// console.log("exchangePTokenToUnderlying success");
+
+	await PUSDIns.exchangeUnderlyingToPToken(USDTdec("10000"));
 }
 
 main()

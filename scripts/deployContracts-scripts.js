@@ -125,6 +125,10 @@ exports.deploy = async function () {
 	// set reward token
 	await LPSTAKING.setRewardsToken(ASETContract.address);
 	console.log(`27. LPSTAKING.setRewardsToken`);
+	// set staking address in ins
+	await PUSDINSPOOL.setLPStakingMiningPool(LPSTAKING.address);
+	await PETHINSPOOL.setLPStakingMiningPool(LPSTAKING.address);
+	console.log(`28. INSPOOL.setLPStakingMiningPool`);
 
 	console.log(`USDTContract:"${USDTContract.address}",`);
 	console.log(`NESTContract:"${NESTContract.address}",`);
