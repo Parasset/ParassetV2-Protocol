@@ -1,0 +1,139 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "INestPriceFacade",
+  "sourceName": "contracts/iface/INestPriceFacade.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "getConfig",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint16",
+              "name": "singleFee",
+              "type": "uint16"
+            },
+            {
+              "internalType": "uint16",
+              "name": "doubleFee",
+              "type": "uint16"
+            },
+            {
+              "internalType": "uint8",
+              "name": "normalFlag",
+              "type": "uint8"
+            }
+          ],
+          "internalType": "struct INestPriceFacade.Config",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "tokenAddress",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "paybackAddress",
+          "type": "address"
+        }
+      ],
+      "name": "triggeredPriceInfo",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "blockNumber",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "price",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "avgPrice",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "sigmaSQ",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "tokenAddress",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "paybackAddress",
+          "type": "address"
+        }
+      ],
+      "name": "triggeredPriceInfo2",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "blockNumber",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "price",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "avgPrice",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "sigmaSQ",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "ntokenBlockNumber",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "ntokenPrice",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "ntokenAvgPrice",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "ntokenSigmaSQ",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "payable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}
