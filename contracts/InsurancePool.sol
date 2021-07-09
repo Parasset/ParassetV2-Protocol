@@ -114,8 +114,16 @@ contract InsurancePool is ParassetBase, IInsurancePool {
     /// @dev View the personal LP
     /// @param add user address
     /// @return personal LP
-    function getBalances(address add) external view returns(uint256) {
+    function balanceOf(address add) external view returns (uint256) {
         return balances[add];
+    }
+
+    /// @dev View the authorization limit
+    /// @param owner token owner address
+    /// @param spender authorized target address
+    /// @return authorization limit
+    function allowance(address owner, address spender) external view returns (uint256) {
+        return allowed[owner][spender];
     }
 
     /// @dev View redemption period, next time
