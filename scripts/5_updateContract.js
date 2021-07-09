@@ -9,6 +9,7 @@ async function main() {
 	const InsurancePool = await ethers.getContractFactory("InsurancePool");
 
 	const PUSDINSPOOL = await upgrades.upgradeProxy(contracts.PUSDInsPool, InsurancePool);
+	const PETHINSPOOL = await upgrades.upgradeProxy(contracts.PETHInsPool, InsurancePool);
 }
 
 main()

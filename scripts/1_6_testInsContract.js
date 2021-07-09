@@ -12,6 +12,7 @@ async function main() {
 	const USDTToken = await USDT.attach(contracts.USDTContract);
 	const PUSD = await PToken.attach(contracts.PUSD);
 	const PUSDIns = await InsurancePool.attach(contracts.PUSDInsPool);
+	const PETHIns = await InsurancePool.attach(contracts.PETHInsPool);
 
 	// await PUSD.approve(PUSDIns.address, ETHdec("9999999999"));
 	// await USDTToken.approve(PUSDIns.address, USDTdec("9999999999"));
@@ -20,10 +21,12 @@ async function main() {
 	// await PUSDIns.subscribeIns(USDTdec("10"));
 	// console.log("subscribeIns success");
 
+	await PETHIns.subscribeIns(ETHdec("1"), {value:ETHdec("1")});
+
 	// await PUSDIns.exchangePTokenToUnderlying(ETHdec("1"));
 	// console.log("exchangePTokenToUnderlying success");
 
-	await PUSDIns.exchangeUnderlyingToPToken(USDTdec("10000"));
+	// await PUSDIns.exchangeUnderlyingToPToken(USDTdec("10000"));
 }
 
 main()

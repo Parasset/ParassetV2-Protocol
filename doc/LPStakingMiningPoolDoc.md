@@ -37,6 +37,40 @@ account | 用户地址
 ---|---
 --- | 预计获得出矿
 
+#### 查询lp挖矿信息
+
+```
+    /// @dev Get the lock channel information
+    /// @param stakingToken staking token address
+    /// @return lastUpdateBlock the height of the recently operated block
+    /// @return endBlock mining end block
+    /// @return rewardRate mining efficiency per block
+    /// @return rewardPerTokenStored receivable mine per share
+    /// @return totalSupply total locked position
+    function getChannelInfo(
+        address stakingToken
+    ) 
+    external view override returns (
+        uint256 lastUpdateBlock, 
+        uint256 endBlock, 
+        uint256 rewardRate, 
+        uint256 rewardPerTokenStored, 
+        uint256 totalSupply
+    ) 
+```
+
+参数 | 描述
+---|---
+stakingToken | 锁仓token地址
+
+返回值 | 描述
+---|---
+lastUpdateBlock | 最新操作区块
+endBlock | 挖矿结束区块
+rewardRate | 区块出矿量
+rewardPerTokenStored | 每份lp分配的矿
+totalSupply | 总锁仓量
+
 
 ### 交易
 - 阶段挖矿，挖矿结束后继续锁仓将不会出矿。等到下一个挖矿阶段才继续出矿。
