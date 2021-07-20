@@ -6,21 +6,15 @@ import "./iface/IERC20.sol";
 
 contract ParassetBase {
 
-	// The values being non-zero value makes deployment a bit more expensive,
-    // but in exchange the refund on every call to nonReentrant will be lower in
-    // amount. Since refunds are capped to a percentage of the total
-    // transaction's gas, it is best to keep them low in cases like this one, to
-    // increase the likelihood of the full refund coming into effect.
-    uint256 private constant _NOT_ENTERED = 1;
-    uint256 private constant _ENTERED = 2;
-    uint256 private _status;
+    // Lock flag
+    uint256 _locked;
 
 	/// @dev To support open-zeppelin/upgrades
     /// @param governance IParassetGovernance implementation contract address
-    function initialize(address governance) virtual public {
+    function initialize(address governance) public virtual {
         require(_governance == address(0), 'Log:ParassetBase!initialize');
         _governance = governance;
-        _status = _NOT_ENTERED;
+        _locked = 0;
     }
 
     /// @dev IParassetGovernance implementation contract address
@@ -65,16 +59,9 @@ contract ParassetBase {
     }
 
     modifier nonReentrant() {
-        // On the first call to nonReentrant, _notEntered will be true
-        require(_status != _ENTERED, "ReentrancyGuard: reentrant call");
-
-        // Any calls to nonReentrant after this point will fail
-        _status = _ENTERED;
-
+        require(_locked == 0, "Log:ParassetBase:!_locked");
+        _locked = 1;
         _;
-
-        // By storing the original value once again, a refund is triggered (see
-        // https://eips.ethereum.org/EIPS/eip-2200)
-        _status = _NOT_ENTERED;
+        _locked = 0;
     }
 }

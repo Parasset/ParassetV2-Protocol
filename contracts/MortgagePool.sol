@@ -83,6 +83,7 @@ contract MortgagePool is ParassetBase {
     /// @param blockHeight The block height of the last operation
     /// @param rate Mortgage rate(Initial mortgage rate,Mortgage rate after the last operation)
     /// @param nowRate Current mortgage rate (not including stability fee)
+    /// @param r0Value Market base interest rate
     /// @return fee
     function getFee(
         uint256 parassetAssets, 
@@ -143,10 +144,19 @@ contract MortgagePool is ParassetBase {
         if (pLedger.mortgageAssets == 0 && pLedger.parassetAssets == 0) {
             return (0,0,0,0);
         }
-        uint256 pTokenPrice = getDecimalConversion(_config.underlyingTokenAdd, uTokenPrice, _config.pTokenAdd);
+        uint256 pTokenPrice = getDecimalConversion(_config.underlyingTokenAdd, 
+                                                   uTokenPrice, 
+                                                   _config.pTokenAdd);
         uint256 tokenPriceAmount = tokenPrice;
-        fee = getFee(pLedger.parassetAssets, pLedger.blockHeight, pLedger.rate, getMortgageRate(pLedger.mortgageAssets, pLedger.parassetAssets, tokenPriceAmount, pTokenPrice), _mortageConfig[mToken].r0);
-        mortgageRate = getMortgageRate(pLedger.mortgageAssets, pLedger.parassetAssets + fee, tokenPriceAmount, pTokenPrice);
+        fee = getFee(pLedger.parassetAssets, 
+                     pLedger.blockHeight, 
+                     pLedger.rate, 
+                     getMortgageRate(pLedger.mortgageAssets, pLedger.parassetAssets, tokenPriceAmount, pTokenPrice), 
+                     _mortageConfig[mToken].r0);
+        mortgageRate = getMortgageRate(pLedger.mortgageAssets, 
+                                       pLedger.parassetAssets + fee, 
+                                       tokenPriceAmount, 
+                                       pTokenPrice);
         uint256 mRateNum = maxRateNum;
         if (mortgageRate >= mRateNum) {
             maxSubM = 0;
@@ -176,7 +186,11 @@ contract MortgagePool is ParassetBase {
         bool created
     ) {
     	PersonalLedger memory pLedger = _ledgerList[mortgageToken].ledger[address(owner)];
-    	return (pLedger.mortgageAssets, pLedger.parassetAssets, pLedger.blockHeight, pLedger.rate, pLedger.created);
+    	return (pLedger.mortgageAssets, 
+                pLedger.parassetAssets, 
+                pLedger.blockHeight, 
+                pLedger.rate, 
+                pLedger.created);
     }
 
     /// @dev View the insurance pool address
@@ -372,6 +386,7 @@ contract MortgagePool is ParassetBase {
         pLedger.blockHeight = uint160(block.number);
         pLedger.rate = getMortgageRate(pLedger.mortgageAssets, pLedger.parassetAssets, tokenPrice, pTokenPrice);
         emit LedgerLog(mortgageToken, pLedger.mortgageAssets, pLedger.parassetAssets, tokenPrice, pTokenPrice, pLedger.rate);
+
         // Tag created
         if (pLedger.created == false) {
             _ledgerList[mortgageToken].ledgerArray.push(address(msg.sender));
@@ -510,10 +525,12 @@ contract MortgagePool is ParassetBase {
     /// @param mortgageToken mortgage asset address
     /// @param account debt owner address
     /// @param amount amount of mortgaged assets
+    /// @param pTokenAmountLimit pay ptoken limit
     function liquidation(
         address mortgageToken,
         address account,
-        uint256 amount
+        uint256 amount,
+        uint256 pTokenAmountLimit
     ) public payable outOnly nonReentrant {
         MortgageInfo memory morInfo = _mortageConfig[mortgageToken];
     	require(morInfo.mortgageAllow, "Log:MortgagePool:!mortgageAllow");
@@ -527,11 +544,12 @@ contract MortgagePool is ParassetBase {
     	(uint256 tokenPrice, uint256 pTokenPrice) = getPriceForPToken(mortgageToken, msg.value);
         
         // Judging the liquidation line
-        checkLine(pLedger, tokenPrice, pTokenPrice, morInfo.k, morInfo.r0);
+        _checkLine(pLedger, tokenPrice, pTokenPrice, morInfo.k, morInfo.r0);
 
         // Calculate the amount of ptoken
         uint256 pTokenAmount = amount * pTokenPrice * 90 / (tokenPrice * 100);
     	// Transfer to ptoken
+        require(pTokenAmount <= pTokenAmountLimit, "Log:MortgagePool:!pTokenAmountLimit");
         TransferHelper.safeTransferFrom(_config.pTokenAdd, address(msg.sender), address(_insurancePool), pTokenAmount);
 
     	// Eliminate negative accounts
@@ -547,6 +565,7 @@ contract MortgagePool is ParassetBase {
     	pLedger.mortgageAssets = mortgageAssets - amount;
         pLedger.parassetAssets = parassetAssets - offset;
         emit LedgerLog(mortgageToken, pLedger.mortgageAssets, pLedger.parassetAssets, tokenPrice, pTokenPrice, pLedger.rate);
+
         // MortgageAssets liquidation, mortgage rate and block number are not updated
         if (pLedger.mortgageAssets == 0) {
             pLedger.parassetAssets = 0;
@@ -566,7 +585,7 @@ contract MortgagePool is ParassetBase {
     /// @param pLedger debt warehouse ledger
     /// @param tokenPrice Mortgage asset price(1 ETH = ? token)
     /// @param pTokenPrice PToken price(1 ETH = ? pToken)
-    function checkLine(
+    function _checkLine(
         PersonalLedger memory pLedger, 
         uint256 tokenPrice, 
         uint256 pTokenPrice, 
@@ -575,6 +594,7 @@ contract MortgagePool is ParassetBase {
     ) public view {
         uint256 parassetAssets = pLedger.parassetAssets;
         uint256 mortgageAssets = pLedger.mortgageAssets;
+
         // The current mortgage rate cannot exceed the liquidation line
         uint256 mortgageRate = getMortgageRate(pLedger.mortgageAssets, parassetAssets, tokenPrice, pTokenPrice);
         uint256 fee = 0;
@@ -597,9 +617,18 @@ contract MortgagePool is ParassetBase {
         uint256 rate = pLedger.rate;
         uint160 blockHeight = pLedger.blockHeight;
         if (parassetAssets > 0 && uint160(block.number) > blockHeight && blockHeight != 0) {
-            uint256 fee = getFee(parassetAssets, blockHeight, rate, getMortgageRate(mortgageAssets, parassetAssets, tokenPrice, pTokenPrice), r0Value);
+            uint256 fee = getFee(parassetAssets, 
+                                 blockHeight, 
+                                 rate, 
+                                 getMortgageRate(mortgageAssets, parassetAssets, tokenPrice, pTokenPrice), 
+                                 r0Value);
+
             // The stability fee is transferred to the insurance pool
-            TransferHelper.safeTransferFrom(_config.pTokenAdd, address(msg.sender), address(_insurancePool), fee + otherAmount);
+            TransferHelper.safeTransferFrom(_config.pTokenAdd, 
+                                            address(msg.sender), 
+                                            address(_insurancePool), 
+                                            fee + otherAmount);
+
             // Eliminate negative accounts
             _insurancePool.eliminate();
             emit FeeValue(fee);
@@ -618,7 +647,9 @@ contract MortgagePool is ParassetBase {
         uint256 tokenPrice, 
         uint256 pTokenPrice
     ) {
-        (tokenPrice, pTokenPrice) = _quary.getPriceForPToken{value:priceValue}(mortgageToken, _config.underlyingTokenAdd, msg.sender);   
+        (tokenPrice, pTokenPrice) = _quary.getPriceForPToken{value:priceValue}(mortgageToken, 
+                                                                               _config.underlyingTokenAdd,
+                                                                               msg.sender);   
     }
 
 }

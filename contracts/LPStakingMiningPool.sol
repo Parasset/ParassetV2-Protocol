@@ -2,7 +2,6 @@
 pragma solidity ^0.8.4;
 
 import './lib/TransferHelper.sol';
-// import "./lib/ReentrancyGuard.sol";
 import "./iface/ILPStakingMiningPool.sol";
 import "./iface/IERC20.sol";
 import "./ParassetBase.sol";
@@ -55,7 +54,10 @@ contract LPStakingMiningPool is ParassetBase, ILPStakingMiningPool {
     /// @param stakingToken staking token address
     /// @param account user address
     /// @return the amount of locked staked token
-    function getBalance(address stakingToken, address account) external view override returns(uint256) {
+    function getBalance(
+        address stakingToken, 
+        address account
+    ) external view override returns(uint256) {
         return _tokenChannel[stakingToken].accounts[account].balance;
     }
 
@@ -68,8 +70,7 @@ contract LPStakingMiningPool is ParassetBase, ILPStakingMiningPool {
     /// @return totalSupply total locked position
     function getChannelInfo(
         address stakingToken
-    ) 
-    external view override returns (
+    ) external view override returns (
         uint256 lastUpdateBlock, 
         uint256 endBlock, 
         uint256 rewardRate, 
@@ -88,9 +89,12 @@ contract LPStakingMiningPool is ParassetBase, ILPStakingMiningPool {
     /// @param stakingToken staking token address
     /// @param account user address
     /// @return the estimated number of receivables
-    function getAccountReward(address stakingToken, address account) external view override returns(uint256) {
+    function getAccountReward(
+        address stakingToken, 
+        address account
+    ) external view override returns(uint256) {
         Channel storage channelInfo = _tokenChannel[stakingToken];
-        (,,uint256 userReward) = calcReward(channelInfo, account);
+        (,,uint256 userReward) = _calcReward(channelInfo, account);
         return userReward;
     }
 
@@ -110,7 +114,7 @@ contract LPStakingMiningPool is ParassetBase, ILPStakingMiningPool {
         return (accountInfo.balance, accountInfo.userRewardPerTokenPaid);
     }
 
-    function calcReward(
+    function _calcReward(
         Channel storage channelInfo,
         address account
     ) private view returns(
@@ -158,14 +162,6 @@ contract LPStakingMiningPool is ParassetBase, ILPStakingMiningPool {
         channelInfo.rewardRate = rewardRate;
     	channelInfo.endBlock = uint32(tokenAmount / rewardRate + block.number);
     }
-
-    // function subToken(
-    //     address token, 
-    //     uint256 amount, 
-    //     address to
-    // ) external onlyGovernance {
-    //     TransferHelper.safeTransfer(token, to, amount);
-    // }
 
     /// @dev Set the lock channel information
     /// @param lastUpdateBlock the height of the recently operated block
@@ -223,7 +219,7 @@ contract LPStakingMiningPool is ParassetBase, ILPStakingMiningPool {
     }
 
     function _gerReward(Channel storage channelInfo, address to) private {
-        (uint32 lastUpdateBlock, uint96 rewardPerTokenStored, uint256 userReward) = calcReward(channelInfo, to);
+        (uint32 lastUpdateBlock, uint96 rewardPerTokenStored, uint256 userReward) = _calcReward(channelInfo, to);
 
         channelInfo.rewardPerTokenStored = rewardPerTokenStored;
         channelInfo.lastUpdateBlock = lastUpdateBlock;

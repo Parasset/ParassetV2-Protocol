@@ -92,7 +92,7 @@ contract PTokenFactory is ParassetBase, IPTokenFactory {
 
     /// @dev Create PToken
     /// @param name token name
-    function createPtoken(string memory name) public onlyGovernance {
+    function createPtoken(string memory name) external onlyGovernance {
     	PToken pToken = new PToken(strConcat("PToken_", name), strConcat("P", name));
     	_pTokenMapping[address(pToken)] = true;
         _pTokenList.push(address(pToken));

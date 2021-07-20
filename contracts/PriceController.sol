@@ -63,7 +63,7 @@ contract PriceController is IPriceController {
         address token, 
         address uToken,
         address payback
-    ) override public payable returns (
+    ) public payable override returns (
         uint256 tokenPrice, 
         uint256 pTokenPrice
     ) {

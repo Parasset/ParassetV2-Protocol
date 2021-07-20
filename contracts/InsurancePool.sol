@@ -6,8 +6,9 @@ import "./iface/IParasset.sol";
 import "./iface/ILPStakingMiningPool.sol";
 import './lib/TransferHelper.sol';
 import "./ParassetBase.sol";
+import "./ParassetERC20.sol";
 
-contract InsurancePool is ParassetBase, IInsurancePool {
+contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
 
     // negative account funds
     uint256 public _insNegative;
@@ -19,10 +20,6 @@ contract InsurancePool is ParassetBase, IInsurancePool {
                              // = 2: redemption only
     // user address => freeze LP data
     mapping(address => Frozen) frozenIns;
-    // user address => balances
-    mapping(address => uint256) balances;
-    // trom address => to address => amount
-    mapping(address => mapping (address => uint256)) allowed;
     struct Frozen {
         // frozen quantity
         uint256 amount;
@@ -47,20 +44,7 @@ contract InsurancePool is ParassetBase, IInsurancePool {
     // staking address
     ILPStakingMiningPool lpStakingMiningPool;
 
-    // ERC20 - totalSupply
-    uint256 public totalSupply;
-    // ERC20 - name                                     
-    string public name;
-    // ERC20 - symbol
-    string public symbol;
-    // ERC20 - decimals
-    uint8 public decimals;
-
-    // event Destroy(uint256 amount, address account);
-    // event Issuance(uint256 amount, address account);
     event Negative(uint256 amount, uint256 allValue);
-    event Transfer(address indexed from, address indexed to, uint256 value);
-    event Approval(address indexed owner, address indexed spender, uint256 value);
 
     function initialize(address governance) public override {
         super.initialize(governance);
@@ -68,10 +52,9 @@ contract InsurancePool is ParassetBase, IInsurancePool {
         _waitCycle = 30 minutes;
         _feeRate = 2;
         _ethIns = false;
-        totalSupply = 0;
-        name = "";
-        symbol = "";
-        decimals = 18;
+        _totalSupply = 0;
+        _name = "";
+        _symbol = "";
     }
 
 	//---------modifier---------
@@ -93,12 +76,6 @@ contract InsurancePool is ParassetBase, IInsurancePool {
 
     //---------view---------
 
-    /// @dev View the total LP
-    /// @return total LP
-    function getTotalSupply() external view returns(uint256) {
-        return totalSupply;
-    }
-
     /// @dev View the lpStakingMiningPool address
     /// @return lpStakingMiningPool address
     function getLPStakingMiningPool() external view returns(address) {
@@ -108,22 +85,7 @@ contract InsurancePool is ParassetBase, IInsurancePool {
     /// @dev View the all lp 
     /// @return all lp 
     function getAllLP(address user) public view returns(uint256) {
-        return balances[user] + lpStakingMiningPool.getBalance(address(this), user);
-    }
-
-    /// @dev View the personal LP
-    /// @param add user address
-    /// @return personal LP
-    function balanceOf(address add) external view returns (uint256) {
-        return balances[add];
-    }
-
-    /// @dev View the authorization limit
-    /// @param owner token owner address
-    /// @param spender authorized target address
-    /// @return authorization limit
-    function allowance(address owner, address spender) external view returns (uint256) {
-        return allowed[owner][spender];
+        return _balances[user] + lpStakingMiningPool.getBalance(address(this), user);
     }
 
     /// @dev View redemption period, next time
@@ -179,7 +141,7 @@ contract InsurancePool is ParassetBase, IInsurancePool {
     /// @return redeemable LP
     function getRedemptionAmount(address add) external view returns (uint256) {
         Frozen memory frozenInfo = frozenIns[add];
-        uint256 balanceSelf = balances[add];
+        uint256 balanceSelf = _balances[add];
         if (block.timestamp > frozenInfo.time) {
             return balanceSelf;
         } else {
@@ -190,11 +152,11 @@ contract InsurancePool is ParassetBase, IInsurancePool {
     //---------governance----------
 
     /// @dev Set token name
-    /// @param _name token name
-    /// @param _symbol token symbol
-    function setTokenInfo(string memory _name, string memory _symbol) external onlyGovernance {
-        name = _name;
-        symbol = _symbol;
+    /// @param name token name
+    /// @param symbol token symbol
+    function setTokenInfo(string memory name, string memory symbol) external onlyGovernance {
+        _name = name;
+        _symbol = symbol;
     }
 
     /// @dev Set contract status
@@ -344,7 +306,7 @@ contract InsurancePool is ParassetBase, IInsurancePool {
 
         // Calculate LP
     	uint256 insAmount = 0;
-    	uint256 insTotal = totalSupply;
+    	uint256 insTotal = _totalSupply;
         uint256 allBalance = tokenBalance + pTokenBalance;
     	if (insTotal != 0) {
             // Insurance pool assets must be greater than 0
@@ -363,7 +325,7 @@ contract InsurancePool is ParassetBase, IInsurancePool {
     	}
 
     	// Additional LP issuance
-    	issuance(insAmount, address(msg.sender));
+    	_issuance(insAmount, address(msg.sender));
 
     	// Freeze insurance LP
     	frozenInfo.amount = frozenInfo.amount + insAmount;
@@ -404,11 +366,11 @@ contract InsurancePool is ParassetBase, IInsurancePool {
         require(allBalance > _insNegative, "Log:InsurancePool:allBalanceNotEnough");
         // Calculated amount of assets
     	uint256 allValue = allBalance - _insNegative;
-    	uint256 insTotal = totalSupply;
+    	uint256 insTotal = _totalSupply;
     	uint256 underlyingAmount = amount * allValue / insTotal;
 
         // Destroy LP
-        destroy(amount, address(msg.sender));
+        _destroy(amount, address(msg.sender));
         // Judgment to freeze LP
         require(getAllLP(address(msg.sender)) >= frozenInfo.amount, "Log:InsurancePool:frozen");
     	
@@ -434,14 +396,14 @@ contract InsurancePool is ParassetBase, IInsurancePool {
 
     /// @dev Destroy ptoken, update negative ledger
     /// @param amount quantity destroyed
-    function destroyPToken(uint256 amount) override public onlyMortgagePool {
+    function destroyPToken(uint256 amount) public override onlyMortgagePool {
     	IParasset pErc20 = IParasset(_pTokenAddress);
     	uint256 pTokenBalance = pErc20.balanceOf(address(this));
     	if (pTokenBalance >= amount) {
     		pErc20.destroy(amount, address(this));
     	} else {
     		pErc20.destroy(pTokenBalance, address(this));
-    		// 记录负账户
+    		// Increase negative ledger
             uint256 subAmount = amount - pTokenBalance;
     		_insNegative = _insNegative + subAmount;
             emit Negative(subAmount, _insNegative);
@@ -482,11 +444,13 @@ contract InsurancePool is ParassetBase, IInsurancePool {
     /// @dev Destroy LP
     /// @param amount quantity destroyed
     /// @param account destroy address
-    function destroy(uint256 amount, 
-                     address account) private {
-        require(balances[account] >= amount, "Log:InsurancePool:!destroy");
-        balances[account] = balances[account] - amount;
-        totalSupply = totalSupply - amount;
+    function _destroy(
+        uint256 amount, 
+        address account
+    ) private {
+        require(_balances[account] >= amount, "Log:InsurancePool:!destroy");
+        _balances[account] = _balances[account] - amount;
+        _totalSupply = _totalSupply - amount;
         // emit Destroy(amount, account);
         emit Transfer(account, address(0x0), amount);
     }
@@ -494,50 +458,35 @@ contract InsurancePool is ParassetBase, IInsurancePool {
     /// @dev Additional LP issuance
     /// @param amount additional issuance quantity
     /// @param account additional issuance address
-    function issuance(uint256 amount, 
-                      address account) private {
-        balances[account] = balances[account] + amount;
-        totalSupply = totalSupply + amount;
+    function _issuance(
+        uint256 amount, 
+        address account
+    ) private {
+        _balances[account] = _balances[account] + amount;
+        _totalSupply = _totalSupply + amount;
         // emit Issuance(amount, account);
         emit Transfer(address(0x0), account, amount);
     }
 
-    function transfer(address to, uint256 value) public returns (bool) {
-        _transfer(msg.sender, to, value);
-        return true;
-    }
-
-    function approve(address spender, uint256 value) public returns (bool) {
-        require(spender != address(0));
-        allowed[msg.sender][spender] = value;
-        emit Approval(msg.sender, spender, value);
-        return true;
-    }
-
-    function transferFrom(address from, address to, uint256 value) public returns (bool) {
-        allowed[from][msg.sender] = allowed[from][msg.sender] - value;
-        _transfer(from, to, value);
-        emit Approval(from, msg.sender, allowed[from][msg.sender]);
-        return true;
-    }
-
-    function increaseAllowance(address spender, uint256 addedValue) public returns (bool) {
-        require(spender != address(0));
-
-        allowed[msg.sender][spender] = allowed[msg.sender][spender] + addedValue;
-        emit Approval(msg.sender, spender, allowed[msg.sender][spender]);
-        return true;
-    }
-
-    function decreaseAllowance(address spender, uint256 subtractedValue) public returns (bool) {
-        require(spender != address(0));
-
-        allowed[msg.sender][spender] = allowed[msg.sender][spender] - subtractedValue;
-        emit Approval(msg.sender, spender, allowed[msg.sender][spender]);
-        return true;
-    }
-
-    function _transfer(address from, address to, uint256 value) internal {
+    /**
+     * @dev Moves `amount` of tokens from `sender` to `recipient`.
+     *
+     * This internal function is equivalent to {transfer}, and can be used to
+     * e.g. implement automatic token fees, slashing mechanisms, etc.
+     *
+     * Emits a {Transfer} event.
+     *
+     * Requirements:
+     *
+     * - `sender` cannot be the zero address.
+     * - `recipient` cannot be the zero address.
+     * - `sender` must have a balance of at least `amount`.
+     */
+    function _transfer(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) internal override {
         // Update redemption time
         updateLatestTime();
 
@@ -547,18 +496,26 @@ contract InsurancePool is ParassetBase, IInsurancePool {
             frozenInfo.amount = 0;
         }
 
-        balances[from] = balances[from] - value;
-        balances[to] = balances[to] + value;
-        emit Transfer(from, to, value);
+        require(sender != address(0), "ERC20: transfer from the zero address");
+        require(recipient != address(0), "ERC20: transfer to the zero address");
 
-        if (to != address(lpStakingMiningPool)) {
+        uint256 senderBalance = _balances[sender];
+        require(senderBalance >= amount, "ERC20: transfer amount exceeds balance");
+        unchecked {
+            _balances[sender] = senderBalance - amount;
+        }
+        _balances[recipient] += amount;
+
+        emit Transfer(sender, recipient, amount);
+
+        if (recipient != address(lpStakingMiningPool)) {
             require(getAllLP(address(msg.sender)) >= frozenInfo.amount, "Log:InsurancePool:frozen");
         }
     }
 
-    function addETH() public payable {}
-
-    function addToken(address tokenAddress, uint256 amount) public {
+    /// The insurance pool penetrates the warehouse, and external assets are added to the insurance pool.
+    function addETH() external payable {}
+    function addToken(address tokenAddress, uint256 amount) external {
         TransferHelper.safeTransferFrom(tokenAddress, address(msg.sender), address(this), amount);
     }
 
