@@ -163,8 +163,22 @@ created | 是否已创建债仓
 
 - rate返回值除1000，71200/1000=71.2%
 
+#### 查询最大抵押率
+```
+    /// @dev View the maximum mortgage rate
+    /// @param mortgageToken Mortgage asset address
+    /// @return maximum mortgage rate
+    function getMaxRate(address mortgageToken) external view returns(uint88)
+```
+参数 | 描述
+---|---
+mortgageToken | 抵押资产地址
 
+返回值 | 描述
+---|---
+---|最大抵押率
 
+- 返回数据除以100000；70000 = 70%, 40000 = 40%
 
 ### 交易
 - 除第一次操作外，对债仓操作都需要授权对应的p资产
