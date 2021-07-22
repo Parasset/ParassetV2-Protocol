@@ -2,6 +2,55 @@
 
 ### 查询
 
+#### 计算稳定费
+
+```
+    /// @dev Calculate the stability fee
+    /// @param parassetAssets Amount of debt(Ptoken,Stability fee not included)
+    /// @param blockHeight The block height of the last operation
+    /// @param rate Mortgage rate(Initial mortgage rate,Mortgage rate after the last operation)
+    /// @param nowRate Current mortgage rate (not including stability fee)
+    /// @param r0Value Market base interest rate
+    /// @return fee
+    function getFee(
+        uint256 parassetAssets, 
+        uint160 blockHeight,
+        uint256 rate,
+        uint256 nowRate,
+        uint80 r0Value
+    ) public view returns(uint256)
+```
+参数 | 描述
+---|---
+parassetAssets | 债仓中债务数量
+blockHeight | 当前区块高度
+rate | 上次操作后的抵押率
+nowRate | 当前的抵押率
+r0Value | 市场基础利率
+
+返回值 | 描述
+---|---
+--- | 稳定费
+
+- parassetAssets、rate调用getLedger方法获得
+- r0Value调用getR0方法获得
+- nowRate调用getMortgageRate方法获得
+
+#### 获取抵押资产的r0（市场基础利率）
+```
+    /// @dev View the market base interest rate
+    /// @return market base interest rate
+    function getR0(address mortgageToken) external view returns(uint80)
+```
+参数 | 描述
+---|---
+mortgageToken | 抵押资产的地址
+
+返回值 | 描述
+---|---
+--- | r0
+
+- 每个抵押资产的r0可能不一样
 #### 计算抵押率
 
 ```
