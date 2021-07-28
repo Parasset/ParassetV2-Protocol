@@ -221,7 +221,7 @@ rate | 抵押率
 
 - 抵押资产为ETH时，mortgageToken传入0x0。value=amount+0.01ETH
 - 抵押资产为Token时，调用该方法前需要授权。value=0.01ETH
-- rate传入参数为整数，70=70%
+- rate：传入70000 = 70%，1 = 0.001%
 
 #### 增加抵押资产
 
@@ -305,6 +305,7 @@ amount | 减少铸币数量
 mortgageToken | 抵押资产地址
 account | 债仓所有人
 amount | 抵押资产数量
+pTokenAmountLimit | 最大支付数量，前端自行设置，可设置最大值，本次交易所支付的P资产不超过最大支付数量
 
 - value=0.01ETH
 

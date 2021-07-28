@@ -356,7 +356,7 @@ contract MortgagePool is ParassetBase {
     ) public payable whenActive nonReentrant {
         MortgageInfo memory morInfo = _mortageConfig[mortgageToken];
     	require(morInfo.mortgageAllow, "Log:MortgagePool:!mortgageAllow");
-        require(rate > 0 && uint256(rate) * 1000 <= morInfo.maxRate, "Log:MortgagePool:rate!=0");
+        require(rate > 0 && rate <= morInfo.maxRate, "Log:MortgagePool:rate!=0");
         require(amount > 0, "Log:MortgagePool:amount!=0");
     	PersonalLedger storage pLedger = _ledgerList[mortgageToken].ledger[address(msg.sender)];
         uint256 parassetAssets = pLedger.parassetAssets;
@@ -377,7 +377,7 @@ contract MortgagePool is ParassetBase {
         transferFee(pLedger, tokenPrice, pTokenPrice, morInfo.r0, 0);
 
         // Additional ptoken issuance
-        uint256 pTokenAmount = amount * pTokenPrice * rate / (tokenPrice * 100);
+        uint256 pTokenAmount = amount * pTokenPrice * rate / (tokenPrice * 100000);
         IParasset(_config.pTokenAdd).issuance(pTokenAmount, address(msg.sender));
 
         // Update debt information
@@ -602,7 +602,7 @@ contract MortgagePool is ParassetBase {
         if (parassetAssets > 0 && uint160(block.number) > blockHeight && blockHeight != 0) {
             fee = getFee(parassetAssets, blockHeight, pLedger.rate, mortgageRate, r0Value);
         }
-        require((parassetAssets + fee) * kValue / (mortgageAssets * 100000) < pTokenPrice / tokenPrice, "Log:MortgagePool:!liquidationLine");
+        require(((parassetAssets + fee) * uint256(kValue) / (mortgageAssets * 100000)) < (pTokenPrice / tokenPrice), "Log:MortgagePool:!liquidationLine");
     }
 
     function transferFee(

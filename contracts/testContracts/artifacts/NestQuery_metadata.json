@@ -1,0 +1,334 @@
+{
+	"compiler": {
+		"version": "0.8.4+commit.c7e474f2"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [],
+				"stateMutability": "nonpayable",
+				"type": "constructor"
+			},
+			{
+				"inputs": [],
+				"name": "getConfig",
+				"outputs": [
+					{
+						"components": [
+							{
+								"internalType": "uint16",
+								"name": "singleFee",
+								"type": "uint16"
+							},
+							{
+								"internalType": "uint16",
+								"name": "doubleFee",
+								"type": "uint16"
+							},
+							{
+								"internalType": "uint8",
+								"name": "normalFlag",
+								"type": "uint8"
+							}
+						],
+						"internalType": "struct NestQuery.Config",
+						"name": "",
+						"type": "tuple"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "token",
+						"type": "address"
+					},
+					{
+						"internalType": "uint128",
+						"name": "_avg",
+						"type": "uint128"
+					}
+				],
+				"name": "setAvg",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint16",
+						"name": "singleFee",
+						"type": "uint16"
+					},
+					{
+						"internalType": "uint16",
+						"name": "doubleFee",
+						"type": "uint16"
+					},
+					{
+						"internalType": "uint8",
+						"name": "normalFlag",
+						"type": "uint8"
+					}
+				],
+				"name": "setConfig",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "token",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
+						"name": "ntoken",
+						"type": "address"
+					}
+				],
+				"name": "setNTokenMapping",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "tokenAddress",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
+						"name": "paybackAddress",
+						"type": "address"
+					}
+				],
+				"name": "triggeredPriceInfo",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "blockNumber",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "price",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "avgPrice",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "sigmaSQ",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "payable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "tokenAddress",
+						"type": "address"
+					}
+				],
+				"name": "triggeredPriceInfo",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "blockNumber",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "price",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "avgPrice",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "sigmaSQ",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "tokenAddress",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
+						"name": "paybackAddress",
+						"type": "address"
+					}
+				],
+				"name": "triggeredPriceInfo2",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "blockNumber",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "price",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "avgPrice",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "sigmaSQ",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "ntokenBlockNumber",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "ntokenPrice",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "ntokenAvgPrice",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "ntokenSigmaSQ",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "payable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "tokenAddress",
+						"type": "address"
+					}
+				],
+				"name": "triggeredPriceInfo2",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "blockNumber",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "price",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "avgPrice",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "sigmaSQ",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "ntokenBlockNumber",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "ntokenPrice",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "ntokenAvgPrice",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "ntokenSigmaSQ",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"testContracts/NESTQuary-Test.sol": "NestQuery"
+		},
+		"evmVersion": "istanbul",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": true,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"lib/TransferHelper.sol": {
+			"keccak256": "0x5cd7b677741700cf5ab9fbd4702cc2371340bf1cfcff42da218fe859d2088010",
+			"license": "GPL-3.0-or-later",
+			"urls": [
+				"bzz-raw://e90962978395401dc5422cfdb233f3a9cd244bfa9e83c6189fc18714c993c757",
+				"dweb:/ipfs/QmYma7FWG7isyP2FTchi669k11EYAGo9xfzb7RJSyUWAJS"
+			]
+		},
+		"testContracts/NESTQuary-Test.sol": {
+			"keccak256": "0x407ad9c13ab9fd27a8f3fc69a88f11a656f7d2b681c5498535db1062170c577b",
+			"license": "GPL-3.0-or-later",
+			"urls": [
+				"bzz-raw://3271f08b47ea5bb7b164c59f25b623c579540332145984a099589f9961a9e329",
+				"dweb:/ipfs/QmTS9ZXLZHBQo1wagrToSWvc9ii5VcPLTx4bDgSpPPE5PY"
+			]
+		}
+	},
+	"version": 1
+}

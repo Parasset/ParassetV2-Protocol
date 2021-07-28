@@ -212,6 +212,10 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
         _ethIns = isETHIns;
     }
 
+    function test_insNegative(uint256 amount) external onlyGovernance {
+        _insNegative = amount;
+    }
+
     //---------transaction---------
 
     /// @dev Exchange: ptoken exchanges the underlying asset

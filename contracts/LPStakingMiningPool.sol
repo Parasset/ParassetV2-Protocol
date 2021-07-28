@@ -15,10 +15,10 @@ contract LPStakingMiningPool is ParassetBase, ILPStakingMiningPool {
     mapping(address => Channel) _tokenChannel;
     struct Channel {
         // recently operated block
-        // 上限4294967295, 8 * 4 = 32
+        // 上限4294967295
         uint32 lastUpdateBlock;
         // end block
-        // 上限4294967295, 8 * 4 = 32
+        // 上限4294967295
         uint32 endBlock;
         // revenue efficiency
         uint96 rewardRate;
@@ -132,9 +132,9 @@ contract LPStakingMiningPool is ParassetBase, ILPStakingMiningPool {
         _rewardPerTokenStored = (totalSupply == 0 ? 
                                 uint96(rewardPerTokenStored) : 
                                 uint96(rewardPerTokenStored + accrued * 1e18 / totalSupply));
-        _userReward = channelInfo.accounts[account].balance 
-                      * (_rewardPerTokenStored 
-                      - channelInfo.accounts[account].userRewardPerTokenPaid)
+        _userReward = uint256(channelInfo.accounts[account].balance)
+                      * (uint256(_rewardPerTokenStored) 
+                      - uint256(channelInfo.accounts[account].userRewardPerTokenPaid))
                       / 1e18;
     }
 
