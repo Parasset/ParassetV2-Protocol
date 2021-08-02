@@ -41,6 +41,8 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
     // is ETH insPool
     bool public _ethIns;
 
+    uint constant MINIMUM_LIQUIDITY = 1e9; 
+
     // staking address
     ILPStakingMiningPool lpStakingMiningPool;
 
@@ -319,7 +321,8 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
     		insAmount = getDecimalConversion(_underlyingTokenAddress, amount, _pTokenAddress) * insTotal / allValue;
     	} else {
             // The initial net value is 1
-            insAmount = getDecimalConversion(_underlyingTokenAddress, amount, _pTokenAddress);
+            insAmount = getDecimalConversion(_underlyingTokenAddress, amount, _pTokenAddress) - MINIMUM_LIQUIDITY;
+            _issuance(MINIMUM_LIQUIDITY, address(0x0));
         }
 
     	// Transfer to the underlying asset(ERC20)
@@ -513,7 +516,7 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
         emit Transfer(sender, recipient, amount);
 
         if (recipient != address(lpStakingMiningPool)) {
-            require(getAllLP(address(msg.sender)) >= frozenInfo.amount, "Log:InsurancePool:frozen");
+            require(getAllLP(sender) >= frozenInfo.amount, "Log:InsurancePool:frozen");
         }
     }
 

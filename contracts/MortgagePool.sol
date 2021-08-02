@@ -602,7 +602,7 @@ contract MortgagePool is ParassetBase {
         if (parassetAssets > 0 && uint160(block.number) > blockHeight && blockHeight != 0) {
             fee = getFee(parassetAssets, blockHeight, pLedger.rate, mortgageRate, r0Value);
         }
-        require(((parassetAssets + fee) * uint256(kValue) / (mortgageAssets * 100000)) < (pTokenPrice / tokenPrice), "Log:MortgagePool:!liquidationLine");
+        require(((parassetAssets + fee) * uint256(kValue) * tokenPrice / (mortgageAssets * 100000)) < pTokenPrice, "Log:MortgagePool:!liquidationLine");
     }
 
     function transferFee(

@@ -1,6 +1,6 @@
 {
 	"compiler": {
-		"version": "0.8.4+commit.c7e474f2"
+		"version": "0.8.6+commit.11564f7e"
 	},
 	"language": "Solidity",
 	"output": {
@@ -275,7 +275,7 @@
 					},
 					{
 						"internalType": "uint256",
-						"name": "value",
+						"name": "amount",
 						"type": "uint256"
 					}
 				],
@@ -294,7 +294,7 @@
 				"inputs": [
 					{
 						"internalType": "address",
-						"name": "add",
+						"name": "account",
 						"type": "address"
 					}
 				],
@@ -552,19 +552,6 @@
 				"type": "function"
 			},
 			{
-				"inputs": [],
-				"name": "getTotalSupply",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
 				"inputs": [
 					{
 						"internalType": "address",
@@ -747,12 +734,12 @@
 				"inputs": [
 					{
 						"internalType": "string",
-						"name": "_name",
+						"name": "name",
 						"type": "string"
 					},
 					{
 						"internalType": "string",
-						"name": "_symbol",
+						"name": "symbol",
 						"type": "string"
 					}
 				],
@@ -801,6 +788,19 @@
 				"type": "function"
 			},
 			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					}
+				],
+				"name": "test_insNegative",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
 				"inputs": [],
 				"name": "totalSupply",
 				"outputs": [
@@ -817,12 +817,12 @@
 				"inputs": [
 					{
 						"internalType": "address",
-						"name": "to",
+						"name": "recipient",
 						"type": "address"
 					},
 					{
 						"internalType": "uint256",
-						"name": "value",
+						"name": "amount",
 						"type": "uint256"
 					}
 				],
@@ -841,17 +841,17 @@
 				"inputs": [
 					{
 						"internalType": "address",
-						"name": "from",
+						"name": "sender",
 						"type": "address"
 					},
 					{
 						"internalType": "address",
-						"name": "to",
+						"name": "recipient",
 						"type": "address"
 					},
 					{
 						"internalType": "uint256",
-						"name": "value",
+						"name": "amount",
 						"type": "uint256"
 					}
 				],
@@ -891,23 +891,19 @@
 			"kind": "dev",
 			"methods": {
 				"allowance(address,address)": {
-					"details": "View the authorization limit",
-					"params": {
-						"owner": "token owner address",
-						"spender": "authorized target address"
-					},
-					"returns": {
-						"_0": "authorization limit"
-					}
+					"details": "See {IERC20-allowance}."
+				},
+				"approve(address,uint256)": {
+					"details": "See {IERC20-approve}. Requirements: - `spender` cannot be the zero address."
 				},
 				"balanceOf(address)": {
-					"details": "View the personal LP",
-					"params": {
-						"add": "user address"
-					},
-					"returns": {
-						"_0": "personal LP"
-					}
+					"details": "See {IERC20-balanceOf}."
+				},
+				"decimals()": {
+					"details": "Returns the number of decimals used to get its user representation. For example, if `decimals` equals `2`, a balance of `505` tokens should be displayed to a user as `5,05` (`505 / 10 ** 2`). Tokens usually opt for a value of 18, imitating the relationship between Ether and Wei. This is the value {ERC20} uses, unless this function is overridden; NOTE: This information is only used for _display_ purposes: it in no way affects any of the arithmetic of the contract, including {IERC20-balanceOf} and {IERC20-transfer}."
+				},
+				"decreaseAllowance(address,uint256)": {
+					"details": "Atomically decreases the allowance granted to `spender` by the caller. This is an alternative to {approve} that can be used as a mitigation for problems described in {IERC20-approve}. Emits an {Approval} event indicating the updated allowance. Requirements: - `spender` cannot be the zero address. - `spender` must have allowance for the caller of at least `subtractedValue`."
 				},
 				"destroyPToken(uint256)": {
 					"details": "Destroy ptoken, update negative ledger",
@@ -995,17 +991,17 @@
 						"startTime": "start time"
 					}
 				},
-				"getTotalSupply()": {
-					"details": "View the total LP",
-					"returns": {
-						"_0": "total LP"
-					}
+				"increaseAllowance(address,uint256)": {
+					"details": "Atomically increases the allowance granted to `spender` by the caller. This is an alternative to {approve} that can be used as a mitigation for problems described in {IERC20-approve}. Emits an {Approval} event indicating the updated allowance. Requirements: - `spender` cannot be the zero address."
 				},
 				"initialize(address)": {
 					"details": "To support open-zeppelin/upgrades",
 					"params": {
 						"governance": "IParassetGovernance implementation contract address"
 					}
+				},
+				"name()": {
+					"details": "Returns the name of the token."
 				},
 				"redemptionIns(uint256)": {
 					"details": "Redemption insurance",
@@ -1044,8 +1040,8 @@
 				"setTokenInfo(string,string)": {
 					"details": "Set token name",
 					"params": {
-						"_name": "token name",
-						"_symbol": "token symbol"
+						"name": "token name",
+						"symbol": "token symbol"
 					}
 				},
 				"setWaitCycle(uint256)": {
@@ -1056,6 +1052,18 @@
 					"params": {
 						"amount": "amount of underlying asset"
 					}
+				},
+				"symbol()": {
+					"details": "Returns the symbol of the token, usually a shorter version of the name."
+				},
+				"totalSupply()": {
+					"details": "See {IERC20-totalSupply}."
+				},
+				"transfer(address,uint256)": {
+					"details": "See {IERC20-transfer}. Requirements: - `recipient` cannot be the zero address. - the caller must have a balance of at least `amount`."
+				},
+				"transferFrom(address,address,uint256)": {
+					"details": "See {IERC20-transferFrom}. Emits an {Approval} event indicating the updated allowance. This is not required by the EIP. See the note at the beginning of {ERC20}. Requirements: - `sender` and `recipient` cannot be the zero address. - `sender` must have a balance of at least `amount`. - the caller must have allowance for ``sender``'s tokens of at least `amount`."
 				},
 				"update(address)": {
 					"details": "Rewritten in the implementation contract, for load other contract addresses. Call       super.update(newGovernance) when overriding, and override method without onlyGovernance",
@@ -1071,7 +1079,11 @@
 		},
 		"userdoc": {
 			"kind": "user",
-			"methods": {},
+			"methods": {
+				"addETH()": {
+					"notice": "The insurance pool penetrates the warehouse, and external assets are added to the insurance pool."
+				}
+			},
 			"version": 1
 		}
 	},
@@ -1079,7 +1091,7 @@
 		"compilationTarget": {
 			"InsurancePool.sol": "InsurancePool"
 		},
-		"evmVersion": "istanbul",
+		"evmVersion": "berlin",
 		"libraries": {},
 		"metadata": {
 			"bytecodeHash": "ipfs"
@@ -1092,19 +1104,27 @@
 	},
 	"sources": {
 		"InsurancePool.sol": {
-			"keccak256": "0x3b169b07b0026c9b37a27a3fb52171584a7f4f22cd729162d75319ff31b7f89e",
+			"keccak256": "0x8a0924d1e3325a72a1bcfe8167274c4c1d63e3a8246888db077ed0e28923c93c",
 			"license": "GPL-3.0-or-later",
 			"urls": [
-				"bzz-raw://7450b6a7e7e9ad26362be546d5b2845e0153d4166d2b7d60ff8ace74780351e1",
-				"dweb:/ipfs/QmXYh5rvw5ihuTp2qkDq5AteZYxRs9VmiBn4NaUH9Y3VbS"
+				"bzz-raw://a4789717ee9a4663a2b3cb433db0e8f56ccf508e1ce66fe1e162685cfcd8d16d",
+				"dweb:/ipfs/QmWeqCsK6oz7aAWzm2UgZHV7916hQo84HjkLRrKsWVCWNm"
 			]
 		},
 		"ParassetBase.sol": {
-			"keccak256": "0xd817d4f0ad34aa1812560961dcf9d5a3e7add4d64fe5c19eea5d0af6385dc60a",
+			"keccak256": "0xc2cf6591eb2a3e405c2e8c061251f53a3e65704f24ad932132faef59f7225ba6",
 			"license": "GPL-3.0-or-later",
 			"urls": [
-				"bzz-raw://604c84e38064199d27c9970b2f1d241069c674d8ceecb5f2fcd26e0756db994b",
-				"dweb:/ipfs/QmQUNd2ikDUoQ9TYfUwB5akeDPWn5QotiFZKkQ6Yydi3ch"
+				"bzz-raw://ab51d62f85d5158e2ae3ddd1fe2888aa118557995cdf6d00014fecabe1621550",
+				"dweb:/ipfs/QmcXYuahR3qHKGijf78dBfWkjFdjhuvXJpQvcUwkhd21CG"
+			]
+		},
+		"ParassetERC20.sol": {
+			"keccak256": "0x5de152f8e99a31f55062ba34b05483dc0ea1ee1f2440dadc6fb635c860f3495d",
+			"license": "GPL-3.0-or-later",
+			"urls": [
+				"bzz-raw://b9f6819716512fcc6c9fe70deab54b9cd0bcd67bfbcaad8fa82cc855edfaf71a",
+				"dweb:/ipfs/QmYBv2AQizNLg8LAj4anXmmM6Tg7tsKm3oV86ydEw4fEzs"
 			]
 		},
 		"iface/IERC20.sol": {
@@ -1116,11 +1136,11 @@
 			]
 		},
 		"iface/IInsurancePool.sol": {
-			"keccak256": "0x4716339ebc550d0cf1396b99afe53d32452726dfc02715fb18ace1ce7e79ea56",
+			"keccak256": "0x94ed8eca44e9529bd26d44dc52f6de6f8fe75bd553d0ffca159b68b0df732bb9",
 			"license": "GPL-3.0-or-later",
 			"urls": [
-				"bzz-raw://5cb28452aae4fbf770b103f11d2569c41795c83380713ad45bb622d0f4a53233",
-				"dweb:/ipfs/QmYNkLdQZxdJuPZxE4cSLmfVQh5v8iHjMCbiYfo9MPPmr7"
+				"bzz-raw://0b1f59bbb59ccd114048827c2facd1f5615171805e36f3b3d768c0f542c62431",
+				"dweb:/ipfs/QmXodQriuHhyg7SkPEwESqNd7teZ69vpEiYCgjTU7eBsic"
 			]
 		},
 		"iface/ILPStakingMiningPool.sol": {

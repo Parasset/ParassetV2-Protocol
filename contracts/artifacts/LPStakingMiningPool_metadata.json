@@ -486,11 +486,11 @@
 	},
 	"sources": {
 		"LPStakingMiningPool.sol": {
-			"keccak256": "0x7fea20b2a0d73194105793e33b86631544de272216959d7a1d5d28829594c5d2",
+			"keccak256": "0x8237edbfb84c617efaf0609e834ea831f9058f2b80ce4aa207d327f409674cfc",
 			"license": "GPL-3.0-or-later",
 			"urls": [
-				"bzz-raw://b5ed6b22d9b44fcd96a76f77889050a76be5cb9c7c05f451fb773531107e4636",
-				"dweb:/ipfs/QmaGAU9uk26NhEGo1WsqAheMpTbzRpqrf3PAr73BFcqJe3"
+				"bzz-raw://589a83550f8409b944cfd3530807bdfeb16dc2ac87dd468b8d9466711328bc53",
+				"dweb:/ipfs/QmZuufSf9HvPPt982hQAS1JwDw6SeB2mcVNVGCNtiamH7T"
 			]
 		},
 		"ParassetBase.sol": {
