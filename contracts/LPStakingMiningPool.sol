@@ -21,9 +21,9 @@ contract LPStakingMiningPool is ParassetBase, ILPStakingMiningPool {
         // 上限4294967295
         uint32 endBlock;
         // revenue efficiency
-        uint96 rewardRate;
+        uint192 rewardRate;
         // profit per share
-        uint96 rewardPerTokenStored;
+        uint256 rewardPerTokenStored;
         // total locked position
         uint256 totalSupply;
         // user address => Account info
@@ -32,9 +32,9 @@ contract LPStakingMiningPool is ParassetBase, ILPStakingMiningPool {
 
     struct Account {
         // locked position
-        uint128 balance;
+        uint256 balance;
         // latest profit per share
-        uint128 userRewardPerTokenPaid;
+        uint256 userRewardPerTokenPaid;
     }
 
     //---------view---------
@@ -119,7 +119,7 @@ contract LPStakingMiningPool is ParassetBase, ILPStakingMiningPool {
         address account
     ) private view returns(
         uint32 _nowBlock, 
-        uint96 _rewardPerTokenStored, 
+        uint256 _rewardPerTokenStored, 
         uint256 _userReward
     ) {
         uint256 nowBlock = getBlock(channelInfo.endBlock);
@@ -130,11 +130,11 @@ contract LPStakingMiningPool is ParassetBase, ILPStakingMiningPool {
 
         _nowBlock = uint32(nowBlock);
         _rewardPerTokenStored = (totalSupply == 0 ? 
-                                uint96(rewardPerTokenStored) : 
-                                uint96(rewardPerTokenStored + accrued * 1e18 / totalSupply));
-        _userReward = uint256(channelInfo.accounts[account].balance)
-                      * (uint256(_rewardPerTokenStored) 
-                      - uint256(channelInfo.accounts[account].userRewardPerTokenPaid))
+                                rewardPerTokenStored : 
+                                (rewardPerTokenStored + accrued * 1e18 / totalSupply));
+        _userReward = channelInfo.accounts[account].balance
+                      * (_rewardPerTokenStored 
+                      - channelInfo.accounts[account].userRewardPerTokenPaid)
                       / 1e18;
     }
 
@@ -174,9 +174,14 @@ contract LPStakingMiningPool is ParassetBase, ILPStakingMiningPool {
         uint96 rewardRate,
         address stakingToken
     ) external onlyGovernance {
-        _tokenChannel[stakingToken].lastUpdateBlock = lastUpdateBlock;
-        _tokenChannel[stakingToken].endBlock = endBlock;
-        _tokenChannel[stakingToken].rewardRate = rewardRate;
+        Channel storage channelInfo = _tokenChannel[stakingToken];
+        // settlement
+        (, uint256 rewardPerTokenStored,) = _calcReward(channelInfo, address(this));
+        channelInfo.rewardPerTokenStored = rewardPerTokenStored;
+        // update
+        channelInfo.lastUpdateBlock = lastUpdateBlock;
+        channelInfo.endBlock = endBlock;
+        channelInfo.rewardRate = rewardRate;
     }
 
     //---------transaction---------
@@ -191,7 +196,7 @@ contract LPStakingMiningPool is ParassetBase, ILPStakingMiningPool {
         _gerReward(channelInfo, msg.sender);
 
     	channelInfo.totalSupply = channelInfo.totalSupply + amount;
-        channelInfo.accounts[msg.sender].balance = uint128(channelInfo.accounts[msg.sender].balance + amount);
+        channelInfo.accounts[msg.sender].balance = channelInfo.accounts[msg.sender].balance + amount;
 
         TransferHelper.safeTransferFrom(stakingToken, msg.sender, address(this), amount);
     }
@@ -206,7 +211,7 @@ contract LPStakingMiningPool is ParassetBase, ILPStakingMiningPool {
         _gerReward(channelInfo, msg.sender);
 
         channelInfo.totalSupply = channelInfo.totalSupply - amount;
-        channelInfo.accounts[msg.sender].balance = uint128(channelInfo.accounts[msg.sender].balance - amount);
+        channelInfo.accounts[msg.sender].balance = channelInfo.accounts[msg.sender].balance - amount;
 
     	TransferHelper.safeTransfer(stakingToken, msg.sender, amount);
     }
@@ -219,7 +224,7 @@ contract LPStakingMiningPool is ParassetBase, ILPStakingMiningPool {
     }
 
     function _gerReward(Channel storage channelInfo, address to) private {
-        (uint32 lastUpdateBlock, uint96 rewardPerTokenStored, uint256 userReward) = _calcReward(channelInfo, to);
+        (uint32 lastUpdateBlock, uint256 rewardPerTokenStored, uint256 userReward) = _calcReward(channelInfo, to);
 
         channelInfo.rewardPerTokenStored = rewardPerTokenStored;
         channelInfo.lastUpdateBlock = lastUpdateBlock;

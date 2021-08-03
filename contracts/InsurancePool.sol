@@ -19,7 +19,7 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
                              // = 1: active
                              // = 2: redemption only
     // user address => freeze LP data
-    mapping(address => Frozen) frozenIns;
+    mapping(address => Frozen) _frozenIns;
     struct Frozen {
         // frozen quantity
         uint256 amount;
@@ -28,14 +28,14 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
     }
     // pToken address
     address public _pTokenAddress;
+    // redemption cycle, 2 days
+	uint256 public _redemptionCycle;
     // underlyingToken address
     address public _underlyingTokenAddress;
+    // redemption duration, 7 days
+	uint256 public _waitCycle;
     // mortgagePool address
     address public _mortgagePool;
-	// redemption cycle, 2 days
-	uint256 public _redemptionCycle;
-	// redemption duration, 7 days
-	uint256 public _waitCycle;
     // rate(2/1000)
     uint256 public _feeRate;
     // is ETH insPool
@@ -44,7 +44,7 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
     uint constant MINIMUM_LIQUIDITY = 1e9; 
 
     // staking address
-    ILPStakingMiningPool lpStakingMiningPool;
+    ILPStakingMiningPool _lpStakingMiningPool;
 
     event Negative(uint256 amount, uint256 allValue);
 
@@ -81,13 +81,13 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
     /// @dev View the lpStakingMiningPool address
     /// @return lpStakingMiningPool address
     function getLPStakingMiningPool() external view returns(address) {
-        return address(lpStakingMiningPool);
+        return address(_lpStakingMiningPool);
     }
 
     /// @dev View the all lp 
     /// @return all lp 
     function getAllLP(address user) public view returns(uint256) {
-        return _balances[user] + lpStakingMiningPool.getBalance(address(this), user);
+        return _balances[user] + _lpStakingMiningPool.getBalance(address(this), user);
     }
 
     /// @dev View redemption period, next time
@@ -123,7 +123,7 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
     /// @return frozen LP
     /// @return unfreeze time
     function getFrozenIns(address add) external view returns(uint256, uint256) {
-        Frozen memory frozenInfo = frozenIns[add];
+        Frozen memory frozenInfo = _frozenIns[add];
         return (frozenInfo.amount, frozenInfo.time);
     }
 
@@ -131,7 +131,7 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
     /// @param add user address
     /// @return frozen LP
     function getFrozenInsInTime(address add) external view returns(uint256) {
-        Frozen memory frozenInfo = frozenIns[add];
+        Frozen memory frozenInfo = _frozenIns[add];
         if (block.timestamp > frozenInfo.time) {
             return 0;
         }
@@ -142,7 +142,7 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
     /// @param add user address
     /// @return redeemable LP
     function getRedemptionAmount(address add) external view returns (uint256) {
-        Frozen memory frozenInfo = frozenIns[add];
+        Frozen memory frozenInfo = _frozenIns[add];
         uint256 balanceSelf = _balances[add];
         if (block.timestamp > frozenInfo.time) {
             return balanceSelf;
@@ -174,13 +174,10 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
 
     /// @dev Set the staking contract address
     function setLPStakingMiningPool(address add) external onlyGovernance {
-        lpStakingMiningPool = ILPStakingMiningPool(add);
+        _lpStakingMiningPool = ILPStakingMiningPool(add);
     }
 
     /// @dev Set the latest redemption time
-    function setLatestTime() external onlyGovernance {
-        _latestTime = block.timestamp + _waitCycle;
-    }
     function setLatestTime(uint256 num) external onlyGovernance {
         _latestTime = num;
     }
@@ -230,14 +227,15 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
     	uint256 fee = amount * _feeRate / 1000;
 
         // Transfer to the ptoken
-        TransferHelper.safeTransferFrom(_pTokenAddress, address(msg.sender), address(this), amount);
+        address pTokenAddress = _pTokenAddress;
+        TransferHelper.safeTransferFrom(pTokenAddress, address(msg.sender), address(this), amount);
 
         // Calculate the amount of transferred underlying asset
-        uint256 uTokenAmount = getDecimalConversion(_pTokenAddress, amount - fee, _underlyingTokenAddress);
+        uint256 uTokenAmount = getDecimalConversion(pTokenAddress, amount - fee, _underlyingTokenAddress);
         require(uTokenAmount > 0, "Log:InsurancePool:!uTokenAmount");
 
         // Transfer out underlying asset
-    	if (_ethIns) {
+    	if (_underlyingTokenAddress == address(0x0)) {
             TransferHelper.safeTransferETH(address(msg.sender), uTokenAmount);
     	} else {
             TransferHelper.safeTransfer(_underlyingTokenAddress, address(msg.sender), uTokenAmount);
@@ -257,7 +255,7 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
     	uint256 fee = amount * _feeRate / 1000;
 
         // Transfer to the underlying asset
-    	if (_ethIns) {
+    	if (_underlyingTokenAddress == address(0x0)) {
             // The underlying asset is ETH
             require(msg.value == amount, "Log:InsurancePool:!msg.value");
     	} else {
@@ -267,18 +265,19 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
     	}
 
         // Calculate the amount of transferred ptokens
-        uint256 pTokenAmount = getDecimalConversion(_underlyingTokenAddress, amount - fee, _pTokenAddress);
+        uint256 pTokenAmount = getDecimalConversion(_underlyingTokenAddress, amount - fee, address(0x0));
         require(pTokenAmount > 0, "Log:InsurancePool:!pTokenAmount");
 
         // Transfer out ptoken
-        uint256 pTokenBalance = IERC20(_pTokenAddress).balanceOf(address(this));
+        address pTokenAddress = _pTokenAddress;
+        uint256 pTokenBalance = IERC20(pTokenAddress).balanceOf(address(this));
         if (pTokenBalance < pTokenAmount) {
             // Insufficient ptoken balance,
             uint256 subNum = pTokenAmount - pTokenBalance;
-            IParasset(_pTokenAddress).issuance(subNum, address(this));
+            IParasset(pTokenAddress).issuance(subNum, address(this));
             _insNegative = _insNegative + subNum;
         }
-        TransferHelper.safeTransfer(_pTokenAddress, address(msg.sender), pTokenAmount);
+        TransferHelper.safeTransfer(pTokenAddress, address(msg.sender), pTokenAmount);
     }
 
     /// @dev Subscribe for insurance
@@ -291,7 +290,7 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
     	updateLatestTime();
 
         // Thaw LP
-    	Frozen storage frozenInfo = frozenIns[address(msg.sender)];
+    	Frozen storage frozenInfo = _frozenIns[address(msg.sender)];
     	if (block.timestamp > frozenInfo.time) {
     		frozenInfo.amount = 0;
     	}
@@ -300,14 +299,14 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
     	uint256 pTokenBalance = IERC20(_pTokenAddress).balanceOf(address(this));
         // underlying asset balance
         uint256 tokenBalance;
-    	if (_ethIns) {
+    	if (_underlyingTokenAddress == address(0x0)) {
             // The amount of ETH involved in the calculation does not include the transfer in this time
             require(msg.value == amount, "Log:InsurancePool:!msg.value");
             tokenBalance = address(this).balance - amount;
     	} else {
             require(msg.value == 0, "Log:InsurancePool:msg.value!=0");
             // Underlying asset conversion 18 decimals
-            tokenBalance = getDecimalConversion(_underlyingTokenAddress, IERC20(_underlyingTokenAddress).balanceOf(address(this)), _pTokenAddress);
+            tokenBalance = getDecimalConversion(_underlyingTokenAddress, IERC20(_underlyingTokenAddress).balanceOf(address(this)), address(0x0));
     	}
 
         // Calculate LP
@@ -318,15 +317,15 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
             // Insurance pool assets must be greater than 0
             require(allBalance > _insNegative, "Log:InsurancePool:allBalanceNotEnough");
             uint256 allValue = allBalance - _insNegative;
-    		insAmount = getDecimalConversion(_underlyingTokenAddress, amount, _pTokenAddress) * insTotal / allValue;
+    		insAmount = getDecimalConversion(_underlyingTokenAddress, amount, address(0x0)) * insTotal / allValue;
     	} else {
             // The initial net value is 1
-            insAmount = getDecimalConversion(_underlyingTokenAddress, amount, _pTokenAddress) - MINIMUM_LIQUIDITY;
+            insAmount = getDecimalConversion(_underlyingTokenAddress, amount, address(0x0)) - MINIMUM_LIQUIDITY;
             _issuance(MINIMUM_LIQUIDITY, address(0x0));
         }
 
     	// Transfer to the underlying asset(ERC20)
-    	if (!_ethIns) {
+    	if (_underlyingTokenAddress != address(0x0)) {
     		require(msg.value == 0, "Log:InsurancePool:msg.value!=0");
             TransferHelper.safeTransferFrom(_underlyingTokenAddress, address(msg.sender), address(this), amount);
     	}
@@ -353,7 +352,7 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
     	require(block.timestamp >= tokenTime - _waitCycle && block.timestamp <= tokenTime - _waitCycle + _redemptionCycle, "Log:InsurancePool:!time");
 
         // Thaw LP
-    	Frozen storage frozenInfo = frozenIns[address(msg.sender)];
+    	Frozen storage frozenInfo = _frozenIns[address(msg.sender)];
     	if (block.timestamp > frozenInfo.time) {
     		frozenInfo.amount = 0;
     	}
@@ -362,10 +361,10 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
     	uint256 pTokenBalance = IERC20(_pTokenAddress).balanceOf(address(this));
         // underlying asset balance
         uint256 tokenBalance;
-    	if (_ethIns) {
+    	if (_underlyingTokenAddress == address(0x0)) {
             tokenBalance = address(this).balance;
     	} else {
-    		tokenBalance = getDecimalConversion(_underlyingTokenAddress, IERC20(_underlyingTokenAddress).balanceOf(address(this)), _pTokenAddress);
+    		tokenBalance = getDecimalConversion(_underlyingTokenAddress, IERC20(_underlyingTokenAddress).balanceOf(address(this)), address(0x0));
     	}
 
         // Insurance pool assets must be greater than 0
@@ -382,7 +381,7 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
         require(getAllLP(address(msg.sender)) >= frozenInfo.amount, "Log:InsurancePool:frozen");
     	
     	// Transfer out assets, priority transfer of the underlying assets, if the underlying assets are insufficient, transfer ptoken
-    	if (_ethIns) {
+    	if (_underlyingTokenAddress == address(0x0)) {
             // ETH
             if (tokenBalance >= underlyingAmount) {
                 TransferHelper.safeTransferETH(address(msg.sender), underlyingAmount);
@@ -498,7 +497,7 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
         updateLatestTime();
 
         // Thaw LP
-        Frozen storage frozenInfo = frozenIns[address(msg.sender)];
+        Frozen storage frozenInfo = _frozenIns[sender];
         if (block.timestamp > frozenInfo.time) {
             frozenInfo.amount = 0;
         }
@@ -515,7 +514,7 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
 
         emit Transfer(sender, recipient, amount);
 
-        if (recipient != address(lpStakingMiningPool)) {
+        if (recipient != address(_lpStakingMiningPool)) {
             require(getAllLP(sender) >= frozenInfo.amount, "Log:InsurancePool:frozen");
         }
     }

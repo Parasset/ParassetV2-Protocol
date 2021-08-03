@@ -12,7 +12,7 @@ contract ParassetBase {
 	/// @dev To support open-zeppelin/upgrades
     /// @param governance IParassetGovernance implementation contract address
     function initialize(address governance) public virtual {
-        require(_governance == address(0), 'Log:ParassetBase!initialize');
+        require(_governance == address(0), "Log:ParassetBase!initialize");
         _governance = governance;
         _locked = 0;
     }

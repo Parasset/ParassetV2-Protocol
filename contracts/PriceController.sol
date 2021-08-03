@@ -17,7 +17,7 @@ contract PriceController is IPriceController {
     /// @dev Initialization method
     /// @param nestPriceFacade Nest price contract
     /// @param ntokenController NTokenController
-	constructor (address nestPriceFacade, address ntokenController) public {
+	constructor (address nestPriceFacade, address ntokenController) {
 		_nestPriceFacade = INestPriceFacade(nestPriceFacade);
         _ntokenController = INTokenController(ntokenController);
     }
@@ -76,7 +76,7 @@ contract PriceController is IPriceController {
             // The underlying asset is ETH，get ERC20-ETH price
             (,,uint256 avg,) = _nestPriceFacade.triggeredPriceInfo{value:msg.value}(token, payback);
             require(avg > 0, "Log:PriceController:!avg2");
-            return (getDecimalConversion(uToken, avg, address(0x0)), 1 ether);
+            return (avg, 1 ether);
         } else {
             // Get ERC20-ERC20 price
             if (checkNToken(token, uToken)) {
