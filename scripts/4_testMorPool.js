@@ -17,7 +17,7 @@ async function main() {
 
 	await contracts.PUSD.approve(PUSDMorPool.address, ETHdec(9999999));
 	await NESTContract.approve(PUSDMorPool.address, ETHdec(9999999));
-	await PUSDMorPool.coin(NESTContract.address, ETHdec(10), 39, {value:priceFee});
+	await PUSDMorPool.coin(NESTContract.address, ETHdec(10), 39000, {value:priceFee});
 	ledger = await getLedger(PUSDMorPool.address, NESTContract.address, accounts[0].address);
 
 	if (ledger[0] * 2 / 3 * 0.39 == ledger[1]) {

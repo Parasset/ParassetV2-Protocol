@@ -32,9 +32,9 @@ contract MortgagePool is ParassetBase {
     }
     struct MortgageLeader {
         // debt data
-        mapping(address => PersonalLedger) ledger;
+        PersonalLedger[] ledgerArray;
         // users who have created debt positions(address)
-        address[] ledgerArray;
+        mapping(address => uint256) accountMapping;
     }
     struct PersonalLedger {
         // amount of mortgaged assets
@@ -45,8 +45,6 @@ contract MortgagePool is ParassetBase {
         uint160 blockHeight;
         // mortgage rate(Initial mortgage rate,Mortgage rate after the last operation)           
         uint88 rate;
-        // is it created
-        bool created;
     }
     struct Config {
         // pToken address
@@ -111,6 +109,9 @@ contract MortgagePool is ParassetBase {
         uint256 tokenPrice, 
         uint256 pTokenPrice
     ) public pure returns(uint88) {
+        if (mortgageAssets == 0) {
+            return 0;
+        }
     	return uint88(parassetAssets * tokenPrice * 100000 / (pTokenPrice * mortgageAssets));
     }
 
@@ -137,7 +138,8 @@ contract MortgagePool is ParassetBase {
         uint256 maxAddP
     ) {
         address mToken = mortgageToken;
-        PersonalLedger memory pLedger = _ledgerList[mToken].ledger[address(owner)];
+        MortgageLeader storage mLedger = _ledgerList[mToken];
+        PersonalLedger memory pLedger = mLedger.ledgerArray[mLedger.accountMapping[address(owner)] - 1];
         if (pLedger.mortgageAssets == 0 && pLedger.parassetAssets == 0) {
             return (0,0,0,0);
         }
@@ -182,12 +184,13 @@ contract MortgagePool is ParassetBase {
         uint88 rate,
         bool created
     ) {
-    	PersonalLedger memory pLedger = _ledgerList[mortgageToken].ledger[address(owner)];
+        MortgageLeader storage mLedger = _ledgerList[mortgageToken];
+        PersonalLedger memory pLedger = mLedger.ledgerArray[mLedger.accountMapping[address(owner)] - 1];
     	return (pLedger.mortgageAssets, 
                 pLedger.parassetAssets, 
                 pLedger.blockHeight, 
-                pLedger.rate, 
-                pLedger.created);
+                pLedger.rate,
+                true);
     }
 
     /// @dev View the insurance pool address
@@ -235,13 +238,16 @@ contract MortgagePool is ParassetBase {
         return _ledgerList[mortgageToken].ledgerArray.length;
     }
 
-    /// @dev View the debt owner
+    /// @dev View the debt index
     /// @param mortgageToken mortgage asset address
-    /// @param index array subscript
-    /// @return debt owner
-    function getLedgerAddress(address mortgageToken, 
-                              uint256 index) external view returns(address) {
-        return _ledgerList[mortgageToken].ledgerArray[index];
+    /// @param owner debt owner
+    /// @return index
+    function getLedgerIndex(
+        address mortgageToken, 
+        address owner
+    ) external view returns(uint256) {
+        MortgageLeader storage mLedger = _ledgerList[mortgageToken];
+        return mLedger.accountMapping[address(owner)];
     }
 
     /// @dev View the pToken address
@@ -355,7 +361,15 @@ contract MortgagePool is ParassetBase {
     	require(morInfo.mortgageAllow, "Log:MortgagePool:!mortgageAllow");
         require(rate > 0 && rate <= morInfo.maxRate, "Log:MortgagePool:rate!=0");
         require(amount > 0, "Log:MortgagePool:amount!=0");
-    	PersonalLedger storage pLedger = _ledgerList[mortgageToken].ledger[address(msg.sender)];
+        MortgageLeader storage mLedger = _ledgerList[mortgageToken];
+        uint256 ledgerNum = mLedger.accountMapping[address(msg.sender)];
+        if (ledgerNum == 0) {
+            // create
+            // PersonalLedger storage newLedger = PersonalLedger(0,0,0,0);
+            mLedger.ledgerArray.push(PersonalLedger(0,0,0,0));
+            mLedger.accountMapping[msg.sender] = mLedger.ledgerArray.length;
+        }
+        PersonalLedger storage pLedger = mLedger.ledgerArray[mLedger.accountMapping[address(msg.sender)] - 1];
         uint256 parassetAssets = pLedger.parassetAssets;
         uint256 mortgageAssets = pLedger.mortgageAssets;
 
@@ -385,10 +399,10 @@ contract MortgagePool is ParassetBase {
         emit LedgerLog(mortgageToken, pLedger.mortgageAssets, pLedger.parassetAssets, tokenPrice, pTokenPrice, pLedger.rate);
 
         // Tag created
-        if (pLedger.created == false) {
-            _ledgerList[mortgageToken].ledgerArray.push(address(msg.sender));
-            pLedger.created = true;
-        }
+        // if (pLedger.created == false) {
+        //     _ledgerList[mortgageToken].ledgerArray.push(address(msg.sender));
+        //     pLedger.created = true;
+        // }
     }
 
     /// @dev Increase mortgage assets
@@ -398,10 +412,17 @@ contract MortgagePool is ParassetBase {
         MortgageInfo memory morInfo = _mortgageConfig[mortgageToken];
     	require(morInfo.mortgageAllow, "Log:MortgagePool:!mortgageAllow");
         require(amount > 0, "Log:MortgagePool:!amount");
-    	PersonalLedger storage pLedger = _ledgerList[mortgageToken].ledger[address(msg.sender)];
+        MortgageLeader storage mLedger = _ledgerList[mortgageToken];
+        uint256 ledgerNum = mLedger.accountMapping[address(msg.sender)];
+        if (ledgerNum == 0) {
+            // create
+            PersonalLedger memory newLedger = PersonalLedger(0,0,0,0);
+            mLedger.ledgerArray.push(newLedger);
+            mLedger.accountMapping[msg.sender] = mLedger.ledgerArray.length;
+        }
+        PersonalLedger storage pLedger = mLedger.ledgerArray[mLedger.accountMapping[address(msg.sender)] - 1];
         uint256 parassetAssets = pLedger.parassetAssets;
         uint256 mortgageAssets = pLedger.mortgageAssets;
-        require(pLedger.created, "Log:MortgagePool:!created");
 
     	// Get the price and transfer to the mortgage token
         uint256 tokenPrice;
@@ -430,11 +451,13 @@ contract MortgagePool is ParassetBase {
     function decrease(address mortgageToken, uint256 amount) public payable outOnly nonReentrant {
         MortgageInfo memory morInfo = _mortgageConfig[mortgageToken];
     	require(morInfo.mortgageAllow, "Log:MortgagePool:!mortgageAllow");
-    	PersonalLedger storage pLedger = _ledgerList[mortgageToken].ledger[address(msg.sender)];
+        MortgageLeader storage mLedger = _ledgerList[mortgageToken];
+        uint256 ledgerNum = mLedger.accountMapping[address(msg.sender)];
+        require(ledgerNum != 0, "Log:MortgagePool:index=0");
+        PersonalLedger storage pLedger = mLedger.ledgerArray[ledgerNum - 1];
         uint256 parassetAssets = pLedger.parassetAssets;
         uint256 mortgageAssets = pLedger.mortgageAssets;
         require(amount > 0 && amount <= mortgageAssets, "Log:MortgagePool:!amount");
-        require(pLedger.created, "Log:MortgagePool:!created");
 
     	// Get the price
         (uint256 tokenPrice, uint256 pTokenPrice) = getPriceForPToken(mortgageToken, msg.value);
@@ -471,10 +494,13 @@ contract MortgagePool is ParassetBase {
         MortgageInfo memory morInfo = _mortgageConfig[mortgageToken];
         require(morInfo.mortgageAllow, "Log:MortgagePool:!mortgageAllow");
         require(amount > 0, "Log:MortgagePool:!amount");
-        PersonalLedger storage pLedger = _ledgerList[mortgageToken].ledger[address(msg.sender)];
+        MortgageLeader storage mLedger = _ledgerList[mortgageToken];
+        uint256 ledgerNum = mLedger.accountMapping[address(msg.sender)];
+        require(ledgerNum != 0, "Log:MortgagePool:index=0");
+        PersonalLedger storage pLedger = mLedger.ledgerArray[ledgerNum - 1];
         uint256 parassetAssets = pLedger.parassetAssets;
         uint256 mortgageAssets = pLedger.mortgageAssets;
-        require(pLedger.created, "Log:MortgagePool:!created");
+        require(mortgageAssets > 0, "Log:MortgagePool:!mortgageAssets");
 
         // Get the price
         (uint256 tokenPrice, uint256 pTokenPrice) = getPriceForPToken(mortgageToken, msg.value);
@@ -501,11 +527,13 @@ contract MortgagePool is ParassetBase {
     function reducedCoinage(address mortgageToken, uint256 amount) public payable outOnly nonReentrant {
         MortgageInfo memory morInfo = _mortgageConfig[mortgageToken];
         require(morInfo.mortgageAllow, "Log:MortgagePool:!mortgageAllow");
-        PersonalLedger storage pLedger = _ledgerList[mortgageToken].ledger[address(msg.sender)];
+        MortgageLeader storage mLedger = _ledgerList[mortgageToken];
+        uint256 ledgerNum = mLedger.accountMapping[address(msg.sender)];
+        require(ledgerNum != 0, "Log:MortgagePool:index=0");
+        PersonalLedger storage pLedger = mLedger.ledgerArray[ledgerNum - 1];
         uint256 parassetAssets = pLedger.parassetAssets;
         uint256 mortgageAssets = pLedger.mortgageAssets;
         require(amount > 0 && amount <= parassetAssets, "Log:MortgagePool:!amount");
-        require(pLedger.created, "Log:MortgagePool:!created");
 
         // Get the price
         (uint256 tokenPrice, uint256 pTokenPrice) = getPriceForPToken(mortgageToken, msg.value);
@@ -516,11 +544,7 @@ contract MortgagePool is ParassetBase {
         // Update debt information
         pLedger.parassetAssets = parassetAssets - amount;
         pLedger.blockHeight = uint160(block.number);
-        if (pLedger.parassetAssets == 0) {
-            pLedger.rate = 0;
-        } else {
-            pLedger.rate = getMortgageRate(mortgageAssets, pLedger.parassetAssets, tokenPrice, pTokenPrice);
-        }
+        pLedger.rate = getMortgageRate(mortgageAssets, pLedger.parassetAssets, tokenPrice, pTokenPrice);
         emit LedgerLog(mortgageToken, pLedger.mortgageAssets, pLedger.parassetAssets, tokenPrice, pTokenPrice, pLedger.rate);
 
         TransferHelper.safeTransferFrom(_config.pTokenAdd, 
@@ -544,8 +568,10 @@ contract MortgagePool is ParassetBase {
     ) public payable outOnly nonReentrant {
         MortgageInfo memory morInfo = _mortgageConfig[mortgageToken];
     	require(morInfo.mortgageAllow, "Log:MortgagePool:!mortgageAllow");
-    	PersonalLedger storage pLedger = _ledgerList[mortgageToken].ledger[address(account)];
-        require(pLedger.created, "Log:MortgagePool:!created");
+        MortgageLeader storage mLedger = _ledgerList[mortgageToken];
+        uint256 ledgerNum = mLedger.accountMapping[address(account)];
+        require(ledgerNum != 0, "Log:MortgagePool:index=0");
+        PersonalLedger storage pLedger = mLedger.ledgerArray[ledgerNum - 1];
         uint256 parassetAssets = pLedger.parassetAssets;
         uint256 mortgageAssets = pLedger.mortgageAssets;
         require(amount > 0 && amount <= mortgageAssets, "Log:MortgagePool:!amount");

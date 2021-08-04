@@ -6,10 +6,14 @@ const contracts = require("./contracts.js")
 
 async function main() {
 
-	const InsurancePool = await ethers.getContractFactory("InsurancePool");
+	// const InsurancePool = await ethers.getContractFactory("InsurancePool");
 
-	const PUSDINSPOOL = await upgrades.upgradeProxy(contracts.PUSDInsPool, InsurancePool);
-	const PETHINSPOOL = await upgrades.upgradeProxy(contracts.PETHInsPool, InsurancePool);
+	// const PUSDINSPOOL = await upgrades.upgradeProxy(contracts.PUSDInsPool, InsurancePool);
+	// const PETHINSPOOL = await upgrades.upgradeProxy(contracts.PETHInsPool, InsurancePool);
+
+  const MortgagePool = await ethers.getContractFactory("MortgagePool");
+  await upgrades.upgradeProxy(contracts.PUSDMorPool, MortgagePool);
+  await upgrades.upgradeProxy(contracts.PETHMorPool, MortgagePool);
 }
 
 main()

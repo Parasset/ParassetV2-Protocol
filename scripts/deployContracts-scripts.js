@@ -36,10 +36,10 @@ exports.deploy = async function () {
 	const PTOKENFACTORY = await upgrades.deployProxy(PTokenFactory, [GovernanceContract.address], { initializer: 'initialize' });
 	console.log(`5. PTOKENFACTORY + "${PTOKENFACTORY.address}"`);
 	// create PUSD
-	await PTOKENFACTORY.createPtoken("USD");
+	await PTOKENFACTORY.createPToken("USD");
 	console.log(`6. createPtoken success-USD"`);
 	// create PETH
-	await PTOKENFACTORY.createPtoken("ETH");
+	await PTOKENFACTORY.createPToken("ETH");
 	console.log(`7. createPtoken success-ETH"`);
 
 	sleep(5000);
@@ -98,11 +98,10 @@ exports.deploy = async function () {
 	await PUSDMORPOOL.setConfig(USDTPToken, "2400000", USDTContract.address, "1");
 	await PETHMORPOOL.setConfig(ETHPToken, "2400000", ETHAddress, "1");
 	console.log(`23. setConfig`);
-	// start ins and set ETHINS
-	await PETHINSPOOL.setETHIns(true);
+	// start ins
 	await PETHINSPOOL.setFlag(1);
 	await PUSDINSPOOL.setFlag(1);
-	await PETHINSPOOL.setTokenInfo("LP-USD", "LP-USD");
+	await PETHINSPOOL.setTokenInfo("LP-ETH", "LP-ETH");
 	await PUSDINSPOOL.setTokenInfo("LP-USD", "LP-USD");
 	await PETHINSPOOL.setInfo(ETHAddress, ETHPToken);
 	await PUSDINSPOOL.setInfo(USDTContract.address, USDTPToken);
