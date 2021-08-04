@@ -29,17 +29,15 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
     // pToken address
     address public _pTokenAddress;
     // redemption cycle, 2 days
-	uint256 public _redemptionCycle;
+	uint96 public _redemptionCycle;
     // underlyingToken address
     address public _underlyingTokenAddress;
     // redemption duration, 7 days
-	uint256 public _waitCycle;
+	uint96 public _waitCycle;
     // mortgagePool address
     address public _mortgagePool;
     // rate(2/1000)
-    uint256 public _feeRate;
-    // is ETH insPool
-    bool public _ethIns;
+    uint96 public _feeRate;
 
     uint constant MINIMUM_LIQUIDITY = 1e9; 
 
@@ -53,10 +51,7 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
         _redemptionCycle = 15 minutes;
         _waitCycle = 30 minutes;
         _feeRate = 2;
-        _ethIns = false;
         _totalSupply = 0;
-        _name = "";
-        _symbol = "";
     }
 
 	//---------modifier---------
@@ -96,12 +91,12 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
     function getRedemptionTime() external view returns(uint256 startTime, uint256 endTime) {
         uint256 time = _latestTime;
         if (block.timestamp > time) {
-            uint256 subTime = (block.timestamp - time) / _waitCycle;
-            startTime = time + (_waitCycle * (1 + subTime));
+            uint256 subTime = (block.timestamp - time) / uint256(_waitCycle);
+            startTime = time + (uint256(_waitCycle) * (1 + subTime));
         } else {
             startTime = time;
         }
-        endTime = startTime + _redemptionCycle;
+        endTime = startTime + uint256(_redemptionCycle);
     }
 
     /// @dev View redemption period, this period
@@ -110,12 +105,12 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
     function getRedemptionTimeFront() external view returns(uint256 startTime, uint256 endTime) {
         uint256 time = _latestTime;
         if (block.timestamp > time) {
-            uint256 subTime = (block.timestamp - time) / _waitCycle;
-            startTime = time + (_waitCycle * subTime);
+            uint256 subTime = (block.timestamp - time) / uint256(_waitCycle);
+            startTime = time + (uint256(_waitCycle) * subTime);
         } else {
-            startTime = time - _waitCycle;
+            startTime = time - uint256(_waitCycle);
         }
-        endTime = startTime + _redemptionCycle;
+        endTime = startTime + uint256(_redemptionCycle);
     }
 
     /// @dev View frozen LP and unfreeze time
@@ -183,20 +178,20 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
     }
 
     /// @dev Set the rate
-    function setFeeRate(uint256 num) external onlyGovernance {
+    function setFeeRate(uint96 num) external onlyGovernance {
         _feeRate = num;
     }
 
     /// @dev Set redemption cycle
     function setRedemptionCycle(uint256 num) external onlyGovernance {
         require(num > 0, "Log:InsurancePool:!zero");
-        _redemptionCycle = num * 1 days;
+        _redemptionCycle = uint96(num * 1 days);
     }
 
     /// @dev Set redemption duration
     function setWaitCycle(uint256 num) external onlyGovernance {
         require(num > 0, "Log:InsurancePool:!zero");
-        _waitCycle = num * 1 days;
+        _waitCycle = uint96(num * 1 days);
     }
 
     /// @dev Set the underlying asset and ptoken mapping and
@@ -205,10 +200,6 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
     function setInfo(address uToken, address pToken) external onlyGovernance {
         _underlyingTokenAddress = uToken;
         _pTokenAddress = pToken;
-    }
-
-    function setETHIns(bool isETHIns) external onlyGovernance {
-        _ethIns = isETHIns;
     }
 
     function test_insNegative(uint256 amount) external onlyGovernance {
@@ -335,7 +326,7 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
 
     	// Freeze insurance LP
     	frozenInfo.amount = frozenInfo.amount + insAmount;
-    	frozenInfo.time = _latestTime + _waitCycle;
+    	frozenInfo.time = _latestTime + uint256(_waitCycle);
     }
 
     /// @dev Redemption insurance
@@ -349,7 +340,7 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
 
         // Judging the redemption time
         uint256 tokenTime = _latestTime;
-    	require(block.timestamp >= tokenTime - _waitCycle && block.timestamp <= tokenTime - _waitCycle + _redemptionCycle, "Log:InsurancePool:!time");
+    	require(block.timestamp >= tokenTime - uint256(_waitCycle) && block.timestamp <= tokenTime - uint256(_waitCycle) + uint256(_redemptionCycle), "Log:InsurancePool:!time");
 
         // Thaw LP
     	Frozen storage frozenInfo = _frozenIns[address(msg.sender)];
@@ -442,8 +433,8 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
     function updateLatestTime() public {
         uint256 time = _latestTime;
     	if (block.timestamp > time) {
-    		uint256 subTime = (block.timestamp - time) / _waitCycle;
-    		_latestTime = time + (_waitCycle * (1 + subTime));
+    		uint256 subTime = (block.timestamp - time) / uint256(_waitCycle);
+    		_latestTime = time + (uint256(_waitCycle) * (1 + subTime));
     	}
     }
 
@@ -521,8 +512,5 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
 
     /// The insurance pool penetrates the warehouse, and external assets are added to the insurance pool.
     function addETH() external payable {}
-    function addToken(address tokenAddress, uint256 amount) external {
-        TransferHelper.safeTransferFrom(tokenAddress, address(msg.sender), address(this), amount);
-    }
 
 }
