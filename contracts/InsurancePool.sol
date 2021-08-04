@@ -194,9 +194,9 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
         _waitCycle = uint96(num * 1 days);
     }
 
-    /// @dev Set the underlying asset and ptoken mapping and
+    /// @dev Set the underlying asset and PToken mapping and
     /// @param uToken underlying asset address
-    /// @param pToken ptoken address
+    /// @param pToken PToken address
     function setInfo(address uToken, address pToken) external onlyGovernance {
         _underlyingTokenAddress = uToken;
         _pTokenAddress = pToken;
@@ -208,8 +208,8 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
 
     //---------transaction---------
 
-    /// @dev Exchange: ptoken exchanges the underlying asset
-    /// @param amount amount of ptoken
+    /// @dev Exchange: PToken exchanges the underlying asset
+    /// @param amount amount of PToken
     function exchangePTokenToUnderlying(uint256 amount) public whenActive nonReentrant {
         // amount > 0
         require(amount > 0, "Log:InsurancePool:!amount");
@@ -217,7 +217,7 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
         // Calculate the fee
     	uint256 fee = amount * _feeRate / 1000;
 
-        // Transfer to the ptoken
+        // Transfer to the PToken
         address pTokenAddress = _pTokenAddress;
         TransferHelper.safeTransferFrom(pTokenAddress, address(msg.sender), address(this), amount);
 
@@ -236,7 +236,7 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
         eliminate();
     }
 
-    /// @dev Exchange: underlying asset exchanges the ptoken
+    /// @dev Exchange: underlying asset exchanges the PToken
     /// @param amount amount of underlying asset
     function exchangeUnderlyingToPToken(uint256 amount) public payable whenActive nonReentrant {
         // amount > 0
@@ -255,15 +255,15 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
             TransferHelper.safeTransferFrom(_underlyingTokenAddress, address(msg.sender), address(this), amount);
     	}
 
-        // Calculate the amount of transferred ptokens
+        // Calculate the amount of transferred PTokens
         uint256 pTokenAmount = getDecimalConversion(_underlyingTokenAddress, amount - fee, address(0x0));
         require(pTokenAmount > 0, "Log:InsurancePool:!pTokenAmount");
 
-        // Transfer out ptoken
+        // Transfer out PToken
         address pTokenAddress = _pTokenAddress;
         uint256 pTokenBalance = IERC20(pTokenAddress).balanceOf(address(this));
         if (pTokenBalance < pTokenAmount) {
-            // Insufficient ptoken balance,
+            // Insufficient PToken balance,
             uint256 subNum = pTokenAmount - pTokenBalance;
             IParasset(pTokenAddress).issuance(subNum, address(this));
             _insNegative = _insNegative + subNum;
@@ -286,7 +286,7 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
     		frozenInfo.amount = 0;
     	}
 
-        // ptoken balance 
+        // PToken balance 
     	uint256 pTokenBalance = IERC20(_pTokenAddress).balanceOf(address(this));
         // underlying asset balance
         uint256 tokenBalance;
@@ -348,7 +348,7 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
     		frozenInfo.amount = 0;
     	}
     	
-        // ptoken balance
+        // PToken balance
     	uint256 pTokenBalance = IERC20(_pTokenAddress).balanceOf(address(this));
         // underlying asset balance
         uint256 tokenBalance;
@@ -391,7 +391,7 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
     	}
     }
 
-    /// @dev Destroy ptoken, update negative ledger
+    /// @dev Destroy PToken, update negative ledger
     /// @param amount quantity destroyed
     function destroyPToken(uint256 amount) public override onlyMortgagePool {
     	IParasset pErc20 = IParasset(_pTokenAddress);
@@ -412,7 +412,7 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
     	IParasset pErc20 = IParasset(_pTokenAddress);
         // negative ledger
     	uint256 negative = _insNegative;
-        // ptoken balance
+        // PToken balance
     	uint256 pTokenBalance = pErc20.balanceOf(address(this)); 
     	if (negative > 0 && pTokenBalance > 0) {
     		if (negative >= pTokenBalance) {

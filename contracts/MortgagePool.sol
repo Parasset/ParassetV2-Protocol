@@ -12,11 +12,11 @@ contract MortgagePool is ParassetBase {
 
     Config _config;
     // mortgage asset address => mortgage config
-    mapping(address=>MortgageInfo) _mortageConfig;
+    mapping(address=>MortgageInfo) _mortgageConfig;
     // mortgage asset address => ledger info
-    mapping(address=>MortageLeader) _ledgerList;
+    mapping(address=>MortgageLeader) _ledgerList;
     // priceController contract
-    IPriceController _quary;
+    IPriceController _query;
     // insurance pool contract
     IInsurancePool _insurancePool;
 
@@ -30,7 +30,7 @@ contract MortgagePool is ParassetBase {
         // six digits, 0.02=2000
         uint80 r0;
     }
-    struct MortageLeader {
+    struct MortgageLeader {
         // debt data
         mapping(address => PersonalLedger) ledger;
         // users who have created debt positions(address)
@@ -39,7 +39,7 @@ contract MortgagePool is ParassetBase {
     struct PersonalLedger {
         // amount of mortgaged assets
         uint256 mortgageAssets;
-        // amount of debt(Ptoken,Stability fee not included)      
+        // amount of debt(PToken,Stability fee not included)      
         uint256 parassetAssets;
         // the block height of the last operation       
         uint160 blockHeight;
@@ -79,7 +79,7 @@ contract MortgagePool is ParassetBase {
     //---------view---------
 
     /// @dev Calculate the stability fee
-    /// @param parassetAssets Amount of debt(Ptoken,Stability fee not included)
+    /// @param parassetAssets Amount of debt(PToken,Stability fee not included)
     /// @param blockHeight The block height of the last operation
     /// @param rate Mortgage rate(Initial mortgage rate,Mortgage rate after the last operation)
     /// @param nowRate Current mortgage rate (not including stability fee)
@@ -115,7 +115,7 @@ contract MortgagePool is ParassetBase {
     }
 
     /// @dev Get real-time data of the current debt warehouse
-    /// @param mortgageToken Mortgage asset addresss
+    /// @param mortgageToken Mortgage asset address
     /// @param tokenPrice Mortgage asset price(1 ETH = ? token)
     /// @param uTokenPrice Underlying asset price(1 ETH = ? Underlying asset)
     /// @param maxRateNum Maximum mortgage rate
@@ -149,7 +149,7 @@ contract MortgagePool is ParassetBase {
                      pLedger.blockHeight, 
                      pLedger.rate, 
                      getMortgageRate(pLedger.mortgageAssets, pLedger.parassetAssets, tokenPriceAmount, pTokenPrice), 
-                     _mortageConfig[mToken].r0);
+                     _mortgageConfig[mToken].r0);
         mortgageRate = getMortgageRate(pLedger.mortgageAssets, 
                                        pLedger.parassetAssets + fee, 
                                        tokenPriceAmount, 
@@ -168,7 +168,7 @@ contract MortgagePool is ParassetBase {
     /// @param mortgageToken mortgage asset address
     /// @param owner debt owner
     /// @return mortgageAssets amount of mortgaged assets
-    /// @return parassetAssets amount of debt(Ptoken,Stability fee not included)
+    /// @return parassetAssets amount of debt(PToken,Stability fee not included)
     /// @return blockHeight the block height of the last operation
     /// @return rate Mortgage rate(Initial mortgage rate,Mortgage rate after the last operation)
     /// @return created is it created
@@ -199,7 +199,7 @@ contract MortgagePool is ParassetBase {
     /// @dev View the market base interest rate
     /// @return market base interest rate
     function getR0(address mortgageToken) external view returns(uint80) {
-    	return _mortageConfig[mortgageToken].r0;
+    	return _mortgageConfig[mortgageToken].r0;
     }
 
     /// @dev View the amount of blocks produced in a year
@@ -212,20 +212,20 @@ contract MortgagePool is ParassetBase {
     /// @param mortgageToken Mortgage asset address
     /// @return maximum mortgage rate
     function getMaxRate(address mortgageToken) external view returns(uint88) {
-    	return _mortageConfig[mortgageToken].maxRate;
+    	return _mortgageConfig[mortgageToken].maxRate;
     }
 
     /// @dev View the k value
     /// @param mortgageToken Mortgage asset address
     /// @return k value
     function getK(address mortgageToken) external view returns(uint256) {
-        return _mortageConfig[mortgageToken].k;
+        return _mortgageConfig[mortgageToken].k;
     }
 
     /// @dev View the priceController contract address
     /// @return priceController contract address
     function getPriceController() external view returns(address) {
-        return address(_quary);
+        return address(_query);
     }
 
     /// @dev View the debt array length
@@ -246,7 +246,7 @@ contract MortgagePool is ParassetBase {
 
     /// @dev View the pToken address
     /// @return pToken address
-    function getPtokenAddress() external view returns(address) {
+    function getPTokenAddress() external view returns(address) {
         return _config.pTokenAdd;
     }
 
@@ -287,11 +287,11 @@ contract MortgagePool is ParassetBase {
         _config.flag = num;
     }
 
-    /// @dev Allow asset mortgage to generate ptoken
+    /// @dev Allow asset mortgage to generate PToken
     /// @param mortgageToken mortgage asset address
     /// @param allow allow mortgage
     function setMortgageAllow(address mortgageToken, bool allow) public onlyGovernance {
-    	_mortageConfig[mortgageToken].mortgageAllow = allow;
+    	_mortgageConfig[mortgageToken].mortgageAllow = allow;
     }
 
     /// @dev Set insurance pool contract
@@ -303,7 +303,7 @@ contract MortgagePool is ParassetBase {
     /// @dev Set market base interest rate
     /// @param num market base interest rate(num = ? * 1 ether)
     function setR0(address mortgageToken, uint80 num) public onlyGovernance {
-    	_mortageConfig[mortgageToken].r0 = num;
+    	_mortgageConfig[mortgageToken].r0 = num;
     }
 
     /// @dev Set the amount of blocks produced in a year
@@ -316,25 +316,25 @@ contract MortgagePool is ParassetBase {
     /// @param mortgageToken mortgage asset address
     /// @param num K value
     function setK(address mortgageToken, uint80 num) public onlyGovernance {
-        _mortageConfig[mortgageToken].k = num;
+        _mortgageConfig[mortgageToken].k = num;
     }
 
     /// @dev Set the maximum mortgage rate
     /// @param mortgageToken mortgage asset address
     /// @param num maximum mortgage rate(num = ? * 1000)
     function setMaxRate(address mortgageToken, uint88 num) public onlyGovernance {
-        _mortageConfig[mortgageToken].maxRate = num;
+        _mortgageConfig[mortgageToken].maxRate = num;
     }
 
     /// @dev Set priceController contract address
     /// @param add priceController contract address
     function setPriceController(address add) public onlyGovernance {
-        _quary = IPriceController(add);
+        _query = IPriceController(add);
     }
 
-    /// @dev Set the underlying asset and ptoken mapping and
+    /// @dev Set the underlying asset and PToken mapping and
     /// @param uToken underlying asset address
-    /// @param pToken ptoken address
+    /// @param pToken PToken address
     function setInfo(address uToken, address pToken) public onlyGovernance {
         _config.pTokenAdd = pToken;
         _config.underlyingTokenAdd = uToken;
@@ -342,7 +342,7 @@ contract MortgagePool is ParassetBase {
 
     //---------transaction---------
 
-    /// @dev Mortgage asset casting ptoken
+    /// @dev Mortgage asset casting PToken
     /// @param mortgageToken mortgage asset address
     /// @param amount amount of mortgaged assets
     /// @param rate custom mortgage rate
@@ -351,7 +351,7 @@ contract MortgagePool is ParassetBase {
         uint256 amount, 
         uint88 rate
     ) public payable whenActive nonReentrant {
-        MortgageInfo memory morInfo = _mortageConfig[mortgageToken];
+        MortgageInfo memory morInfo = _mortgageConfig[mortgageToken];
     	require(morInfo.mortgageAllow, "Log:MortgagePool:!mortgageAllow");
         require(rate > 0 && rate <= morInfo.maxRate, "Log:MortgagePool:rate!=0");
         require(amount > 0, "Log:MortgagePool:amount!=0");
@@ -373,7 +373,7 @@ contract MortgagePool is ParassetBase {
         // Calculate the stability fee
         transferFee(pLedger, tokenPrice, pTokenPrice, morInfo.r0);
 
-        // Additional ptoken issuance
+        // Additional PToken issuance
         uint256 pTokenAmount = amount * pTokenPrice * rate / (tokenPrice * 100000);
         IParasset(_config.pTokenAdd).issuance(pTokenAmount, address(msg.sender));
 
@@ -395,7 +395,7 @@ contract MortgagePool is ParassetBase {
     /// @param mortgageToken mortgage asset address
     /// @param amount amount of mortgaged assets
     function supplement(address mortgageToken, uint256 amount) public payable outOnly nonReentrant {
-        MortgageInfo memory morInfo = _mortageConfig[mortgageToken];
+        MortgageInfo memory morInfo = _mortgageConfig[mortgageToken];
     	require(morInfo.mortgageAllow, "Log:MortgagePool:!mortgageAllow");
         require(amount > 0, "Log:MortgagePool:!amount");
     	PersonalLedger storage pLedger = _ledgerList[mortgageToken].ledger[address(msg.sender)];
@@ -428,7 +428,7 @@ contract MortgagePool is ParassetBase {
     /// @param mortgageToken mortgage asset address
     /// @param amount amount of mortgaged assets
     function decrease(address mortgageToken, uint256 amount) public payable outOnly nonReentrant {
-        MortgageInfo memory morInfo = _mortageConfig[mortgageToken];
+        MortgageInfo memory morInfo = _mortgageConfig[mortgageToken];
     	require(morInfo.mortgageAllow, "Log:MortgagePool:!mortgageAllow");
     	PersonalLedger storage pLedger = _ledgerList[mortgageToken].ledger[address(msg.sender)];
         uint256 parassetAssets = pLedger.parassetAssets;
@@ -468,7 +468,7 @@ contract MortgagePool is ParassetBase {
     /// @param mortgageToken mortgage asset address
     /// @param amount amount of debt
     function increaseCoinage(address mortgageToken, uint256 amount) public payable whenActive nonReentrant {
-        MortgageInfo memory morInfo = _mortageConfig[mortgageToken];
+        MortgageInfo memory morInfo = _mortgageConfig[mortgageToken];
         require(morInfo.mortgageAllow, "Log:MortgagePool:!mortgageAllow");
         require(amount > 0, "Log:MortgagePool:!amount");
         PersonalLedger storage pLedger = _ledgerList[mortgageToken].ledger[address(msg.sender)];
@@ -491,7 +491,7 @@ contract MortgagePool is ParassetBase {
         // The debt warehouse mortgage rate cannot be greater than the maximum mortgage rate
         require(pLedger.rate <= morInfo.maxRate, "Log:MortgagePool:!maxRate");
 
-        // Additional ptoken issuance
+        // Additional PToken issuance
         IParasset(_config.pTokenAdd).issuance(amount, address(msg.sender));
     }
 
@@ -499,7 +499,7 @@ contract MortgagePool is ParassetBase {
     /// @param mortgageToken mortgage asset address
     /// @param amount amount of debt
     function reducedCoinage(address mortgageToken, uint256 amount) public payable outOnly nonReentrant {
-        MortgageInfo memory morInfo = _mortageConfig[mortgageToken];
+        MortgageInfo memory morInfo = _mortgageConfig[mortgageToken];
         require(morInfo.mortgageAllow, "Log:MortgagePool:!mortgageAllow");
         PersonalLedger storage pLedger = _ledgerList[mortgageToken].ledger[address(msg.sender)];
         uint256 parassetAssets = pLedger.parassetAssets;
@@ -527,7 +527,7 @@ contract MortgagePool is ParassetBase {
                                         address(msg.sender), 
                                         address(_insurancePool), 
                                         amount);
-        // Destroy ptoken
+        // Destroy PToken
         _insurancePool.destroyPToken(amount);
     }
 
@@ -535,14 +535,14 @@ contract MortgagePool is ParassetBase {
     /// @param mortgageToken mortgage asset address
     /// @param account debt owner address
     /// @param amount amount of mortgaged assets
-    /// @param pTokenAmountLimit pay ptoken limit
+    /// @param pTokenAmountLimit pay PToken limit
     function liquidation(
         address mortgageToken,
         address account,
         uint256 amount,
         uint256 pTokenAmountLimit
     ) public payable outOnly nonReentrant {
-        MortgageInfo memory morInfo = _mortageConfig[mortgageToken];
+        MortgageInfo memory morInfo = _mortgageConfig[mortgageToken];
     	require(morInfo.mortgageAllow, "Log:MortgagePool:!mortgageAllow");
     	PersonalLedger storage pLedger = _ledgerList[mortgageToken].ledger[address(account)];
         require(pLedger.created, "Log:MortgagePool:!created");
@@ -556,9 +556,9 @@ contract MortgagePool is ParassetBase {
         // Judging the liquidation line
         _checkLine(pLedger, tokenPrice, pTokenPrice, morInfo.k, morInfo.r0);
 
-        // Calculate the amount of ptoken
+        // Calculate the amount of PToken
         uint256 pTokenAmount = amount * pTokenPrice * 90 / (tokenPrice * 100);
-    	// Transfer to ptoken
+    	// Transfer to PToken
         require(pTokenAmount <= pTokenAmountLimit, "Log:MortgagePool:!pTokenAmountLimit");
         TransferHelper.safeTransferFrom(_config.pTokenAdd, address(msg.sender), address(_insurancePool), pTokenAmount);
 
@@ -568,7 +568,7 @@ contract MortgagePool is ParassetBase {
         // Calculate the debt for destruction
         uint256 offset = parassetAssets * amount / mortgageAssets;
 
-        // Destroy ptoken
+        // Destroy PToken
     	_insurancePool.destroyPToken(offset);
 
     	// Update debt information
@@ -656,7 +656,7 @@ contract MortgagePool is ParassetBase {
         uint256 tokenPrice, 
         uint256 pTokenPrice
     ) {
-        (tokenPrice, pTokenPrice) = _quary.getPriceForPToken{value:priceValue}(mortgageToken, 
+        (tokenPrice, pTokenPrice) = _query.getPriceForPToken{value:priceValue}(mortgageToken, 
                                                                                _config.underlyingTokenAdd,
                                                                                msg.sender);   
     }

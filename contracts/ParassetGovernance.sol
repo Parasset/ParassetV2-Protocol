@@ -14,7 +14,7 @@ contract ParassetGovernance is IParassetGovernance {
     /// @dev Governance address information
     mapping(address=>GovernanceInfo) _governanceMapping;
 
-    constructor() public {
+    constructor() {
 		// Add msg.sender to governance
         _governanceMapping[msg.sender] = GovernanceInfo(msg.sender, uint96(0xFFFFFFFFFFFFFFFFFFFFFFFF));
     }

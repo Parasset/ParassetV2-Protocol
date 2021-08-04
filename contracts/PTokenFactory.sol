@@ -9,11 +9,11 @@ contract PTokenFactory is ParassetBase, IPTokenFactory {
 
     // Governance contract
     address public _owner;
-	// contract address => bool, ptoken operation permissions
+	// contract address => bool, PToken operation permissions
 	mapping(address=>bool) _allowAddress;
-	// ptoken address => bool, ptoken verification
+	// PToken address => bool, PToken verification
 	mapping(address=>bool) _pTokenMapping;
-    // ptoken address list
+    // PToken address list
     address[] public _pTokenList;
 
     event createLog(address pTokenAddress);
@@ -25,7 +25,7 @@ contract PTokenFactory is ParassetBase, IPTokenFactory {
     /// @param _a previous string
     /// @param _b after the string
     /// @return full string
-    function strConcat(string memory _a, string memory _b) public pure returns (string memory){
+    function strSplicing(string memory _a, string memory _b) public pure returns (string memory){
         bytes memory _ba = bytes(_a);
         bytes memory _bb = bytes(_b);
         string memory ret = new string(_ba.length + _bb.length);
@@ -46,21 +46,21 @@ contract PTokenFactory is ParassetBase, IPTokenFactory {
         return _owner;
     }
 
-    /// @dev View ptoken operation permissions
+    /// @dev View PToken operation permissions
     /// @param contractAddress contract address
     /// @return bool
     function getPTokenOperator(address contractAddress) external override view returns(bool) {
     	return _allowAddress[contractAddress];
     }
 
-    /// @dev View ptoken operation permissions
-    /// @param pToken ptoken verification
+    /// @dev View PToken operation permissions
+    /// @param pToken PToken verification
     /// @return bool
     function getPTokenAuthenticity(address pToken) external override view returns(bool) {
     	return _pTokenMapping[pToken];
     }
 
-    /// @dev Query ptoken address through index
+    /// @dev Query PToken address through index
     /// @param index array subscript
     /// @return pToken address
     function getPTokenAddress(uint256 index) external override view returns(address) {
@@ -84,7 +84,7 @@ contract PTokenFactory is ParassetBase, IPTokenFactory {
         emit pTokenOperator(contractAddress, allow);
     }
 
-    /// @dev Add data to the ptoken array
+    /// @dev Add data to the PToken array
     /// @param add pToken address
     function addPTokenList(address add) external onlyGovernance {
         _pTokenList.push(add);
@@ -92,8 +92,8 @@ contract PTokenFactory is ParassetBase, IPTokenFactory {
 
     /// @dev Create PToken
     /// @param name token name
-    function createPtoken(string memory name) external onlyGovernance {
-    	PToken pToken = new PToken(strConcat("PToken_", name), strConcat("P", name));
+    function createPToken(string memory name) external onlyGovernance {
+    	PToken pToken = new PToken(strSplicing("PToken_", name), strSplicing("P", name));
     	_pTokenMapping[address(pToken)] = true;
         _pTokenList.push(address(pToken));
     	emit createLog(address(pToken));

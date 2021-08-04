@@ -12,21 +12,21 @@ contract PriceController is IPriceController {
 	// Nest price contract
     INestPriceFacade _nestPriceFacade;
     // NTokenController
-    INTokenController _ntokenController;
+    INTokenController _nTokenController;
 
     /// @dev Initialization method
     /// @param nestPriceFacade Nest price contract
-    /// @param ntokenController NTokenController
-	constructor (address nestPriceFacade, address ntokenController) {
+    /// @param nTokenController NTokenController
+	constructor (address nestPriceFacade, address nTokenController) {
 		_nestPriceFacade = INestPriceFacade(nestPriceFacade);
-        _ntokenController = INTokenController(ntokenController);
+        _nTokenController = INTokenController(nTokenController);
     }
 
-    /// @dev Is it a token-ntoken price pair
+    /// @dev Is it a token-NToken price pair
     /// @param tokenOne token address(USDT,HBTC...)
-    /// @param tokenTwo ntoken address(NEST,NHBTC...)
+    /// @param tokenTwo NToken address(NEST,NHBTC...)
     function checkNToken(address tokenOne, address tokenTwo) public view returns(bool) {
-        if (_ntokenController.getNTokenAddress(tokenOne) == tokenTwo) {
+        if (_nTokenController.getNTokenAddress(tokenOne) == tokenTwo) {
             return true;
         }
         return false;
