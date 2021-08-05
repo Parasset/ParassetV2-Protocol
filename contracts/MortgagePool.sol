@@ -90,11 +90,20 @@ contract MortgagePool is ParassetBase {
         uint256 nowRate,
         uint80 r0Value
     ) public view returns(uint256) {
-        uint256 topOne = parassetAssets * uint256(r0Value) * (block.number - uint256(blockHeight));
-        uint256 ratePlus = rate + nowRate;
-        uint256 topTwo = parassetAssets * uint256(r0Value) * (block.number - uint256(blockHeight)) * uint256(3) * ratePlus;
-    	uint256 bottom = uint256(_config.oneYearBlock) * 100000;
-    	return topOne / bottom + (topTwo / (bottom * 100000 * 2));
+        uint256 top = (uint256(3) * (rate + nowRate) + 100000 * 2)
+                      * parassetAssets
+                      * uint256(r0Value)
+                      * (block.number - uint256(blockHeight));
+        uint256 bottom = 100000 
+                         * 100000 
+                         * uint256(_config.oneYearBlock) 
+                         * 2;
+        // uint256 topOne = parassetAssets * uint256(r0Value) * (block.number - uint256(blockHeight));
+        // uint256 ratePlus = rate + nowRate;
+        // uint256 topTwo = parassetAssets * uint256(r0Value) * (block.number - uint256(blockHeight)) * uint256(3) * ratePlus;
+    	// uint256 bottom = uint256(_config.oneYearBlock) * 100000;
+    	// return topOne / bottom + (topTwo / (bottom * 100000 * 2));
+        return top / bottom;
     }
 
     /// @dev Calculate the mortgage rate
@@ -549,10 +558,11 @@ contract MortgagePool is ParassetBase {
 
         TransferHelper.safeTransferFrom(_config.pTokenAdd, 
                                         address(msg.sender), 
-                                        address(_insurancePool), 
+                                        address(this), 
                                         amount);
         // Destroy PToken
-        _insurancePool.destroyPToken(amount);
+        IParasset(_config.pTokenAdd).destroy(amount, address(this));
+        // _insurancePool.destroyPToken(amount);
     }
 
     /// @dev Liquidation of debt
@@ -588,8 +598,8 @@ contract MortgagePool is ParassetBase {
         require(pTokenAmount <= pTokenAmountLimit, "Log:MortgagePool:!pTokenAmountLimit");
         TransferHelper.safeTransferFrom(_config.pTokenAdd, address(msg.sender), address(_insurancePool), pTokenAmount);
 
-    	// Eliminate negative accounts
-        _insurancePool.eliminate();
+    	// // Eliminate negative accounts
+        // _insurancePool.eliminate();
 
         // Calculate the debt for destruction
         uint256 offset = parassetAssets * amount / mortgageAssets;
@@ -638,7 +648,7 @@ contract MortgagePool is ParassetBase {
         if (parassetAssets > 0 && uint160(block.number) > blockHeight && blockHeight != 0) {
             fee = getFee(parassetAssets, blockHeight, pLedger.rate, mortgageRate, r0Value);
         }
-        require(((parassetAssets + fee) * uint256(kValue) * tokenPrice / (mortgageAssets * 100000)) < pTokenPrice, "Log:MortgagePool:!liquidationLine");
+        require(((parassetAssets + fee) * uint256(kValue) * tokenPrice / (mortgageAssets * 100000)) > pTokenPrice, "Log:MortgagePool:!liquidationLine");
     }
 
     function transferFee(

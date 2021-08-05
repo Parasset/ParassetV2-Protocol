@@ -44,7 +44,8 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
     // staking address
     ILPStakingMiningPool _lpStakingMiningPool;
 
-    event Negative(uint256 amount, uint256 allValue);
+    event SubNegative(uint256 amount, uint256 allValue);
+    event AddNegative(uint256 amount, uint256 allValue);
 
     function initialize(address governance) public override {
         super.initialize(governance);
@@ -265,8 +266,9 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
         if (pTokenBalance < pTokenAmount) {
             // Insufficient PToken balance,
             uint256 subNum = pTokenAmount - pTokenBalance;
-            IParasset(pTokenAddress).issuance(subNum, address(this));
-            _insNegative = _insNegative + subNum;
+            _issuancePToken(subNum);
+            // IParasset(pTokenAddress).issuance(subNum, address(this));
+            // _insNegative = _insNegative + subNum;
         }
         TransferHelper.safeTransfer(pTokenAddress, address(msg.sender), pTokenAmount);
     }
@@ -394,17 +396,30 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
     /// @dev Destroy PToken, update negative ledger
     /// @param amount quantity destroyed
     function destroyPToken(uint256 amount) public override onlyMortgagePool {
-    	IParasset pErc20 = IParasset(_pTokenAddress);
-    	uint256 pTokenBalance = pErc20.balanceOf(address(this));
-    	if (pTokenBalance >= amount) {
-    		pErc20.destroy(amount, address(this));
-    	} else {
-    		pErc20.destroy(pTokenBalance, address(this));
-    		// Increase negative ledger
-            uint256 subAmount = amount - pTokenBalance;
-    		_insNegative = _insNegative + subAmount;
-            emit Negative(subAmount, _insNegative);
-    	}
+        _insNegative = _insNegative + amount;
+        emit AddNegative(amount, _insNegative);
+
+        eliminate();
+
+    	// IParasset pErc20 = IParasset(_pTokenAddress);
+    	// uint256 pTokenBalance = pErc20.balanceOf(address(this));
+    	// if (pTokenBalance >= amount) {
+    	// 	pErc20.destroy(amount, address(this));
+    	// } else {
+    	// 	pErc20.destroy(pTokenBalance, address(this));
+    	// 	// Increase negative ledger
+        //     uint256 subAmount = amount - pTokenBalance;
+    	// 	_insNegative = _insNegative + subAmount;
+        //     emit Negative(subAmount, _insNegative);
+    	// }
+    }
+
+    /// @dev Issuance PToken, update negative ledger
+    /// @param amount Additional issuance quantity
+    function _issuancePToken(uint256 amount) private {
+        IParasset(_pTokenAddress).issuance(amount, address(this));
+        _insNegative = _insNegative + amount;
+        emit AddNegative(amount, _insNegative);
     }
 
     /// @dev Clear negative books
@@ -419,12 +434,12 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
                 // Increase negative ledger
                 pErc20.destroy(pTokenBalance, address(this));
     			_insNegative = _insNegative - pTokenBalance;
-                emit Negative(pTokenBalance, _insNegative);
+                emit SubNegative(pTokenBalance, _insNegative);
     		} else {
                 // negative ledger = 0
                 pErc20.destroy(negative, address(this));
     			_insNegative = 0;
-                emit Negative(negative, _insNegative);
+                emit SubNegative(negative, _insNegative);
     		}
     	}
     }
