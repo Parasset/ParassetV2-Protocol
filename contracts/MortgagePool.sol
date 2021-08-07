@@ -117,11 +117,11 @@ contract MortgagePool is ParassetBase {
         uint256 parassetAssets, 
         uint256 tokenPrice, 
         uint256 pTokenPrice
-    ) public pure returns(uint88) {
+    ) public pure returns(uint256) {
         if (mortgageAssets == 0) {
             return 0;
         }
-    	return uint88(parassetAssets * tokenPrice * 100000 / (pTokenPrice * mortgageAssets));
+    	return parassetAssets * tokenPrice * 100000 / (pTokenPrice * mortgageAssets);
     }
 
     /// @dev Get real-time data of the current debt warehouse
@@ -371,14 +371,13 @@ contract MortgagePool is ParassetBase {
         require(rate > 0 && rate <= morInfo.maxRate, "Log:MortgagePool:rate!=0");
         require(amount > 0, "Log:MortgagePool:amount!=0");
         MortgageLeader storage mLedger = _ledgerList[mortgageToken];
-        uint256 ledgerNum = mLedger.accountMapping[address(msg.sender)];
+        uint256 ledgerNum = mLedger.accountMapping[msg.sender];
         if (ledgerNum == 0) {
             // create
-            // PersonalLedger storage newLedger = PersonalLedger(0,0,0,0);
-            mLedger.ledgerArray.push(PersonalLedger(0,0,0,0));
+            mLedger.ledgerArray.push();
             mLedger.accountMapping[msg.sender] = mLedger.ledgerArray.length;
         }
-        PersonalLedger storage pLedger = mLedger.ledgerArray[mLedger.accountMapping[address(msg.sender)] - 1];
+        PersonalLedger storage pLedger = mLedger.ledgerArray[mLedger.accountMapping[msg.sender] - 1];
         uint256 parassetAssets = pLedger.parassetAssets;
         uint256 mortgageAssets = pLedger.mortgageAssets;
 
@@ -386,7 +385,7 @@ contract MortgagePool is ParassetBase {
         uint256 tokenPrice;
         uint256 pTokenPrice;
         if (mortgageToken != address(0x0)) {
-            TransferHelper.safeTransferFrom(mortgageToken, address(msg.sender), address(this), amount);
+            TransferHelper.safeTransferFrom(mortgageToken, msg.sender, address(this), amount);
             (tokenPrice, pTokenPrice) = getPriceForPToken(mortgageToken, msg.value);
         } else {
             require(msg.value >= amount, "Log:MortgagePool:!msg.value");
@@ -398,20 +397,14 @@ contract MortgagePool is ParassetBase {
 
         // Additional PToken issuance
         uint256 pTokenAmount = amount * pTokenPrice * rate / (tokenPrice * 100000);
-        IParasset(_config.pTokenAdd).issuance(pTokenAmount, address(msg.sender));
+        IParasset(_config.pTokenAdd).issuance(pTokenAmount, msg.sender);
 
         // Update debt information
         pLedger.mortgageAssets = mortgageAssets + amount;
         pLedger.parassetAssets = parassetAssets + pTokenAmount;
         pLedger.blockHeight = uint160(block.number);
-        pLedger.rate = getMortgageRate(pLedger.mortgageAssets, pLedger.parassetAssets, tokenPrice, pTokenPrice);
+        pLedger.rate = uint88(getMortgageRate(pLedger.mortgageAssets, pLedger.parassetAssets, tokenPrice, pTokenPrice));
         emit LedgerLog(mortgageToken, pLedger.mortgageAssets, pLedger.parassetAssets, tokenPrice, pTokenPrice, pLedger.rate);
-
-        // Tag created
-        // if (pLedger.created == false) {
-        //     _ledgerList[mortgageToken].ledgerArray.push(address(msg.sender));
-        //     pLedger.created = true;
-        // }
     }
 
     /// @dev Increase mortgage assets
@@ -422,14 +415,13 @@ contract MortgagePool is ParassetBase {
     	require(morInfo.mortgageAllow, "Log:MortgagePool:!mortgageAllow");
         require(amount > 0, "Log:MortgagePool:!amount");
         MortgageLeader storage mLedger = _ledgerList[mortgageToken];
-        uint256 ledgerNum = mLedger.accountMapping[address(msg.sender)];
+        uint256 ledgerNum = mLedger.accountMapping[msg.sender];
         if (ledgerNum == 0) {
             // create
-            PersonalLedger memory newLedger = PersonalLedger(0,0,0,0);
-            mLedger.ledgerArray.push(newLedger);
+            mLedger.ledgerArray.push();
             mLedger.accountMapping[msg.sender] = mLedger.ledgerArray.length;
         }
-        PersonalLedger storage pLedger = mLedger.ledgerArray[mLedger.accountMapping[address(msg.sender)] - 1];
+        PersonalLedger storage pLedger = mLedger.ledgerArray[mLedger.accountMapping[msg.sender] - 1];
         uint256 parassetAssets = pLedger.parassetAssets;
         uint256 mortgageAssets = pLedger.mortgageAssets;
 
@@ -437,7 +429,7 @@ contract MortgagePool is ParassetBase {
         uint256 tokenPrice;
         uint256 pTokenPrice;
         if (mortgageToken != address(0x0)) {
-            TransferHelper.safeTransferFrom(mortgageToken, address(msg.sender), address(this), amount);
+            TransferHelper.safeTransferFrom(mortgageToken, msg.sender, address(this), amount);
             (tokenPrice, pTokenPrice) = getPriceForPToken(mortgageToken, msg.value);
         } else {
             require(msg.value >= amount, "Log:MortgagePool:!msg.value");
@@ -450,7 +442,7 @@ contract MortgagePool is ParassetBase {
         // Update debt information
     	pLedger.mortgageAssets = mortgageAssets + amount;
     	pLedger.blockHeight = uint160(block.number);
-        pLedger.rate = getMortgageRate(pLedger.mortgageAssets, parassetAssets, tokenPrice, pTokenPrice);
+        pLedger.rate = uint88(getMortgageRate(pLedger.mortgageAssets, parassetAssets, tokenPrice, pTokenPrice));
         emit LedgerLog(mortgageToken, pLedger.mortgageAssets, pLedger.parassetAssets, tokenPrice, pTokenPrice, pLedger.rate);
     }
 
@@ -461,7 +453,7 @@ contract MortgagePool is ParassetBase {
         MortgageInfo memory morInfo = _mortgageConfig[mortgageToken];
     	require(morInfo.mortgageAllow, "Log:MortgagePool:!mortgageAllow");
         MortgageLeader storage mLedger = _ledgerList[mortgageToken];
-        uint256 ledgerNum = mLedger.accountMapping[address(msg.sender)];
+        uint256 ledgerNum = mLedger.accountMapping[msg.sender];
         require(ledgerNum != 0, "Log:MortgagePool:index=0");
         PersonalLedger storage pLedger = mLedger.ledgerArray[ledgerNum - 1];
         uint256 parassetAssets = pLedger.parassetAssets;
@@ -481,18 +473,18 @@ contract MortgagePool is ParassetBase {
             require(pLedger.parassetAssets == 0, "Log:MortgagePool:!parassetAssets");
             pLedger.rate == 0;
         } else {
-            pLedger.rate = getMortgageRate(pLedger.mortgageAssets, parassetAssets, tokenPrice, pTokenPrice);
+            uint256 newRate = getMortgageRate(pLedger.mortgageAssets, parassetAssets, tokenPrice, pTokenPrice);
+            // The debt warehouse mortgage rate cannot be greater than the maximum mortgage rate
+    	    require(newRate <= uint256(morInfo.maxRate), "Log:MortgagePool:!maxRate");
+            pLedger.rate = uint88(newRate);
         }
         emit LedgerLog(mortgageToken, pLedger.mortgageAssets, pLedger.parassetAssets, tokenPrice, pTokenPrice, pLedger.rate);
 
-        // The debt warehouse mortgage rate cannot be greater than the maximum mortgage rate
-    	require(pLedger.rate <= morInfo.maxRate, "Log:MortgagePool:!maxRate");
-
     	// Transfer out mortgage assets
     	if (mortgageToken != address(0x0)) {
-            TransferHelper.safeTransfer(mortgageToken, address(msg.sender), amount);
+            TransferHelper.safeTransfer(mortgageToken, msg.sender, amount);
     	} else {
-            TransferHelper.safeTransferETH(address(msg.sender), amount);
+            TransferHelper.safeTransferETH(msg.sender, amount);
     	}
     }
 
@@ -504,7 +496,7 @@ contract MortgagePool is ParassetBase {
         require(morInfo.mortgageAllow, "Log:MortgagePool:!mortgageAllow");
         require(amount > 0, "Log:MortgagePool:!amount");
         MortgageLeader storage mLedger = _ledgerList[mortgageToken];
-        uint256 ledgerNum = mLedger.accountMapping[address(msg.sender)];
+        uint256 ledgerNum = mLedger.accountMapping[msg.sender];
         require(ledgerNum != 0, "Log:MortgagePool:index=0");
         PersonalLedger storage pLedger = mLedger.ledgerArray[ledgerNum - 1];
         uint256 parassetAssets = pLedger.parassetAssets;
@@ -520,14 +512,14 @@ contract MortgagePool is ParassetBase {
         // Update debt information
         pLedger.parassetAssets = parassetAssets + amount;
         pLedger.blockHeight = uint160(block.number);
-        pLedger.rate = getMortgageRate(mortgageAssets, pLedger.parassetAssets, tokenPrice, pTokenPrice);
+        uint256 newRate = getMortgageRate(mortgageAssets, pLedger.parassetAssets, tokenPrice, pTokenPrice);
+        // The debt warehouse mortgage rate cannot be greater than the maximum mortgage rate
+        require(newRate <= uint256(morInfo.maxRate), "Log:MortgagePool:!maxRate");
+        pLedger.rate = uint88(newRate);
         emit LedgerLog(mortgageToken, pLedger.mortgageAssets, pLedger.parassetAssets, tokenPrice, pTokenPrice, pLedger.rate);
 
-        // The debt warehouse mortgage rate cannot be greater than the maximum mortgage rate
-        require(pLedger.rate <= morInfo.maxRate, "Log:MortgagePool:!maxRate");
-
         // Additional PToken issuance
-        IParasset(_config.pTokenAdd).issuance(amount, address(msg.sender));
+        IParasset(_config.pTokenAdd).issuance(amount, msg.sender);
     }
 
     /// @dev Reduce debt (increase coinage)
@@ -537,7 +529,7 @@ contract MortgagePool is ParassetBase {
         MortgageInfo memory morInfo = _mortgageConfig[mortgageToken];
         require(morInfo.mortgageAllow, "Log:MortgagePool:!mortgageAllow");
         MortgageLeader storage mLedger = _ledgerList[mortgageToken];
-        uint256 ledgerNum = mLedger.accountMapping[address(msg.sender)];
+        uint256 ledgerNum = mLedger.accountMapping[msg.sender];
         require(ledgerNum != 0, "Log:MortgagePool:index=0");
         PersonalLedger storage pLedger = mLedger.ledgerArray[ledgerNum - 1];
         uint256 parassetAssets = pLedger.parassetAssets;
@@ -553,11 +545,11 @@ contract MortgagePool is ParassetBase {
         // Update debt information
         pLedger.parassetAssets = parassetAssets - amount;
         pLedger.blockHeight = uint160(block.number);
-        pLedger.rate = getMortgageRate(mortgageAssets, pLedger.parassetAssets, tokenPrice, pTokenPrice);
+        pLedger.rate = uint88(getMortgageRate(mortgageAssets, pLedger.parassetAssets, tokenPrice, pTokenPrice));
         emit LedgerLog(mortgageToken, pLedger.mortgageAssets, pLedger.parassetAssets, tokenPrice, pTokenPrice, pLedger.rate);
 
         TransferHelper.safeTransferFrom(_config.pTokenAdd, 
-                                        address(msg.sender), 
+                                        msg.sender, 
                                         address(this), 
                                         amount);
         // Destroy PToken
@@ -596,7 +588,7 @@ contract MortgagePool is ParassetBase {
         uint256 pTokenAmount = amount * pTokenPrice * 90 / (tokenPrice * 100);
     	// Transfer to PToken
         require(pTokenAmount <= pTokenAmountLimit, "Log:MortgagePool:!pTokenAmountLimit");
-        TransferHelper.safeTransferFrom(_config.pTokenAdd, address(msg.sender), address(_insurancePool), pTokenAmount);
+        TransferHelper.safeTransferFrom(_config.pTokenAdd, msg.sender, address(_insurancePool), pTokenAmount);
 
     	// // Eliminate negative accounts
         // _insurancePool.eliminate();
@@ -621,9 +613,9 @@ contract MortgagePool is ParassetBase {
 
     	// Transfer out mortgage asset
     	if (mortgageToken != address(0x0)) {
-            TransferHelper.safeTransfer(mortgageToken, address(msg.sender), amount);
+            TransferHelper.safeTransfer(mortgageToken, msg.sender, amount);
     	} else {
-            TransferHelper.safeTransferETH(address(msg.sender), amount);
+            TransferHelper.safeTransferETH(msg.sender, amount);
     	}
     }
 
@@ -645,7 +637,7 @@ contract MortgagePool is ParassetBase {
         uint256 mortgageRate = getMortgageRate(pLedger.mortgageAssets, parassetAssets, tokenPrice, pTokenPrice);
         uint256 fee = 0;
         uint160 blockHeight = pLedger.blockHeight;
-        if (parassetAssets > 0 && uint160(block.number) > blockHeight && blockHeight != 0) {
+        if (parassetAssets > 0 && block.number > uint256(blockHeight) && blockHeight != 0) {
             fee = getFee(parassetAssets, blockHeight, pLedger.rate, mortgageRate, r0Value);
         }
         require(((parassetAssets + fee) * uint256(kValue) * tokenPrice / (mortgageAssets * 100000)) > pTokenPrice, "Log:MortgagePool:!liquidationLine");
@@ -661,7 +653,7 @@ contract MortgagePool is ParassetBase {
         uint256 mortgageAssets = pLedger.mortgageAssets;
         uint256 rate = pLedger.rate;
         uint160 blockHeight = pLedger.blockHeight;
-        if (parassetAssets > 0 && uint160(block.number) > blockHeight && blockHeight != 0) {
+        if (parassetAssets > 0 && block.number > uint256(blockHeight) && blockHeight != 0) {
             uint256 fee = getFee(parassetAssets, 
                                  blockHeight, 
                                  rate, 
@@ -670,7 +662,7 @@ contract MortgagePool is ParassetBase {
 
             // The stability fee is transferred to the insurance pool
             TransferHelper.safeTransferFrom(_config.pTokenAdd, 
-                                            address(msg.sender), 
+                                            msg.sender, 
                                             address(_insurancePool), 
                                             fee);
 

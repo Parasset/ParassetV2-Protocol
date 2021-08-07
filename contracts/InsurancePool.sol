@@ -24,7 +24,7 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
         // frozen quantity
         uint256 amount;
         // freezing time                      
-        uint256 time;                           
+        uint256 time;                       
     }
     // pToken address
     address public _pTokenAddress;
@@ -128,7 +128,7 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
     /// @return frozen LP
     function getFrozenInsInTime(address add) external view returns(uint256) {
         Frozen memory frozenInfo = _frozenIns[add];
-        if (block.timestamp > frozenInfo.time) {
+        if (block.timestamp > frozenInfo.time + _redemptionCycle) {
             return 0;
         }
         return frozenInfo.amount;
@@ -140,7 +140,7 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
     function getRedemptionAmount(address add) external view returns (uint256) {
         Frozen memory frozenInfo = _frozenIns[add];
         uint256 balanceSelf = _balances[add];
-        if (block.timestamp > frozenInfo.time) {
+        if (block.timestamp > frozenInfo.time + _redemptionCycle) {
             return balanceSelf;
         } else {
             return balanceSelf - frozenInfo.amount;
@@ -220,7 +220,7 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
 
         // Transfer to the PToken
         address pTokenAddress = _pTokenAddress;
-        TransferHelper.safeTransferFrom(pTokenAddress, address(msg.sender), address(this), amount);
+        TransferHelper.safeTransferFrom(pTokenAddress, msg.sender, address(this), amount);
 
         // Calculate the amount of transferred underlying asset
         uint256 uTokenAmount = getDecimalConversion(pTokenAddress, amount - fee, _underlyingTokenAddress);
@@ -228,9 +228,9 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
 
         // Transfer out underlying asset
     	if (_underlyingTokenAddress == address(0x0)) {
-            TransferHelper.safeTransferETH(address(msg.sender), uTokenAmount);
+            TransferHelper.safeTransferETH(msg.sender, uTokenAmount);
     	} else {
-            TransferHelper.safeTransfer(_underlyingTokenAddress, address(msg.sender), uTokenAmount);
+            TransferHelper.safeTransfer(_underlyingTokenAddress, msg.sender, uTokenAmount);
     	}
 
     	// Eliminate negative ledger
@@ -253,7 +253,7 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
     	} else {
             // The underlying asset is ERC20
             require(msg.value == 0, "Log:InsurancePool:msg.value!=0");
-            TransferHelper.safeTransferFrom(_underlyingTokenAddress, address(msg.sender), address(this), amount);
+            TransferHelper.safeTransferFrom(_underlyingTokenAddress, msg.sender, address(this), amount);
     	}
 
         // Calculate the amount of transferred PTokens
@@ -270,7 +270,7 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
             // IParasset(pTokenAddress).issuance(subNum, address(this));
             // _insNegative = _insNegative + subNum;
         }
-        TransferHelper.safeTransfer(pTokenAddress, address(msg.sender), pTokenAmount);
+        TransferHelper.safeTransfer(pTokenAddress, msg.sender, pTokenAmount);
     }
 
     /// @dev Subscribe for insurance
@@ -283,8 +283,8 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
     	updateLatestTime();
 
         // Thaw LP
-    	Frozen storage frozenInfo = _frozenIns[address(msg.sender)];
-    	if (block.timestamp > frozenInfo.time) {
+    	Frozen storage frozenInfo = _frozenIns[msg.sender];
+    	if (block.timestamp > frozenInfo.time + _redemptionCycle) {
     		frozenInfo.amount = 0;
     	}
 
@@ -320,15 +320,15 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
     	// Transfer to the underlying asset(ERC20)
     	if (_underlyingTokenAddress != address(0x0)) {
     		require(msg.value == 0, "Log:InsurancePool:msg.value!=0");
-            TransferHelper.safeTransferFrom(_underlyingTokenAddress, address(msg.sender), address(this), amount);
+            TransferHelper.safeTransferFrom(_underlyingTokenAddress, msg.sender, address(this), amount);
     	}
 
     	// Additional LP issuance
-    	_issuance(insAmount, address(msg.sender));
+    	_issuance(insAmount, msg.sender);
 
     	// Freeze insurance LP
     	frozenInfo.amount = frozenInfo.amount + insAmount;
-    	frozenInfo.time = _latestTime + uint256(_waitCycle);
+    	frozenInfo.time = _latestTime;
     }
 
     /// @dev Redemption insurance
@@ -345,8 +345,8 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
     	require(block.timestamp >= tokenTime - uint256(_waitCycle) && block.timestamp <= tokenTime - uint256(_waitCycle) + uint256(_redemptionCycle), "Log:InsurancePool:!time");
 
         // Thaw LP
-    	Frozen storage frozenInfo = _frozenIns[address(msg.sender)];
-    	if (block.timestamp > frozenInfo.time) {
+    	Frozen storage frozenInfo = _frozenIns[msg.sender];
+    	if (block.timestamp > frozenInfo.time + _redemptionCycle) {
     		frozenInfo.amount = 0;
     	}
     	
@@ -369,26 +369,26 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
     	uint256 underlyingAmount = amount * allValue / insTotal;
 
         // Destroy LP
-        _destroy(amount, address(msg.sender));
+        _destroy(amount, msg.sender);
         // Judgment to freeze LP
-        require(getAllLP(address(msg.sender)) >= frozenInfo.amount, "Log:InsurancePool:frozen");
+        require(getAllLP(msg.sender) >= frozenInfo.amount, "Log:InsurancePool:frozen");
     	
     	// Transfer out assets, priority transfer of the underlying assets, if the underlying assets are insufficient, transfer ptoken
     	if (_underlyingTokenAddress == address(0x0)) {
             // ETH
             if (tokenBalance >= underlyingAmount) {
-                TransferHelper.safeTransferETH(address(msg.sender), underlyingAmount);
+                TransferHelper.safeTransferETH(msg.sender, underlyingAmount);
             } else {
-                TransferHelper.safeTransferETH(address(msg.sender), tokenBalance);
-                TransferHelper.safeTransfer(_pTokenAddress, address(msg.sender), underlyingAmount - tokenBalance);
+                TransferHelper.safeTransferETH(msg.sender, tokenBalance);
+                TransferHelper.safeTransfer(_pTokenAddress, msg.sender, underlyingAmount - tokenBalance);
             }
     	} else {
             // ERC20
             if (tokenBalance >= underlyingAmount) {
-                TransferHelper.safeTransfer(_underlyingTokenAddress, address(msg.sender), getDecimalConversion(_pTokenAddress, underlyingAmount, _underlyingTokenAddress));
+                TransferHelper.safeTransfer(_underlyingTokenAddress, msg.sender, getDecimalConversion(_pTokenAddress, underlyingAmount, _underlyingTokenAddress));
             } else {
-                TransferHelper.safeTransfer(_underlyingTokenAddress, address(msg.sender), getDecimalConversion(_pTokenAddress, tokenBalance, _underlyingTokenAddress));
-                TransferHelper.safeTransfer(_pTokenAddress, address(msg.sender), underlyingAmount - tokenBalance);
+                TransferHelper.safeTransfer(_underlyingTokenAddress, msg.sender, getDecimalConversion(_pTokenAddress, tokenBalance, _underlyingTokenAddress));
+                TransferHelper.safeTransfer(_pTokenAddress, msg.sender, underlyingAmount - tokenBalance);
             }
     	}
     }
@@ -504,12 +504,11 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
 
         // Thaw LP
         Frozen storage frozenInfo = _frozenIns[sender];
-        if (block.timestamp > frozenInfo.time) {
+        if (block.timestamp > frozenInfo.time + _redemptionCycle) {
             frozenInfo.amount = 0;
         }
 
         require(sender != address(0), "ERC20: transfer from the zero address");
-        require(recipient != address(0), "ERC20: transfer to the zero address");
 
         uint256 senderBalance = _balances[sender];
         require(senderBalance >= amount, "ERC20: transfer amount exceeds balance");
