@@ -93,26 +93,26 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
         uint256 time = _latestTime;
         if (block.timestamp > time) {
             uint256 subTime = (block.timestamp - time) / uint256(_waitCycle);
-            startTime = time + (uint256(_waitCycle) * (1 + subTime));
+            endTime = time + (uint256(_waitCycle) * (1 + subTime));
         } else {
-            startTime = time;
+            endTime = time;
         }
-        endTime = startTime + uint256(_redemptionCycle);
+        startTime = endTime - uint256(_redemptionCycle);
     }
 
     /// @dev View redemption period, this period
     /// @return startTime start time
     /// @return endTime end time
-    function getRedemptionTimeFront() external view returns(uint256 startTime, uint256 endTime) {
-        uint256 time = _latestTime;
-        if (block.timestamp > time) {
-            uint256 subTime = (block.timestamp - time) / uint256(_waitCycle);
-            startTime = time + (uint256(_waitCycle) * subTime);
-        } else {
-            startTime = time - uint256(_waitCycle);
-        }
-        endTime = startTime + uint256(_redemptionCycle);
-    }
+    // function getRedemptionTimeFront() external view returns(uint256 startTime, uint256 endTime) {
+    //     uint256 time = _latestTime;
+    //     if (block.timestamp > time) {
+    //         uint256 subTime = (block.timestamp - time) / uint256(_waitCycle);
+    //         endTime = time + (uint256(_waitCycle) * subTime);
+    //     } else {
+    //         endTime = time - uint256(_waitCycle);
+    //     }
+    //     startTime = endTime - uint256(_redemptionCycle);
+    // }
 
     /// @dev View frozen LP and unfreeze time
     /// @param add user address
@@ -128,7 +128,7 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
     /// @return frozen LP
     function getFrozenInsInTime(address add) external view returns(uint256) {
         Frozen memory frozenInfo = _frozenIns[add];
-        if (block.timestamp > frozenInfo.time + _redemptionCycle) {
+        if (block.timestamp > frozenInfo.time) {
             return 0;
         }
         return frozenInfo.amount;
@@ -140,7 +140,7 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
     function getRedemptionAmount(address add) external view returns (uint256) {
         Frozen memory frozenInfo = _frozenIns[add];
         uint256 balanceSelf = _balances[add];
-        if (block.timestamp > frozenInfo.time + _redemptionCycle) {
+        if (block.timestamp > frozenInfo.time) {
             return balanceSelf;
         } else {
             return balanceSelf - frozenInfo.amount;
@@ -211,7 +211,7 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
 
     /// @dev Exchange: PToken exchanges the underlying asset
     /// @param amount amount of PToken
-    function exchangePTokenToUnderlying(uint256 amount) public whenActive nonReentrant {
+    function exchangePTokenToUnderlying(uint256 amount) public redemptionOnly nonReentrant {
         // amount > 0
         require(amount > 0, "Log:InsurancePool:!amount");
 
@@ -239,7 +239,7 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
 
     /// @dev Exchange: underlying asset exchanges the PToken
     /// @param amount amount of underlying asset
-    function exchangeUnderlyingToPToken(uint256 amount) public payable whenActive nonReentrant {
+    function exchangeUnderlyingToPToken(uint256 amount) public payable redemptionOnly nonReentrant {
         // amount > 0
         require(amount > 0, "Log:InsurancePool:!amount");
 
@@ -284,7 +284,7 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
 
         // Thaw LP
     	Frozen storage frozenInfo = _frozenIns[msg.sender];
-    	if (block.timestamp > frozenInfo.time + _redemptionCycle) {
+    	if (block.timestamp > frozenInfo.time) {
     		frozenInfo.amount = 0;
     	}
 
@@ -342,11 +342,11 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
 
         // Judging the redemption time
         uint256 tokenTime = _latestTime;
-    	require(block.timestamp >= tokenTime - uint256(_waitCycle) && block.timestamp <= tokenTime - uint256(_waitCycle) + uint256(_redemptionCycle), "Log:InsurancePool:!time");
+    	require(block.timestamp < tokenTime && block.timestamp > tokenTime - uint256(_redemptionCycle), "Log:InsurancePool:!time");
 
         // Thaw LP
     	Frozen storage frozenInfo = _frozenIns[msg.sender];
-    	if (block.timestamp > frozenInfo.time + _redemptionCycle) {
+    	if (block.timestamp > frozenInfo.time) {
     		frozenInfo.amount = 0;
     	}
     	
@@ -400,18 +400,6 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
         emit AddNegative(amount, _insNegative);
 
         eliminate();
-
-    	// IParasset pErc20 = IParasset(_pTokenAddress);
-    	// uint256 pTokenBalance = pErc20.balanceOf(address(this));
-    	// if (pTokenBalance >= amount) {
-    	// 	pErc20.destroy(amount, address(this));
-    	// } else {
-    	// 	pErc20.destroy(pTokenBalance, address(this));
-    	// 	// Increase negative ledger
-        //     uint256 subAmount = amount - pTokenBalance;
-    	// 	_insNegative = _insNegative + subAmount;
-        //     emit Negative(subAmount, _insNegative);
-    	// }
     }
 
     /// @dev Issuance PToken, update negative ledger
@@ -504,7 +492,7 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
 
         // Thaw LP
         Frozen storage frozenInfo = _frozenIns[sender];
-        if (block.timestamp > frozenInfo.time + _redemptionCycle) {
+        if (block.timestamp > frozenInfo.time) {
             frozenInfo.amount = 0;
         }
 
