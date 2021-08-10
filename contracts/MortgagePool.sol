@@ -90,19 +90,13 @@ contract MortgagePool is ParassetBase {
         uint256 nowRate,
         uint80 r0Value
     ) public view returns(uint256) {
-        uint256 top = (uint256(3) * (rate + nowRate) + 100000 * 2)
+        uint256 top = (uint256(2) * (rate + nowRate) + 100000)
                       * parassetAssets
                       * uint256(r0Value)
                       * (block.number - uint256(blockHeight));
         uint256 bottom = 100000 
                          * 100000 
-                         * uint256(_config.oneYearBlock) 
-                         * 2;
-        // uint256 topOne = parassetAssets * uint256(r0Value) * (block.number - uint256(blockHeight));
-        // uint256 ratePlus = rate + nowRate;
-        // uint256 topTwo = parassetAssets * uint256(r0Value) * (block.number - uint256(blockHeight)) * uint256(3) * ratePlus;
-    	// uint256 bottom = uint256(_config.oneYearBlock) * 100000;
-    	// return topOne / bottom + (topTwo / (bottom * 100000 * 2));
+                         * uint256(_config.oneYearBlock);
         return top / bottom;
     }
 
@@ -554,7 +548,6 @@ contract MortgagePool is ParassetBase {
                                         amount);
         // Destroy PToken
         IParasset(_config.pTokenAdd).destroy(amount, address(this));
-        // _insurancePool.destroyPToken(amount);
     }
 
     /// @dev Liquidation of debt
@@ -589,9 +582,6 @@ contract MortgagePool is ParassetBase {
     	// Transfer to PToken
         require(pTokenAmount <= pTokenAmountLimit, "Log:MortgagePool:!pTokenAmountLimit");
         TransferHelper.safeTransferFrom(_config.pTokenAdd, msg.sender, address(_insurancePool), pTokenAmount);
-
-    	// // Eliminate negative accounts
-        // _insurancePool.eliminate();
 
         // Calculate the debt for destruction
         uint256 offset = parassetAssets * amount / mortgageAssets;

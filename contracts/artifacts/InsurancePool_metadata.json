@@ -1,10 +1,29 @@
 {
 	"compiler": {
-		"version": "0.8.6+commit.11564f7e"
+		"version": "0.8.4+commit.c7e474f2"
 	},
 	"language": "Solidity",
 	"output": {
 		"abi": [
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "allValue",
+						"type": "uint256"
+					}
+				],
+				"name": "AddNegative",
+				"type": "event"
+			},
 			{
 				"anonymous": false,
 				"inputs": [
@@ -46,7 +65,7 @@
 						"type": "uint256"
 					}
 				],
-				"name": "Negative",
+				"name": "SubNegative",
 				"type": "event"
 			},
 			{
@@ -76,25 +95,12 @@
 			},
 			{
 				"inputs": [],
-				"name": "_ethIns",
-				"outputs": [
-					{
-						"internalType": "bool",
-						"name": "",
-						"type": "bool"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
 				"name": "_feeRate",
 				"outputs": [
 					{
-						"internalType": "uint256",
+						"internalType": "uint96",
 						"name": "",
-						"type": "uint256"
+						"type": "uint96"
 					}
 				],
 				"stateMutability": "view",
@@ -183,9 +189,9 @@
 				"name": "_redemptionCycle",
 				"outputs": [
 					{
-						"internalType": "uint256",
+						"internalType": "uint96",
 						"name": "",
-						"type": "uint256"
+						"type": "uint96"
 					}
 				],
 				"stateMutability": "view",
@@ -209,9 +215,9 @@
 				"name": "_waitCycle",
 				"outputs": [
 					{
-						"internalType": "uint256",
+						"internalType": "uint96",
 						"name": "",
-						"type": "uint256"
+						"type": "uint96"
 					}
 				],
 				"stateMutability": "view",
@@ -222,24 +228,6 @@
 				"name": "addETH",
 				"outputs": [],
 				"stateMutability": "payable",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "tokenAddress",
-						"type": "address"
-					},
-					{
-						"internalType": "uint256",
-						"name": "amount",
-						"type": "uint256"
-					}
-				],
-				"name": "addToken",
-				"outputs": [],
-				"stateMutability": "nonpayable",
 				"type": "function"
 			},
 			{
@@ -534,24 +522,6 @@
 				"type": "function"
 			},
 			{
-				"inputs": [],
-				"name": "getRedemptionTimeFront",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "startTime",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "endTime",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
 				"inputs": [
 					{
 						"internalType": "address",
@@ -617,22 +587,9 @@
 			{
 				"inputs": [
 					{
-						"internalType": "bool",
-						"name": "isETHIns",
-						"type": "bool"
-					}
-				],
-				"name": "setETHIns",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
+						"internalType": "uint96",
 						"name": "num",
-						"type": "uint256"
+						"type": "uint96"
 					}
 				],
 				"name": "setFeeRate",
@@ -680,13 +637,6 @@
 					}
 				],
 				"name": "setLPStakingMiningPool",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "setLatestTime",
 				"outputs": [],
 				"stateMutability": "nonpayable",
 				"type": "function"
@@ -906,7 +856,7 @@
 					"details": "Atomically decreases the allowance granted to `spender` by the caller. This is an alternative to {approve} that can be used as a mitigation for problems described in {IERC20-approve}. Emits an {Approval} event indicating the updated allowance. Requirements: - `spender` cannot be the zero address. - `spender` must have allowance for the caller of at least `subtractedValue`."
 				},
 				"destroyPToken(uint256)": {
-					"details": "Destroy ptoken, update negative ledger",
+					"details": "Destroy PToken, update negative ledger",
 					"params": {
 						"amount": "quantity destroyed"
 					}
@@ -915,13 +865,13 @@
 					"details": "Clear negative books"
 				},
 				"exchangePTokenToUnderlying(uint256)": {
-					"details": "Exchange: ptoken exchanges the underlying asset",
+					"details": "Exchange: PToken exchanges the underlying asset",
 					"params": {
-						"amount": "amount of ptoken"
+						"amount": "amount of PToken"
 					}
 				},
 				"exchangeUnderlyingToPToken(uint256)": {
-					"details": "Exchange: underlying asset exchanges the ptoken",
+					"details": "Exchange: underlying asset exchanges the PToken",
 					"params": {
 						"amount": "amount of underlying asset"
 					}
@@ -984,13 +934,6 @@
 						"startTime": "start time"
 					}
 				},
-				"getRedemptionTimeFront()": {
-					"details": "View redemption period, this period",
-					"returns": {
-						"endTime": "end time",
-						"startTime": "start time"
-					}
-				},
 				"increaseAllowance(address,uint256)": {
 					"details": "Atomically increases the allowance granted to `spender` by the caller. This is an alternative to {approve} that can be used as a mitigation for problems described in {IERC20-approve}. Emits an {Approval} event indicating the updated allowance. Requirements: - `spender` cannot be the zero address."
 				},
@@ -1009,7 +952,7 @@
 						"amount": "redemption LP"
 					}
 				},
-				"setFeeRate(uint256)": {
+				"setFeeRate(uint96)": {
 					"details": "Set the rate"
 				},
 				"setFlag(uint8)": {
@@ -1019,16 +962,16 @@
 					}
 				},
 				"setInfo(address,address)": {
-					"details": "Set the underlying asset and ptoken mapping and",
+					"details": "Set the underlying asset and PToken mapping and",
 					"params": {
-						"pToken": "ptoken address",
+						"pToken": "PToken address",
 						"uToken": "underlying asset address"
 					}
 				},
 				"setLPStakingMiningPool(address)": {
 					"details": "Set the staking contract address"
 				},
-				"setLatestTime()": {
+				"setLatestTime(uint256)": {
 					"details": "Set the latest redemption time"
 				},
 				"setMortgagePool(address)": {
@@ -1091,7 +1034,7 @@
 		"compilationTarget": {
 			"InsurancePool.sol": "InsurancePool"
 		},
-		"evmVersion": "berlin",
+		"evmVersion": "istanbul",
 		"libraries": {},
 		"metadata": {
 			"bytecodeHash": "ipfs"
@@ -1104,27 +1047,27 @@
 	},
 	"sources": {
 		"InsurancePool.sol": {
-			"keccak256": "0x8a0924d1e3325a72a1bcfe8167274c4c1d63e3a8246888db077ed0e28923c93c",
+			"keccak256": "0x5d2366f241a96439be394449588acc74993396413239105824b11a60e4ce7b16",
 			"license": "GPL-3.0-or-later",
 			"urls": [
-				"bzz-raw://a4789717ee9a4663a2b3cb433db0e8f56ccf508e1ce66fe1e162685cfcd8d16d",
-				"dweb:/ipfs/QmWeqCsK6oz7aAWzm2UgZHV7916hQo84HjkLRrKsWVCWNm"
+				"bzz-raw://e2368486c4abc58a009c0b11a1097a555eb3c4e8207e0f92044d5ede3e49e01f",
+				"dweb:/ipfs/QmYrDM6u5MHwHBPVqoC5swJJqKNv8xRdvgSgGBdUXUNzR1"
 			]
 		},
 		"ParassetBase.sol": {
-			"keccak256": "0xc2cf6591eb2a3e405c2e8c061251f53a3e65704f24ad932132faef59f7225ba6",
+			"keccak256": "0x926b3f336e15a50a9a51704a165405e659939f24dd3ca8e30fcd6d217d11f8a0",
 			"license": "GPL-3.0-or-later",
 			"urls": [
-				"bzz-raw://ab51d62f85d5158e2ae3ddd1fe2888aa118557995cdf6d00014fecabe1621550",
-				"dweb:/ipfs/QmcXYuahR3qHKGijf78dBfWkjFdjhuvXJpQvcUwkhd21CG"
+				"bzz-raw://1e83b9716a7b09418ffad207c22099cc9803d00cde6a93bdf6807154686d13fd",
+				"dweb:/ipfs/QmZn4t25hNEkhVmhF1gHvt5ShX8xtGUSsAyrWgZeqkRqGS"
 			]
 		},
 		"ParassetERC20.sol": {
-			"keccak256": "0x5de152f8e99a31f55062ba34b05483dc0ea1ee1f2440dadc6fb635c860f3495d",
+			"keccak256": "0x4bce46cba833942b96473f94e8a5f4f48e455aae65a685eb0a8e653c43a6a2e5",
 			"license": "GPL-3.0-or-later",
 			"urls": [
-				"bzz-raw://b9f6819716512fcc6c9fe70deab54b9cd0bcd67bfbcaad8fa82cc855edfaf71a",
-				"dweb:/ipfs/QmYBv2AQizNLg8LAj4anXmmM6Tg7tsKm3oV86ydEw4fEzs"
+				"bzz-raw://88c4c07881ed1f7533751d555962956f25514f3b3950c4cbfd6e5403273bc839",
+				"dweb:/ipfs/Qmd9uQfyfhXmgjxE9EqP6XAQQU4r9fje1HznwW6uKHuWMN"
 			]
 		},
 		"iface/IERC20.sol": {

@@ -193,12 +193,12 @@ contract LPStakingMiningPool is ParassetBase, ILPStakingMiningPool {
         require(amount > 0, "Log:LPStakingMiningPool:!0");
 
         Channel storage channelInfo = _tokenChannel[stakingToken];
-        _gerReward(channelInfo, msg.sender);
+        _getReward(channelInfo, msg.sender);
+
+        TransferHelper.safeTransferFrom(stakingToken, msg.sender, address(this), amount);
 
     	channelInfo.totalSupply = channelInfo.totalSupply + amount;
         channelInfo.accounts[msg.sender].balance = channelInfo.accounts[msg.sender].balance + amount;
-
-        TransferHelper.safeTransferFrom(stakingToken, msg.sender, address(this), amount);
     }
 
     /// @dev Withdraw
@@ -208,7 +208,7 @@ contract LPStakingMiningPool is ParassetBase, ILPStakingMiningPool {
         require(amount > 0, "Log:LPStakingMiningPool:!0");
 
         Channel storage channelInfo = _tokenChannel[stakingToken];
-        _gerReward(channelInfo, msg.sender);
+        _getReward(channelInfo, msg.sender);
 
         channelInfo.totalSupply = channelInfo.totalSupply - amount;
         channelInfo.accounts[msg.sender].balance = channelInfo.accounts[msg.sender].balance - amount;
@@ -220,10 +220,10 @@ contract LPStakingMiningPool is ParassetBase, ILPStakingMiningPool {
     /// @param stakingToken staking token address
     function getReward(address stakingToken) external override nonReentrant {
         Channel storage channelInfo = _tokenChannel[stakingToken];
-        _gerReward(channelInfo, msg.sender);
+        _getReward(channelInfo, msg.sender);
     }
 
-    function _gerReward(Channel storage channelInfo, address to) private {
+    function _getReward(Channel storage channelInfo, address to) private {
         (uint32 lastUpdateBlock, uint256 rewardPerTokenStored, uint256 userReward) = _calcReward(channelInfo, to);
 
         channelInfo.rewardPerTokenStored = rewardPerTokenStored;

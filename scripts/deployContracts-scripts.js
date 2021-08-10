@@ -42,11 +42,11 @@ exports.deploy = async function () {
 	await PTOKENFACTORY.createPToken("ETH");
 	console.log(`7. createPtoken success-ETH"`);
 
-	sleep(5000);
-	USDTPToken = await PTOKENFACTORY.getPTokenAddress("0");
-	console.log(`8. USDTPToken + "${USDTPToken.address}"`);
-	ETHPToken = await PTOKENFACTORY.getPTokenAddress("1");
-	console.log(`9. ETHPToken + "${ETHPToken.address}"`);
+	sleep(10000);
+	USDTPToken = await PTOKENFACTORY.getPTokenAddress(0);
+	console.log(`8. USDTPToken + "${USDTPToken}"`);
+	ETHPToken = await PTOKENFACTORY.getPTokenAddress(1);
+	console.log(`9. ETHPToken + "${ETHPToken}"`);
 
 	// deploy nestQuary
 	NESTQUARY = await NestQuery.deploy();

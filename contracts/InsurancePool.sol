@@ -100,20 +100,6 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
         startTime = endTime - uint256(_redemptionCycle);
     }
 
-    /// @dev View redemption period, this period
-    /// @return startTime start time
-    /// @return endTime end time
-    // function getRedemptionTimeFront() external view returns(uint256 startTime, uint256 endTime) {
-    //     uint256 time = _latestTime;
-    //     if (block.timestamp > time) {
-    //         uint256 subTime = (block.timestamp - time) / uint256(_waitCycle);
-    //         endTime = time + (uint256(_waitCycle) * subTime);
-    //     } else {
-    //         endTime = time - uint256(_waitCycle);
-    //     }
-    //     startTime = endTime - uint256(_redemptionCycle);
-    // }
-
     /// @dev View frozen LP and unfreeze time
     /// @param add user address
     /// @return frozen LP
@@ -267,8 +253,6 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
             // Insufficient PToken balance,
             uint256 subNum = pTokenAmount - pTokenBalance;
             _issuancePToken(subNum);
-            // IParasset(pTokenAddress).issuance(subNum, address(this));
-            // _insNegative = _insNegative + subNum;
         }
         TransferHelper.safeTransfer(pTokenAddress, msg.sender, pTokenAmount);
     }
