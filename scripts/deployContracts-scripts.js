@@ -111,15 +111,18 @@ exports.deploy = async function () {
 	await PUSDMORPOOL.setMaxRate(ETHAddress, "70000");
 	await PUSDMORPOOL.setK(ETHAddress, "120000");
 	await PUSDMORPOOL.setR0(ETHAddress, "2000");
+	await PUSDMORPOOL.setLiquidateRate(ETHAddress, "900");
 	await PUSDMORPOOL.setMortgageAllow(NESTContract.address, true);
 	await PUSDMORPOOL.setMaxRate(NESTContract.address, "40000");
 	await PUSDMORPOOL.setK(NESTContract.address, "130000");
 	await PUSDMORPOOL.setR0(NESTContract.address, "2000");
+	await PUSDMORPOOL.setLiquidateRate(NESTContract.address, "900");
 	console.log(`25. PUSDMORPOOL token info`);
 	await PETHMORPOOL.setMortgageAllow(NESTContract.address, true);
 	await PETHMORPOOL.setMaxRate(NESTContract.address, "40000");
 	await PETHMORPOOL.setK(NESTContract.address, "130000");
 	await PETHMORPOOL.setR0(NESTContract.address, "2000");
+	await PETHMORPOOL.setLiquidateRate(NESTContract.address, "900");
 	console.log(`26. PETHMORPOOL token info`);
 	// set reward token
 	await LPSTAKING.setRewardsToken(ASETContract.address);

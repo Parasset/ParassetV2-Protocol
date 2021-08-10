@@ -28,7 +28,9 @@ contract MortgagePool is ParassetBase {
         // six digits, 1.3=130000
         uint80 k;
         // six digits, 0.02=2000
-        uint80 r0;
+        uint40 r0;
+        // liquidation rate 900=90%
+        uint40 liquidateRate;
     }
     struct MortgageLeader {
         // debt data
@@ -88,7 +90,7 @@ contract MortgagePool is ParassetBase {
         uint160 blockHeight,
         uint256 rate,
         uint256 nowRate,
-        uint80 r0Value
+        uint40 r0Value
     ) public view returns(uint256) {
         uint256 top = (uint256(2) * (rate + nowRate) + 100000)
                       * parassetAssets
@@ -204,8 +206,14 @@ contract MortgagePool is ParassetBase {
 
     /// @dev View the market base interest rate
     /// @return market base interest rate
-    function getR0(address mortgageToken) external view returns(uint80) {
+    function getR0(address mortgageToken) external view returns(uint40) {
     	return _mortgageConfig[mortgageToken].r0;
+    }
+
+    /// @dev View the liquidation rate
+    /// @return liquidation rate
+    function getLiquidateRate(address mortgageToken) external view returns(uint40) {
+    	return _mortgageConfig[mortgageToken].liquidateRate;
     }
 
     /// @dev View the amount of blocks produced in a year
@@ -309,9 +317,15 @@ contract MortgagePool is ParassetBase {
         _insurancePool = IInsurancePool(add);
     }
 
+    /// @dev Set liquidation rate
+    /// @param num liquidation rate, 900=90%
+    function setLiquidateRate(address mortgageToken, uint40 num) public onlyGovernance {
+    	_mortgageConfig[mortgageToken].liquidateRate = num;
+    }
+
     /// @dev Set market base interest rate
     /// @param num market base interest rate(num = ? * 1 ether)
-    function setR0(address mortgageToken, uint80 num) public onlyGovernance {
+    function setR0(address mortgageToken, uint40 num) public onlyGovernance {
     	_mortgageConfig[mortgageToken].r0 = num;
     }
 
@@ -578,7 +592,7 @@ contract MortgagePool is ParassetBase {
         _checkLine(pLedger, tokenPrice, pTokenPrice, morInfo.k, morInfo.r0);
 
         // Calculate the amount of PToken
-        uint256 pTokenAmount = amount * pTokenPrice * 90 / (tokenPrice * 100);
+        uint256 pTokenAmount = amount * pTokenPrice * morInfo.liquidateRate / (tokenPrice * 1000);
     	// Transfer to PToken
         require(pTokenAmount <= pTokenAmountLimit, "Log:MortgagePool:!pTokenAmountLimit");
         TransferHelper.safeTransferFrom(_config.pTokenAdd, msg.sender, address(_insurancePool), pTokenAmount);
@@ -618,7 +632,7 @@ contract MortgagePool is ParassetBase {
         uint256 tokenPrice, 
         uint256 pTokenPrice, 
         uint80 kValue,
-        uint80 r0Value
+        uint40 r0Value
     ) public view {
         uint256 parassetAssets = pLedger.parassetAssets;
         uint256 mortgageAssets = pLedger.mortgageAssets;
@@ -637,7 +651,7 @@ contract MortgagePool is ParassetBase {
         PersonalLedger memory pLedger, 
         uint256 tokenPrice, 
         uint256 pTokenPrice, 
-        uint80 r0Value
+        uint40 r0Value
     ) private {
         uint256 parassetAssets = pLedger.parassetAssets;
         uint256 mortgageAssets = pLedger.mortgageAssets;
