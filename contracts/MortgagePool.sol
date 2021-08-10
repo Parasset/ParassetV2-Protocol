@@ -19,6 +19,8 @@ contract MortgagePool is ParassetBase {
     IPriceController _query;
     // insurance pool contract
     IInsurancePool _insurancePool;
+    // contract base num
+    uint256 BASE_NUM = 100000;
 
     struct MortgageInfo {
         // allow mortgage
@@ -29,7 +31,7 @@ contract MortgagePool is ParassetBase {
         uint80 k;
         // six digits, 0.02=2000
         uint40 r0;
-        // liquidation rate 900=90%
+        // liquidation rate 90000=90%
         uint40 liquidateRate;
     }
     struct MortgageLeader {
@@ -92,12 +94,12 @@ contract MortgagePool is ParassetBase {
         uint256 nowRate,
         uint40 r0Value
     ) public view returns(uint256) {
-        uint256 top = (uint256(2) * (rate + nowRate) + 100000)
+        uint256 top = (uint256(2) * (rate + nowRate) + BASE_NUM)
                       * parassetAssets
                       * uint256(r0Value)
                       * (block.number - uint256(blockHeight));
-        uint256 bottom = 100000 
-                         * 100000 
+        uint256 bottom = BASE_NUM 
+                         * BASE_NUM 
                          * uint256(_config.oneYearBlock);
         return top / bottom;
     }
@@ -113,11 +115,11 @@ contract MortgagePool is ParassetBase {
         uint256 parassetAssets, 
         uint256 tokenPrice, 
         uint256 pTokenPrice
-    ) public pure returns(uint256) {
+    ) public view returns(uint256) {
         if (mortgageAssets == 0) {
             return 0;
         }
-    	return parassetAssets * tokenPrice * 100000 / (pTokenPrice * mortgageAssets);
+    	return parassetAssets * tokenPrice * BASE_NUM / (pTokenPrice * mortgageAssets);
     }
 
     /// @dev Get real-time data of the current debt warehouse
@@ -166,8 +168,8 @@ contract MortgagePool is ParassetBase {
             maxSubM = 0;
             maxAddP = 0;
         } else {
-            maxSubM = pLedger.mortgageAssets - (pLedger.parassetAssets * tokenPriceAmount * 100000 / (mRateNum * pTokenPrice));
-            maxAddP = pLedger.mortgageAssets * pTokenPrice * mRateNum / (100000 * tokenPriceAmount) - pLedger.parassetAssets;
+            maxSubM = pLedger.mortgageAssets - (pLedger.parassetAssets * tokenPriceAmount * BASE_NUM / (mRateNum * pTokenPrice));
+            maxAddP = pLedger.mortgageAssets * pTokenPrice * mRateNum / (BASE_NUM * tokenPriceAmount) - pLedger.parassetAssets;
         }
     }
     
@@ -318,7 +320,7 @@ contract MortgagePool is ParassetBase {
     }
 
     /// @dev Set liquidation rate
-    /// @param num liquidation rate, 900=90%
+    /// @param num liquidation rate, 90000=90%
     function setLiquidateRate(address mortgageToken, uint40 num) public onlyGovernance {
     	_mortgageConfig[mortgageToken].liquidateRate = num;
     }
@@ -404,7 +406,7 @@ contract MortgagePool is ParassetBase {
         transferFee(pLedger, tokenPrice, pTokenPrice, morInfo.r0);
 
         // Additional PToken issuance
-        uint256 pTokenAmount = amount * pTokenPrice * rate / (tokenPrice * 100000);
+        uint256 pTokenAmount = amount * pTokenPrice * rate / (tokenPrice * BASE_NUM);
         IParasset(_config.pTokenAdd).issuance(pTokenAmount, msg.sender);
 
         // Update debt information
@@ -592,7 +594,7 @@ contract MortgagePool is ParassetBase {
         _checkLine(pLedger, tokenPrice, pTokenPrice, morInfo.k, morInfo.r0);
 
         // Calculate the amount of PToken
-        uint256 pTokenAmount = amount * pTokenPrice * morInfo.liquidateRate / (tokenPrice * 1000);
+        uint256 pTokenAmount = amount * pTokenPrice * morInfo.liquidateRate / (tokenPrice * BASE_NUM);
     	// Transfer to PToken
         require(pTokenAmount <= pTokenAmountLimit, "Log:MortgagePool:!pTokenAmountLimit");
         TransferHelper.safeTransferFrom(_config.pTokenAdd, msg.sender, address(_insurancePool), pTokenAmount);
@@ -644,7 +646,7 @@ contract MortgagePool is ParassetBase {
         if (parassetAssets > 0 && block.number > uint256(blockHeight) && blockHeight != 0) {
             fee = getFee(parassetAssets, blockHeight, pLedger.rate, mortgageRate, r0Value);
         }
-        require(((parassetAssets + fee) * uint256(kValue) * tokenPrice / (mortgageAssets * 100000)) > pTokenPrice, "Log:MortgagePool:!liquidationLine");
+        require(((parassetAssets + fee) * uint256(kValue) * tokenPrice / (mortgageAssets * BASE_NUM)) > pTokenPrice, "Log:MortgagePool:!liquidationLine");
     }
 
     function transferFee(

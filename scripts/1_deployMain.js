@@ -82,18 +82,18 @@ exports.deploy = async function () {
 	await PUSDMORPOOL.setMaxRate(ETHAddress, "70000");
 	await PUSDMORPOOL.setK(ETHAddress, "120000");
 	await PUSDMORPOOL.setR0(ETHAddress, "2000");
-    await PUSDMORPOOL.setLiquidateRate(ETHAddress, "900");
+    await PUSDMORPOOL.setLiquidateRate(ETHAddress, "90000");
 	await PUSDMORPOOL.setMortgageAllow(NEST, true);
 	await PUSDMORPOOL.setMaxRate(NEST, "40000");
-	await PUSDMORPOOL.setK(NEST, "130000");
+	await PUSDMORPOOL.setK(NEST, "133000");
 	await PUSDMORPOOL.setR0(NEST, "2000");
-    await PUSDMORPOOL.setLiquidateRate(NEST, "900");
+    await PUSDMORPOOL.setLiquidateRate(NEST, "90000");
 	console.log(`15. set mor-token info, PUSD`);
 	await PETHMORPOOL.setMortgageAllow(NEST, true);
 	await PETHMORPOOL.setMaxRate(NEST, "40000");
-	await PETHMORPOOL.setK(NEST, "130000");
+	await PETHMORPOOL.setK(NEST, "133000");
 	await PETHMORPOOL.setR0(NEST, "2000");
-    await PETHMORPOOL.setLiquidateRate(NEST, "900");
+    await PETHMORPOOL.setLiquidateRate(NEST, "90000");
 	console.log(`16. set mor-token info, PETH`);
     // set ins-mor address
     await PUSDINSPOOL.setMortgagePool(PUSDMORPOOL.address);
