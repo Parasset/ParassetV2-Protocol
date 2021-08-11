@@ -5,6 +5,46 @@
 
 ## Contract Addresses
 
+### @mainnet
+#### V2.0
+
+Contract | Address | Description
+---|---|---
+NestContract | 0x04abEdA201850aC0124161F037Efd70c74ddC74C | NEST Token
+USDTContract | 0xdac17f958d2ee523a2206206994597c13d831ec7 | USDT Token
+PTokenFactory | 0xa6F7E15e38a5ba0435E5af06326108204cD175DA | P Asset Factory Contract
+MortgagePool-PUSD | 0x505eFcC134552e34ec67633D1254704B09584227 | Mortgage-PUSD pool contract
+MortgagePool-PETH | 0x9a5C88aC0F209F284E35b4306710fEf83b8f9723 | Mortgage-PETH pool contract
+InsurancePool-USD | 0x79025438C04Ae6A683Bcc7f7c51a01Eb4C2DDabA | Insurance-USD pool contract
+InsurancePool-ETH | 0x0bd32fFC80d5B98E403985D4446AE3BA67528C2e | Insurance-ETH pool contract
+PriceController | 0x54397e5869323aA28CC4aA76F5E5f21ef39BC575 | Price call contract
+StakingContract | 0xbA01258Eb8e133EACE55F5f6ec76907ADdf7797f | Staking contract
+Governance | 0x175d282Bc8249a3b92682365118f693380cA31F4 | Governance contract
+NTokenController | 0xc4f1690eCe0145ed544f0aee0E2Fa886DFD66B62 | NTokenController
+NestQuery | 0xB5D2890c061c321A5B6A4a4254bb1522425BAF0A | NEST Oracle
+PUSDT | 0xCCEcC702Ec67309Bc3DDAF6a42E9e5a6b8Da58f0 | PUSDT
+PETH | 0x53f878Fb7Ec7B86e4F9a0CB1E9a6c89C0555FbbD | PETH
+
+#### MortgagePool
+Parameter | Value
+---|---
+Nest mortgage rate ceiling | 40%
+ETH Mortgage rate ceiling | 70%
+Nest k value | 1.33
+ETH k value | 1.2
+Nest r0 | 0.02
+ETH r0 | 0.02
+Nest maxRate | 40%
+ETH maxRate | 70%
+Nest settlement Rate | 90%
+ETH settlement Rate | 90%
+
+#### InsurancePool
+Insurance redemption cycle | 2 days
+Waiting time for redemption | 7 days
+Initial net value | 1
+Exchange rate | 2‰
+
 ### 2021-08-05@rinkeby
 Name | Address | Description
 ---|---|---
