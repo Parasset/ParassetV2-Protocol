@@ -40,6 +40,8 @@ Nest settlement Rate | 90%
 ETH settlement Rate | 90%
 
 #### InsurancePool
+Parameter | Value
+---|---
 Insurance redemption cycle | 2 days
 Waiting time for redemption | 7 days
 Initial net value | 1
