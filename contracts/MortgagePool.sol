@@ -145,6 +145,9 @@ contract MortgagePool is ParassetBase {
     ) {
         address mToken = mortgageToken;
         MortgageLeader storage mLedger = _ledgerList[mToken];
+        if (mLedger.accountMapping[address(owner)] == 0) {
+            return (0,0,0,0);
+        }
         PersonalLedger memory pLedger = mLedger.ledgerArray[mLedger.accountMapping[address(owner)] - 1];
         if (pLedger.mortgageAssets == 0 && pLedger.parassetAssets == 0) {
             return (0,0,0,0);
@@ -191,6 +194,9 @@ contract MortgagePool is ParassetBase {
         bool created
     ) {
         MortgageLeader storage mLedger = _ledgerList[mortgageToken];
+        if (mLedger.accountMapping[address(owner)] == 0) {
+            return (0,0,0,0,false);
+        }
         PersonalLedger memory pLedger = mLedger.ledgerArray[mLedger.accountMapping[address(owner)] - 1];
     	return (pLedger.mortgageAssets, 
                 pLedger.parassetAssets, 
