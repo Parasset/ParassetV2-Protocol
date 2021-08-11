@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.4;
-pragma experimental ABIEncoderV2;
 
 import "./iface/IParasset.sol";
 import "./iface/IInsurancePool.sol";
@@ -20,7 +19,7 @@ contract MortgagePool is ParassetBase {
     // insurance pool contract
     IInsurancePool _insurancePool;
     // contract base num
-    uint256 BASE_NUM = 100000;
+    uint256 constant BASE_NUM = 100000;
 
     struct MortgageInfo {
         // allow mortgage
@@ -115,7 +114,7 @@ contract MortgagePool is ParassetBase {
         uint256 parassetAssets, 
         uint256 tokenPrice, 
         uint256 pTokenPrice
-    ) public view returns(uint256) {
+    ) public pure returns(uint256) {
         if (mortgageAssets == 0) {
             return 0;
         }

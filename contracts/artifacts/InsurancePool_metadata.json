@@ -1047,11 +1047,11 @@
 	},
 	"sources": {
 		"InsurancePool.sol": {
-			"keccak256": "0x5d2366f241a96439be394449588acc74993396413239105824b11a60e4ce7b16",
+			"keccak256": "0xab88c32516d37984b644d6b3b8a7885e64bf04d90904f3f2eba78bbf5ce09f69",
 			"license": "GPL-3.0-or-later",
 			"urls": [
-				"bzz-raw://e2368486c4abc58a009c0b11a1097a555eb3c4e8207e0f92044d5ede3e49e01f",
-				"dweb:/ipfs/QmYrDM6u5MHwHBPVqoC5swJJqKNv8xRdvgSgGBdUXUNzR1"
+				"bzz-raw://51172897e7f9ad84146b3304d4df8200cc85f0e364d8c132bda59622c8467e4c",
+				"dweb:/ipfs/QmWnZ2CfTtYX2c3jrXFfK2yVQ6ikiNXzDwF79fgDk8iEoY"
 			]
 		},
 		"ParassetBase.sol": {

@@ -106,9 +106,9 @@
 						"type": "uint80"
 					},
 					{
-						"internalType": "uint80",
+						"internalType": "uint40",
 						"name": "r0Value",
-						"type": "uint80"
+						"type": "uint40"
 					}
 				],
 				"name": "_checkLine",
@@ -222,9 +222,9 @@
 						"type": "uint256"
 					},
 					{
-						"internalType": "uint80",
+						"internalType": "uint40",
 						"name": "r0Value",
-						"type": "uint80"
+						"type": "uint40"
 					}
 				],
 				"name": "getFee",
@@ -432,6 +432,25 @@
 						"type": "address"
 					}
 				],
+				"name": "getLiquidateRate",
+				"outputs": [
+					{
+						"internalType": "uint40",
+						"name": "",
+						"type": "uint40"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "mortgageToken",
+						"type": "address"
+					}
+				],
 				"name": "getMaxRate",
 				"outputs": [
 					{
@@ -474,7 +493,7 @@
 						"type": "uint256"
 					}
 				],
-				"stateMutability": "pure",
+				"stateMutability": "view",
 				"type": "function"
 			},
 			{
@@ -527,9 +546,9 @@
 				"name": "getR0",
 				"outputs": [
 					{
-						"internalType": "uint80",
+						"internalType": "uint40",
 						"name": "",
-						"type": "uint80"
+						"type": "uint40"
 					}
 				],
 				"stateMutability": "view",
@@ -723,6 +742,24 @@
 						"type": "address"
 					},
 					{
+						"internalType": "uint40",
+						"name": "num",
+						"type": "uint40"
+					}
+				],
+				"name": "setLiquidateRate",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "mortgageToken",
+						"type": "address"
+					},
+					{
 						"internalType": "uint88",
 						"name": "num",
 						"type": "uint88"
@@ -785,9 +822,9 @@
 						"type": "address"
 					},
 					{
-						"internalType": "uint80",
+						"internalType": "uint40",
 						"name": "num",
-						"type": "uint80"
+						"type": "uint40"
 					}
 				],
 				"name": "setR0",
@@ -830,7 +867,7 @@
 		"devdoc": {
 			"kind": "dev",
 			"methods": {
-				"_checkLine((uint256,uint256,uint160,uint88),uint256,uint256,uint80,uint80)": {
+				"_checkLine((uint256,uint256,uint160,uint88),uint256,uint256,uint80,uint40)": {
 					"details": "Check the liquidation line",
 					"params": {
 						"pLedger": "debt warehouse ledger",
@@ -864,7 +901,7 @@
 						"_0": "stability Amount of outputToken"
 					}
 				},
-				"getFee(uint256,uint160,uint256,uint256,uint80)": {
+				"getFee(uint256,uint160,uint256,uint256,uint40)": {
 					"details": "Calculate the stability fee",
 					"params": {
 						"blockHeight": "The block height of the last operation",
@@ -945,6 +982,12 @@
 					},
 					"returns": {
 						"_0": "index"
+					}
+				},
+				"getLiquidateRate(address)": {
+					"details": "View the liquidation rate",
+					"returns": {
+						"_0": "liquidation rate"
 					}
 				},
 				"getMaxRate(address)": {
@@ -1062,6 +1105,12 @@
 						"num": "K value"
 					}
 				},
+				"setLiquidateRate(address,uint40)": {
+					"details": "Set liquidation rate",
+					"params": {
+						"num": "liquidation rate, 90000=90%"
+					}
+				},
 				"setMaxRate(address,uint88)": {
 					"details": "Set the maximum mortgage rate",
 					"params": {
@@ -1088,7 +1137,7 @@
 						"add": "priceController contract address"
 					}
 				},
-				"setR0(address,uint80)": {
+				"setR0(address,uint40)": {
 					"details": "Set market base interest rate",
 					"params": {
 						"num": "market base interest rate(num = ? * 1 ether)"
@@ -1133,11 +1182,11 @@
 	},
 	"sources": {
 		"MortgagePool.sol": {
-			"keccak256": "0xdfe12cdd23701a0d76d2ae41590d066790714b23ea470f175307c899202df2a5",
+			"keccak256": "0x59fa6caf39c6af4f37da2d8050a204ff67cc85042378d2cd097d58ebefdd94e1",
 			"license": "GPL-3.0-or-later",
 			"urls": [
-				"bzz-raw://f0a4d5aff1879fcdb022e3df0d09ed60b98cfcda88841eac6c6633d4f53d8636",
-				"dweb:/ipfs/QmXPjiX9MfT3pNRkJsLoFKzywTNj388eL5wrKM1yaQTPCj"
+				"bzz-raw://873f5d17c3f88ea2176cb2e1a2ac47d5f65563cb6a5992b37d98d23b8055fc45",
+				"dweb:/ipfs/QmXgpKt2HEB1jyvp2hrF3PbeZYdUQ9UCuoWCXBLUZrCuSS"
 			]
 		},
 		"ParassetBase.sol": {

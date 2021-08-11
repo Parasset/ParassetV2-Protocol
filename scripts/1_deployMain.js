@@ -2,7 +2,7 @@ const { ethers, upgrades } = require("hardhat");
 
 const {ETHdec,USDTdec} = require("./normal-scripts.js")
 
-exports.deploy = async function () {
+async function main() {
     const ETHAddress = "0x0000000000000000000000000000000000000000";
     const USDT = "0xdac17f958d2ee523a2206206994597c13d831ec7";
     const NEST = "0x04abEdA201850aC0124161F037Efd70c74ddC74C";
@@ -109,18 +109,34 @@ exports.deploy = async function () {
 	await PUSDINSPOOL.setLPStakingMiningPool(LPSTAKING.address);
 	await PETHINSPOOL.setLPStakingMiningPool(LPSTAKING.address);
     console.log(`19. set ins-stake address`);
+	// set ins-latestTime
+	await PUSDINSPOOL.setLatestTime("1629043200");
+	await PETHINSPOOL.setLatestTime("1629043200");
+	console.log(`20. set ins-latestTime`);
     // set stake-reward token
 	await LPSTAKING.setRewardsToken(ASETContract.address);
-	console.log(`20. set stake-reward token`);
+	console.log(`21. set stake-reward token`);
+
+	console.log(`USDTContract:"${USDTContract.address}",`);
+	console.log(`NESTContract:"${NESTContract.address}",`);
+	console.log(`ASETContract:"${ASETContract.address}",`);
+    console.log(`GovernanceContract:"${GovernanceContract.address}",`);
+	console.log(`PTokenFactory:"${PTOKENFACTORY.address}",`);
+	console.log(`PUSD:"${USDTPToken}",`);
+	console.log(`PETH:"${ETHPToken}",`);
+	console.log(`NestQuery:"${NESTQUARY.address}",`);
+	console.log(`NTokenController:"${NTOKENCONTROLLER.address}",`);
+	console.log(`PUSDMorPool:"${PUSDMORPOOL.address}",`);
+	console.log(`PETHMorPool:"${PETHMORPOOL.address}",`);
+	console.log(`PUSDInsPool:"${PUSDINSPOOL.address}",`);
+	console.log(`PETHInsPool:"${PETHINSPOOL.address}",`);
+	console.log(`StakingMiningPool:"${LPSTAKING.address}",`);
+	console.log(`PriceController:"${PRICECONTROLLER.address}",`);
 }
 
-function sleep(numberMillis) {
-	var now = new Date();
-	var exitTime = now.getTime() + numberMillis;
-	while (true) {
-		now = new Date();
-		if (now.getTime() > exitTime){
-			return;
-		}
-	}
-}
+main()
+  .then(() => process.exit(0))
+  .catch(error => {
+    console.error(error);
+    process.exit(1);
+});
