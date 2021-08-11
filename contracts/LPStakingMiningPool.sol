@@ -15,10 +15,10 @@ contract LPStakingMiningPool is ParassetBase, ILPStakingMiningPool {
     mapping(address => Channel) _tokenChannel;
     struct Channel {
         // recently operated block
-        // 上限4294967295
+        // limit4294967295
         uint32 lastUpdateBlock;
         // end block
-        // 上限4294967295
+        // limit4294967295
         uint32 endBlock;
         // revenue efficiency
         uint192 rewardRate;

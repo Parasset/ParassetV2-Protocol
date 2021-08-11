@@ -599,7 +599,7 @@ contract MortgagePool is ParassetBase {
         _checkLine(pLedger, tokenPrice, pTokenPrice, morInfo.k, morInfo.r0);
 
         // Calculate the amount of PToken
-        uint256 pTokenAmount = amount * pTokenPrice * morInfo.liquidateRate / (tokenPrice * BASE_NUM);
+        uint256 pTokenAmount = amount * pTokenPrice * uint256(morInfo.liquidateRate) / (tokenPrice * BASE_NUM);
     	// Transfer to PToken
         require(pTokenAmount <= pTokenAmountLimit, "Log:MortgagePool:!pTokenAmountLimit");
         TransferHelper.safeTransferFrom(_config.pTokenAdd, msg.sender, address(_insurancePool), pTokenAmount);
