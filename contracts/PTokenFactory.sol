@@ -90,6 +90,13 @@ contract PTokenFactory is ParassetBase, IPTokenFactory {
         _pTokenList.push(add);
     }
 
+    /// @dev set PToken mapping
+    /// @param add pToken address
+    /// @param isTrue pToken authenticity
+    function setPTokenMapping(address add, bool isTrue) external onlyGovernance {
+        _pTokenMapping[add] = isTrue;
+    }
+
     /// @dev Create PToken
     /// @param name token name
     function createPToken(string memory name) external onlyGovernance {
