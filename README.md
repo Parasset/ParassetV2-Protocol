@@ -12,6 +12,7 @@ Contract | Address | Description
 ---|---|---
 NestContract | 0x04abEdA201850aC0124161F037Efd70c74ddC74C | NEST Token
 USDTContract | 0xdac17f958d2ee523a2206206994597c13d831ec7 | USDT Token
+ASETContract | 0x139cec55d1ec47493dfa25ca77c9208aba4d3c68 | ASET Token
 PTokenFactory | 0xa6F7E15e38a5ba0435E5af06326108204cD175DA | P Asset Factory Contract
 MortgagePool-PUSD | 0x505eFcC134552e34ec67633D1254704B09584227 | Mortgage-PUSD pool contract
 MortgagePool-PETH | 0x9a5C88aC0F209F284E35b4306710fEf83b8f9723 | Mortgage-PETH pool contract
@@ -28,8 +29,6 @@ PETH | 0x53f878Fb7Ec7B86e4F9a0CB1E9a6c89C0555FbbD | PETH
 #### MortgagePool
 Parameter | Value
 ---|---
-Nest mortgage rate ceiling | 40%
-ETH Mortgage rate ceiling | 70%
 Nest k value | 1.33
 ETH k value | 1.2
 Nest r0 | 0.02
