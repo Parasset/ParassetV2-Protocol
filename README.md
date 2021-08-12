@@ -16,8 +16,8 @@ ASETContract | 0x139cec55d1ec47493dfa25ca77c9208aba4d3c68 | ASET Token
 PTokenFactory | 0xa6F7E15e38a5ba0435E5af06326108204cD175DA | P Asset Factory Contract
 MortgagePool-PUSD | 0x505eFcC134552e34ec67633D1254704B09584227 | Mortgage-PUSD pool contract
 MortgagePool-PETH | 0x9a5C88aC0F209F284E35b4306710fEf83b8f9723 | Mortgage-PETH pool contract
-InsurancePool-USD | 0x79025438C04Ae6A683Bcc7f7c51a01Eb4C2DDabA | Insurance-USD pool contract
-InsurancePool-ETH | 0x0bd32fFC80d5B98E403985D4446AE3BA67528C2e | Insurance-ETH pool contract
+InsurancePool-USD & LP-USD | 0x79025438C04Ae6A683Bcc7f7c51a01Eb4C2DDabA | Insurance-USD pool contract
+InsurancePool-ETH & LP-ETH | 0x0bd32fFC80d5B98E403985D4446AE3BA67528C2e | Insurance-ETH pool contract
 PriceController | 0x54397e5869323aA28CC4aA76F5E5f21ef39BC575 | Price call contract
 StakingContract | 0xbA01258Eb8e133EACE55F5f6ec76907ADdf7797f | Staking contract
 Governance | 0x175d282Bc8249a3b92682365118f693380cA31F4 | Governance contract
