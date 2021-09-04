@@ -31,8 +31,8 @@ Parameter | Value
 ---|---
 Nest k value | 1.33
 ETH k value | 1.2
-Nest r0 | 0.02
-ETH r0 | 0.02
+Nest r0 | 0.04
+ETH r0 | 0.04
 Nest maxRate | 40%
 ETH maxRate | 70%
 Nest settlement Rate | 90%
@@ -44,7 +44,7 @@ Parameter | Value
 Insurance redemption cycle | 2 days
 Waiting time for redemption | 7 days
 Initial net value | 1
-Exchange rate | 2‰
+Exchange rate | 4‰
 
 ### 2021-08-05@rinkeby
 Name | Address | Description
