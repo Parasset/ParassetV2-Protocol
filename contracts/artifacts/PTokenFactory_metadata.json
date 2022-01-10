@@ -394,7 +394,7 @@
 	},
 	"settings": {
 		"compilationTarget": {
-			"PTokenFactory.sol": "PTokenFactory"
+			"PTokenFactory_flat.sol": "PTokenFactory"
 		},
 		"evmVersion": "istanbul",
 		"libraries": {},
@@ -408,60 +408,12 @@
 		"remappings": []
 	},
 	"sources": {
-		"PToken.sol": {
-			"keccak256": "0x31e79db962af2f6311ddee3d8314cdbfacfd004b50eaa9df7d1c789e6d976c22",
-			"license": "GPL-3.0-or-later",
-			"urls": [
-				"bzz-raw://fbb4eece7f3d9f4c5007b3cb8b6790fbe3a4c19e446eb9c2aeb6d909b2f7c7dd",
-				"dweb:/ipfs/QmZznAzhpD5dTVZGUGEcctcp6C4hbZqwgDoQcBvseagtca"
-			]
-		},
-		"PTokenFactory.sol": {
-			"keccak256": "0x223455ea38dc23ba18b76a50d2efafd21135abbadf34d14b43d895879b933657",
-			"license": "GPL-3.0-or-later",
-			"urls": [
-				"bzz-raw://52c6fe161e1e1a04451107f274f2e5297761743ba4c29d60c609f1543ea820b3",
-				"dweb:/ipfs/QmYum3RBD43ZVDrSyuHHkM8Lx2FC9FkxdbaZptcBycTSGf"
-			]
-		},
-		"ParassetBase.sol": {
-			"keccak256": "0x926b3f336e15a50a9a51704a165405e659939f24dd3ca8e30fcd6d217d11f8a0",
-			"license": "GPL-3.0-or-later",
-			"urls": [
-				"bzz-raw://1e83b9716a7b09418ffad207c22099cc9803d00cde6a93bdf6807154686d13fd",
-				"dweb:/ipfs/QmZn4t25hNEkhVmhF1gHvt5ShX8xtGUSsAyrWgZeqkRqGS"
-			]
-		},
-		"iface/IERC20.sol": {
-			"keccak256": "0x5ff433ca7071a5539e9ff446bac836616f5fac8c630dd0a27bc47a3a422ae70d",
+		"PTokenFactory_flat.sol": {
+			"keccak256": "0xbf8765b8084e43cf61fd376030204a79d969ef959006b2f63d1b9baaad75a571",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://d4139546bf184be5bbfd1aa40e52d1e597c07c662605afb4a35945a8d5776c8b",
-				"dweb:/ipfs/QmfEkR9yBfLF7zdFJJh9dmbssVXcRdxtMyCeCpPr62v8Rb"
-			]
-		},
-		"iface/IPTokenFactory.sol": {
-			"keccak256": "0xaf239b5b3714584c011e520d57c803ce5af1f23dc2e9a53fd3425546960c5205",
-			"license": "GPL-3.0-or-later",
-			"urls": [
-				"bzz-raw://52f37e91960cbfb2ac2eadf4e86640749a64fd243462b41c03652b94b1fb56a8",
-				"dweb:/ipfs/QmQGZmEkvKZVNsCn4KMT4Zm4NedByzWE3APSqjmX63MVNp"
-			]
-		},
-		"iface/IParasset.sol": {
-			"keccak256": "0xc8fad54a27bc6e6cd187fd06cf703d1b6c32e9b94498a2924c010f2f791f2ed8",
-			"license": "GPL-3.0-or-later",
-			"urls": [
-				"bzz-raw://a4bf5fa656704ec0d4cd2bdab6632a62a473fdbdaa129589ca47e647b25cf88c",
-				"dweb:/ipfs/QmV7kd71wqp8kojCsZAJpJdFhZYPZLJiDLPa2SEYXZsesS"
-			]
-		},
-		"iface/IParassetGovernance.sol": {
-			"keccak256": "0xf6a3edcc61224c9254201fa2d0956efa75aef4cfde6e26683826ca3f08ef0ee0",
-			"license": "GPL-3.0-or-later",
-			"urls": [
-				"bzz-raw://ef70221a738c223b1ebe9510049a7a0de607a8d43f9577b1dff3dcf117d2e3e1",
-				"dweb:/ipfs/QmfAst8UmsvpGk9Fno2p1E48yarF8iunw62AzL3Ca6aMNA"
+				"bzz-raw://db374a95d2b9aa111d268badf86c2b795362c2b16fb7408b6bb346c7c8270b27",
+				"dweb:/ipfs/QmbmabWvXCPTqGssqAbTFCmbSnnLcNrjtEJ3jtxNQHmCGz"
 			]
 		}
 	},

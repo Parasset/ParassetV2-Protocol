@@ -471,7 +471,7 @@
 	},
 	"settings": {
 		"compilationTarget": {
-			"LPStakingMiningPool.sol": "LPStakingMiningPool"
+			"LPStakingMiningPool_flat.sol": "LPStakingMiningPool"
 		},
 		"evmVersion": "istanbul",
 		"libraries": {},
@@ -485,52 +485,12 @@
 		"remappings": []
 	},
 	"sources": {
-		"LPStakingMiningPool.sol": {
-			"keccak256": "0x8237edbfb84c617efaf0609e834ea831f9058f2b80ce4aa207d327f409674cfc",
+		"LPStakingMiningPool_flat.sol": {
+			"keccak256": "0x41834e83a7b84bfbe10b3ab2ee35b57fe6980122a4e3558320bb60b47bc5eb89",
 			"license": "GPL-3.0-or-later",
 			"urls": [
-				"bzz-raw://589a83550f8409b944cfd3530807bdfeb16dc2ac87dd468b8d9466711328bc53",
-				"dweb:/ipfs/QmZuufSf9HvPPt982hQAS1JwDw6SeB2mcVNVGCNtiamH7T"
-			]
-		},
-		"ParassetBase.sol": {
-			"keccak256": "0xc2cf6591eb2a3e405c2e8c061251f53a3e65704f24ad932132faef59f7225ba6",
-			"license": "GPL-3.0-or-later",
-			"urls": [
-				"bzz-raw://ab51d62f85d5158e2ae3ddd1fe2888aa118557995cdf6d00014fecabe1621550",
-				"dweb:/ipfs/QmcXYuahR3qHKGijf78dBfWkjFdjhuvXJpQvcUwkhd21CG"
-			]
-		},
-		"iface/IERC20.sol": {
-			"keccak256": "0x5ff433ca7071a5539e9ff446bac836616f5fac8c630dd0a27bc47a3a422ae70d",
-			"license": "MIT",
-			"urls": [
-				"bzz-raw://d4139546bf184be5bbfd1aa40e52d1e597c07c662605afb4a35945a8d5776c8b",
-				"dweb:/ipfs/QmfEkR9yBfLF7zdFJJh9dmbssVXcRdxtMyCeCpPr62v8Rb"
-			]
-		},
-		"iface/ILPStakingMiningPool.sol": {
-			"keccak256": "0xdff0dedc8c7e55dab6814af59e31cd78e7ef2c4b79b86407709b2003433321e2",
-			"license": "GPL-3.0-or-later",
-			"urls": [
-				"bzz-raw://ac7d528a2b2dc0c92154a5486da4e845d28fd96faf97cea3cd92b75fcdb64cd3",
-				"dweb:/ipfs/QmPGDBwYaAFHKHvz3t69qakcdyLpCG2XzAmpQQW9kSpWjb"
-			]
-		},
-		"iface/IParassetGovernance.sol": {
-			"keccak256": "0xf6a3edcc61224c9254201fa2d0956efa75aef4cfde6e26683826ca3f08ef0ee0",
-			"license": "GPL-3.0-or-later",
-			"urls": [
-				"bzz-raw://ef70221a738c223b1ebe9510049a7a0de607a8d43f9577b1dff3dcf117d2e3e1",
-				"dweb:/ipfs/QmfAst8UmsvpGk9Fno2p1E48yarF8iunw62AzL3Ca6aMNA"
-			]
-		},
-		"lib/TransferHelper.sol": {
-			"keccak256": "0x5cd7b677741700cf5ab9fbd4702cc2371340bf1cfcff42da218fe859d2088010",
-			"license": "GPL-3.0-or-later",
-			"urls": [
-				"bzz-raw://e90962978395401dc5422cfdb233f3a9cd244bfa9e83c6189fc18714c993c757",
-				"dweb:/ipfs/QmYma7FWG7isyP2FTchi669k11EYAGo9xfzb7RJSyUWAJS"
+				"bzz-raw://09ed75b19b88a00a3b70e02925fdbee579402967e9849f84b42c7aedbb841e32",
+				"dweb:/ipfs/QmPNYZ9wRgyUVo1DJHBACMY7b5QvtmumontESfyd8XwPAs"
 			]
 		}
 	},

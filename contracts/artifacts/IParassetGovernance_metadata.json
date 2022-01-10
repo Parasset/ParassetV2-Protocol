@@ -1,0 +1,135 @@
+{
+	"compiler": {
+		"version": "0.8.4+commit.c7e474f2"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "addr",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "flag",
+						"type": "uint256"
+					}
+				],
+				"name": "checkGovernance",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "addr",
+						"type": "address"
+					}
+				],
+				"name": "getGovernance",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "addr",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "flag",
+						"type": "uint256"
+					}
+				],
+				"name": "setGovernance",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"details": "This interface defines the governance methods",
+			"kind": "dev",
+			"methods": {
+				"checkGovernance(address,uint256)": {
+					"details": "Check whether the target address has governance rights for the given target",
+					"params": {
+						"addr": "Destination address",
+						"flag": "Permission weight. The permission of the target address must be greater than this weight to pass the check"
+					},
+					"returns": {
+						"_0": "True indicates permission"
+					}
+				},
+				"getGovernance(address)": {
+					"details": "Get governance rights",
+					"params": {
+						"addr": "Destination address"
+					},
+					"returns": {
+						"_0": "Weight. 0 means to delete the governance permission of the target address. Weight is not         implemented in the current system, only the difference between authorized and unauthorized.         Here, a uint96 is used to represent the weight, which is only reserved for expansion"
+					}
+				},
+				"setGovernance(address,uint256)": {
+					"details": "Set governance authority",
+					"params": {
+						"addr": "Destination address",
+						"flag": "Weight. 0 means to delete the governance permission of the target address. Weight is not         implemented in the current system, only the difference between authorized and unauthorized.         Here, a uint96 is used to represent the weight, which is only reserved for expansion"
+					}
+				}
+			},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"LPStakingMiningPool_flat.sol": "IParassetGovernance"
+		},
+		"evmVersion": "istanbul",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": true,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"LPStakingMiningPool_flat.sol": {
+			"keccak256": "0x41834e83a7b84bfbe10b3ab2ee35b57fe6980122a4e3558320bb60b47bc5eb89",
+			"license": "GPL-3.0-or-later",
+			"urls": [
+				"bzz-raw://09ed75b19b88a00a3b70e02925fdbee579402967e9849f84b42c7aedbb841e32",
+				"dweb:/ipfs/QmPNYZ9wRgyUVo1DJHBACMY7b5QvtmumontESfyd8XwPAs"
+			]
+		}
+	},
+	"version": 1
+}

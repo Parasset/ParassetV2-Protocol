@@ -6,22 +6,6 @@
 	"output": {
 		"abi": [
 			{
-				"inputs": [
-					{
-						"internalType": "string",
-						"name": "_name",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "_symbol",
-						"type": "string"
-					}
-				],
-				"stateMutability": "nonpayable",
-				"type": "constructor"
-			},
-			{
 				"anonymous": false,
 				"inputs": [
 					{
@@ -72,19 +56,6 @@
 				"type": "event"
 			},
 			{
-				"inputs": [],
-				"name": "_totalSupply",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
 				"inputs": [
 					{
 						"internalType": "address",
@@ -117,7 +88,7 @@
 					},
 					{
 						"internalType": "uint256",
-						"name": "value",
+						"name": "amount",
 						"type": "uint256"
 					}
 				],
@@ -136,7 +107,7 @@
 				"inputs": [
 					{
 						"internalType": "address",
-						"name": "owner",
+						"name": "account",
 						"type": "address"
 					}
 				],
@@ -149,19 +120,6 @@
 					}
 				],
 				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "factory",
-						"type": "address"
-					}
-				],
-				"name": "changeFactory",
-				"outputs": [],
-				"stateMutability": "nonpayable",
 				"type": "function"
 			},
 			{
@@ -178,103 +136,6 @@
 				"type": "function"
 			},
 			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "spender",
-						"type": "address"
-					},
-					{
-						"internalType": "uint256",
-						"name": "subtractedValue",
-						"type": "uint256"
-					}
-				],
-				"name": "decreaseAllowance",
-				"outputs": [
-					{
-						"internalType": "bool",
-						"name": "",
-						"type": "bool"
-					}
-				],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "amount",
-						"type": "uint256"
-					},
-					{
-						"internalType": "address",
-						"name": "account",
-						"type": "address"
-					}
-				],
-				"name": "destroy",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "getPTokenFactory",
-				"outputs": [
-					{
-						"internalType": "address",
-						"name": "",
-						"type": "address"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "spender",
-						"type": "address"
-					},
-					{
-						"internalType": "uint256",
-						"name": "addedValue",
-						"type": "uint256"
-					}
-				],
-				"name": "increaseAllowance",
-				"outputs": [
-					{
-						"internalType": "bool",
-						"name": "",
-						"type": "bool"
-					}
-				],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "amount",
-						"type": "uint256"
-					},
-					{
-						"internalType": "address",
-						"name": "account",
-						"type": "address"
-					}
-				],
-				"name": "issuance",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
 				"inputs": [],
 				"name": "name",
 				"outputs": [
@@ -285,24 +146,6 @@
 					}
 				],
 				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "string",
-						"name": "_name",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "_symbol",
-						"type": "string"
-					}
-				],
-				"name": "rename",
-				"outputs": [],
-				"stateMutability": "nonpayable",
 				"type": "function"
 			},
 			{
@@ -335,12 +178,12 @@
 				"inputs": [
 					{
 						"internalType": "address",
-						"name": "to",
+						"name": "recipient",
 						"type": "address"
 					},
 					{
 						"internalType": "uint256",
-						"name": "value",
+						"name": "amount",
 						"type": "uint256"
 					}
 				],
@@ -359,17 +202,17 @@
 				"inputs": [
 					{
 						"internalType": "address",
-						"name": "from",
+						"name": "sender",
 						"type": "address"
 					},
 					{
 						"internalType": "address",
-						"name": "to",
+						"name": "recipient",
 						"type": "address"
 					},
 					{
 						"internalType": "uint256",
-						"name": "value",
+						"name": "amount",
 						"type": "uint256"
 					}
 				],
@@ -386,38 +229,56 @@
 			}
 		],
 		"devdoc": {
+			"details": "Interface of the ERC20 standard as defined in the EIP.",
+			"events": {
+				"Approval(address,address,uint256)": {
+					"details": "Emitted when the allowance of a `spender` for an `owner` is set by a call to {approve}. `value` is the new allowance."
+				},
+				"Transfer(address,address,uint256)": {
+					"details": "Emitted when `value` tokens are moved from one account (`from`) to another (`to`). Note that `value` may be zero."
+				}
+			},
 			"kind": "dev",
 			"methods": {
+				"allowance(address,address)": {
+					"details": "Returns the remaining number of tokens that `spender` will be allowed to spend on behalf of `owner` through {transferFrom}. This is zero by default. This value changes when {approve} or {transferFrom} are called."
+				},
+				"approve(address,uint256)": {
+					"details": "Sets `amount` as the allowance of `spender` over the caller's tokens. Returns a boolean value indicating whether the operation succeeded. IMPORTANT: Beware that changing an allowance with this method brings the risk that someone may use both the old and the new allowance by unfortunate transaction ordering. One possible solution to mitigate this race condition is to first reduce the spender's allowance to 0 and set the desired value afterwards: https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729 Emits an {Approval} event."
+				},
 				"balanceOf(address)": {
-					"details": "The view of balances",
-					"params": {
-						"owner": "The address of an account"
-					},
-					"returns": {
-						"_0": "The balance of the account"
-					}
+					"details": "Returns the amount of tokens owned by `account`."
+				},
+				"decimals()": {
+					"details": "Returns the decimals places of the token."
+				},
+				"name()": {
+					"details": "Returns the name of the token."
+				},
+				"symbol()": {
+					"details": "Returns the symbol of the token."
 				},
 				"totalSupply()": {
-					"returns": {
-						"_0": "The total supply of ntoken"
-					}
+					"details": "Returns the amount of tokens in existence."
+				},
+				"transfer(address,uint256)": {
+					"details": "Moves `amount` tokens from the caller's account to `recipient`. Returns a boolean value indicating whether the operation succeeded. Emits a {Transfer} event."
+				},
+				"transferFrom(address,address,uint256)": {
+					"details": "Moves `amount` tokens from `sender` to `recipient` using the allowance mechanism. `amount` is then deducted from the caller's allowance. Returns a boolean value indicating whether the operation succeeded. Emits a {Transfer} event."
 				}
 			},
 			"version": 1
 		},
 		"userdoc": {
 			"kind": "user",
-			"methods": {
-				"totalSupply()": {
-					"notice": "The view of totalSupply"
-				}
-			},
+			"methods": {},
 			"version": 1
 		}
 	},
 	"settings": {
 		"compilationTarget": {
-			"PTokenFactory_flat.sol": "PToken"
+			"PriceController_flat.sol": "IERC20"
 		},
 		"evmVersion": "istanbul",
 		"libraries": {},
@@ -431,12 +292,12 @@
 		"remappings": []
 	},
 	"sources": {
-		"PTokenFactory_flat.sol": {
-			"keccak256": "0xbf8765b8084e43cf61fd376030204a79d969ef959006b2f63d1b9baaad75a571",
-			"license": "MIT",
+		"PriceController_flat.sol": {
+			"keccak256": "0x27f37128aa466050e86704b5188179838f127817a9d039c2228ee4b2c5435edd",
+			"license": "GPL-3.0-or-later",
 			"urls": [
-				"bzz-raw://db374a95d2b9aa111d268badf86c2b795362c2b16fb7408b6bb346c7c8270b27",
-				"dweb:/ipfs/QmbmabWvXCPTqGssqAbTFCmbSnnLcNrjtEJ3jtxNQHmCGz"
+				"bzz-raw://4fe8084b3c87858cc5ff606d4ed1b7baaf472b6fa984fc067fe2464e3471ff75",
+				"dweb:/ipfs/QmTAfy546tATu6zcb8c9UVabtKUcpRcdz5ois9vyk5Uc3o"
 			]
 		}
 	},

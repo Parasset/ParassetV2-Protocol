@@ -328,7 +328,7 @@
 	},
 	"settings": {
 		"compilationTarget": {
-			"ASET.sol": "ASET"
+			"ASET_flat.sol": "ASET"
 		},
 		"evmVersion": "istanbul",
 		"libraries": {},
@@ -342,28 +342,12 @@
 		"remappings": []
 	},
 	"sources": {
-		"ASET.sol": {
-			"keccak256": "0xf008432445289d0e4d816029754c5c9f05a5caa79eee0801b13f69570c6181c2",
-			"license": "GPL-3.0-or-later",
-			"urls": [
-				"bzz-raw://ef740ff71b282a5bf64384d3726f1f8c7bc54076e4de7509bae22e480072110d",
-				"dweb:/ipfs/QmZQBtM6GsjzXHTuRwRzZaccXN7JbZGbq6V2cQedWCdtgr"
-			]
-		},
-		"ParassetERC20.sol": {
-			"keccak256": "0x5de152f8e99a31f55062ba34b05483dc0ea1ee1f2440dadc6fb635c860f3495d",
-			"license": "GPL-3.0-or-later",
-			"urls": [
-				"bzz-raw://b9f6819716512fcc6c9fe70deab54b9cd0bcd67bfbcaad8fa82cc855edfaf71a",
-				"dweb:/ipfs/QmYBv2AQizNLg8LAj4anXmmM6Tg7tsKm3oV86ydEw4fEzs"
-			]
-		},
-		"iface/IERC20.sol": {
-			"keccak256": "0x5ff433ca7071a5539e9ff446bac836616f5fac8c630dd0a27bc47a3a422ae70d",
+		"ASET_flat.sol": {
+			"keccak256": "0xbb5bfda88424247243c153ae3aa0dfd36ba5115c44bc17f2904c2bfa216c4b5a",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://d4139546bf184be5bbfd1aa40e52d1e597c07c662605afb4a35945a8d5776c8b",
-				"dweb:/ipfs/QmfEkR9yBfLF7zdFJJh9dmbssVXcRdxtMyCeCpPr62v8Rb"
+				"bzz-raw://51edccebbbe5f53d593f27315df50a5480e74a5f344e2fe368021712e201a54b",
+				"dweb:/ipfs/QmXcieNzD8EFe9yxcU9nTr2io3wRCoaaBwMmDhpsQhSExy"
 			]
 		}
 	},

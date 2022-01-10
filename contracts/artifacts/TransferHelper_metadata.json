@@ -1,0 +1,45 @@
+{
+	"compiler": {
+		"version": "0.8.4+commit.c7e474f2"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"LPStakingMiningPool_flat.sol": "TransferHelper"
+		},
+		"evmVersion": "istanbul",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": true,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"LPStakingMiningPool_flat.sol": {
+			"keccak256": "0x41834e83a7b84bfbe10b3ab2ee35b57fe6980122a4e3558320bb60b47bc5eb89",
+			"license": "GPL-3.0-or-later",
+			"urls": [
+				"bzz-raw://09ed75b19b88a00a3b70e02925fdbee579402967e9849f84b42c7aedbb841e32",
+				"dweb:/ipfs/QmPNYZ9wRgyUVo1DJHBACMY7b5QvtmumontESfyd8XwPAs"
+			]
+		}
+	},
+	"version": 1
+}

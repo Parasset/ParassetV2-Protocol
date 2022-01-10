@@ -1,0 +1,143 @@
+{
+	"compiler": {
+		"version": "0.8.4+commit.c7e474f2"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [],
+				"name": "_governance",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "inputToken",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "inputTokenAmount",
+						"type": "uint256"
+					},
+					{
+						"internalType": "address",
+						"name": "outputToken",
+						"type": "address"
+					}
+				],
+				"name": "getDecimalConversion",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "governance",
+						"type": "address"
+					}
+				],
+				"name": "initialize",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "newGovernance",
+						"type": "address"
+					}
+				],
+				"name": "update",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {
+				"getDecimalConversion(address,uint256,address)": {
+					"details": "Uniform accuracy",
+					"params": {
+						"inputToken": "Initial token",
+						"inputTokenAmount": "Amount of token",
+						"outputToken": "Converted token"
+					},
+					"returns": {
+						"_0": "stability Amount of outputToken"
+					}
+				},
+				"initialize(address)": {
+					"details": "To support open-zeppelin/upgrades",
+					"params": {
+						"governance": "IParassetGovernance implementation contract address"
+					}
+				},
+				"update(address)": {
+					"details": "Rewritten in the implementation contract, for load other contract addresses. Call       super.update(newGovernance) when overriding, and override method without onlyGovernance",
+					"params": {
+						"newGovernance": "IParassetGovernance implementation contract address"
+					}
+				}
+			},
+			"stateVariables": {
+				"_governance": {
+					"details": "IParassetGovernance implementation contract address"
+				}
+			},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"LPStakingMiningPool_flat.sol": "ParassetBase"
+		},
+		"evmVersion": "istanbul",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": true,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"LPStakingMiningPool_flat.sol": {
+			"keccak256": "0x41834e83a7b84bfbe10b3ab2ee35b57fe6980122a4e3558320bb60b47bc5eb89",
+			"license": "GPL-3.0-or-later",
+			"urls": [
+				"bzz-raw://09ed75b19b88a00a3b70e02925fdbee579402967e9849f84b42c7aedbb841e32",
+				"dweb:/ipfs/QmPNYZ9wRgyUVo1DJHBACMY7b5QvtmumontESfyd8XwPAs"
+			]
+		}
+	},
+	"version": 1
+}

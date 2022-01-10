@@ -1,0 +1,185 @@
+{
+	"deploy": {
+		"VM:-": {
+			"linkReferences": {},
+			"autoDeployLib": true
+		},
+		"main:1": {
+			"linkReferences": {},
+			"autoDeployLib": true
+		},
+		"ropsten:3": {
+			"linkReferences": {},
+			"autoDeployLib": true
+		},
+		"rinkeby:4": {
+			"linkReferences": {},
+			"autoDeployLib": true
+		},
+		"kovan:42": {
+			"linkReferences": {},
+			"autoDeployLib": true
+		},
+		"görli:5": {
+			"linkReferences": {},
+			"autoDeployLib": true
+		},
+		"Custom": {
+			"linkReferences": {},
+			"autoDeployLib": true
+		}
+	},
+	"data": {
+		"bytecode": {
+			"generatedSources": [],
+			"linkReferences": {},
+			"object": "",
+			"opcodes": "",
+			"sourceMap": ""
+		},
+		"deployedBytecode": {
+			"generatedSources": [],
+			"immutableReferences": {},
+			"linkReferences": {},
+			"object": "",
+			"opcodes": "",
+			"sourceMap": ""
+		},
+		"gasEstimates": null,
+		"methodIdentifiers": {
+			"getConfig()": "c3f909d4",
+			"triggeredPriceInfo(address,address)": "89f4d6e3",
+			"triggeredPriceInfo2(address,address)": "4c298029"
+		}
+	},
+	"abi": [
+		{
+			"inputs": [],
+			"name": "getConfig",
+			"outputs": [
+				{
+					"components": [
+						{
+							"internalType": "uint16",
+							"name": "singleFee",
+							"type": "uint16"
+						},
+						{
+							"internalType": "uint16",
+							"name": "doubleFee",
+							"type": "uint16"
+						},
+						{
+							"internalType": "uint8",
+							"name": "normalFlag",
+							"type": "uint8"
+						}
+					],
+					"internalType": "struct INestPriceFacade.Config",
+					"name": "",
+					"type": "tuple"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "address",
+					"name": "tokenAddress",
+					"type": "address"
+				},
+				{
+					"internalType": "address",
+					"name": "paybackAddress",
+					"type": "address"
+				}
+			],
+			"name": "triggeredPriceInfo",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "blockNumber",
+					"type": "uint256"
+				},
+				{
+					"internalType": "uint256",
+					"name": "price",
+					"type": "uint256"
+				},
+				{
+					"internalType": "uint256",
+					"name": "avgPrice",
+					"type": "uint256"
+				},
+				{
+					"internalType": "uint256",
+					"name": "sigmaSQ",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "payable",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "address",
+					"name": "tokenAddress",
+					"type": "address"
+				},
+				{
+					"internalType": "address",
+					"name": "paybackAddress",
+					"type": "address"
+				}
+			],
+			"name": "triggeredPriceInfo2",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "blockNumber",
+					"type": "uint256"
+				},
+				{
+					"internalType": "uint256",
+					"name": "price",
+					"type": "uint256"
+				},
+				{
+					"internalType": "uint256",
+					"name": "avgPrice",
+					"type": "uint256"
+				},
+				{
+					"internalType": "uint256",
+					"name": "sigmaSQ",
+					"type": "uint256"
+				},
+				{
+					"internalType": "uint256",
+					"name": "ntokenBlockNumber",
+					"type": "uint256"
+				},
+				{
+					"internalType": "uint256",
+					"name": "ntokenPrice",
+					"type": "uint256"
+				},
+				{
+					"internalType": "uint256",
+					"name": "ntokenAvgPrice",
+					"type": "uint256"
+				},
+				{
+					"internalType": "uint256",
+					"name": "ntokenSigmaSQ",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "payable",
+			"type": "function"
+		}
+	]
+}

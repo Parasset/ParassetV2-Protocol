@@ -6,22 +6,6 @@
 	"output": {
 		"abi": [
 			{
-				"inputs": [
-					{
-						"internalType": "string",
-						"name": "_name",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "_symbol",
-						"type": "string"
-					}
-				],
-				"stateMutability": "nonpayable",
-				"type": "constructor"
-			},
-			{
 				"anonymous": false,
 				"inputs": [
 					{
@@ -70,19 +54,6 @@
 				],
 				"name": "Transfer",
 				"type": "event"
-			},
-			{
-				"inputs": [],
-				"name": "_totalSupply",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
 			},
 			{
 				"inputs": [
@@ -136,7 +107,7 @@
 				"inputs": [
 					{
 						"internalType": "address",
-						"name": "owner",
+						"name": "who",
 						"type": "address"
 					}
 				],
@@ -149,56 +120,6 @@
 					}
 				],
 				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "factory",
-						"type": "address"
-					}
-				],
-				"name": "changeFactory",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "decimals",
-				"outputs": [
-					{
-						"internalType": "uint8",
-						"name": "",
-						"type": "uint8"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "spender",
-						"type": "address"
-					},
-					{
-						"internalType": "uint256",
-						"name": "subtractedValue",
-						"type": "uint256"
-					}
-				],
-				"name": "decreaseAllowance",
-				"outputs": [
-					{
-						"internalType": "bool",
-						"name": "",
-						"type": "bool"
-					}
-				],
-				"stateMutability": "nonpayable",
 				"type": "function"
 			},
 			{
@@ -220,43 +141,6 @@
 				"type": "function"
 			},
 			{
-				"inputs": [],
-				"name": "getPTokenFactory",
-				"outputs": [
-					{
-						"internalType": "address",
-						"name": "",
-						"type": "address"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "spender",
-						"type": "address"
-					},
-					{
-						"internalType": "uint256",
-						"name": "addedValue",
-						"type": "uint256"
-					}
-				],
-				"name": "increaseAllowance",
-				"outputs": [
-					{
-						"internalType": "bool",
-						"name": "",
-						"type": "bool"
-					}
-				],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
 				"inputs": [
 					{
 						"internalType": "uint256",
@@ -272,50 +156,6 @@
 				"name": "issuance",
 				"outputs": [],
 				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "name",
-				"outputs": [
-					{
-						"internalType": "string",
-						"name": "",
-						"type": "string"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "string",
-						"name": "_name",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "_symbol",
-						"type": "string"
-					}
-				],
-				"name": "rename",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "symbol",
-				"outputs": [
-					{
-						"internalType": "string",
-						"name": "",
-						"type": "string"
-					}
-				],
-				"stateMutability": "view",
 				"type": "function"
 			},
 			{
@@ -387,37 +227,18 @@
 		],
 		"devdoc": {
 			"kind": "dev",
-			"methods": {
-				"balanceOf(address)": {
-					"details": "The view of balances",
-					"params": {
-						"owner": "The address of an account"
-					},
-					"returns": {
-						"_0": "The balance of the account"
-					}
-				},
-				"totalSupply()": {
-					"returns": {
-						"_0": "The total supply of ntoken"
-					}
-				}
-			},
+			"methods": {},
 			"version": 1
 		},
 		"userdoc": {
 			"kind": "user",
-			"methods": {
-				"totalSupply()": {
-					"notice": "The view of totalSupply"
-				}
-			},
+			"methods": {},
 			"version": 1
 		}
 	},
 	"settings": {
 		"compilationTarget": {
-			"PTokenFactory_flat.sol": "PToken"
+			"InsurancePool_flat.sol": "IParasset"
 		},
 		"evmVersion": "istanbul",
 		"libraries": {},
@@ -431,12 +252,12 @@
 		"remappings": []
 	},
 	"sources": {
-		"PTokenFactory_flat.sol": {
-			"keccak256": "0xbf8765b8084e43cf61fd376030204a79d969ef959006b2f63d1b9baaad75a571",
-			"license": "MIT",
+		"InsurancePool_flat.sol": {
+			"keccak256": "0x2f029d8cdddbde27a287a9eb26f06122497b871ce54fcf15ba06c76457e55306",
+			"license": "GPL-3.0-or-later",
 			"urls": [
-				"bzz-raw://db374a95d2b9aa111d268badf86c2b795362c2b16fb7408b6bb346c7c8270b27",
-				"dweb:/ipfs/QmbmabWvXCPTqGssqAbTFCmbSnnLcNrjtEJ3jtxNQHmCGz"
+				"bzz-raw://d2f37a4278646a5192f79314ff3b0256b500807c2cab66cf0fa80022771e1e20",
+				"dweb:/ipfs/QmZSnx6zCWbY94P2xi75tCP7bati8nwPBrWd5kBA57mu2V"
 			]
 		}
 	},
