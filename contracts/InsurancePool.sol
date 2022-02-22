@@ -189,10 +189,6 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
         _pTokenAddress = pToken;
     }
 
-    function test_insNegative(uint256 amount) external onlyGovernance {
-        _insNegative = amount;
-    }
-
     //---------transaction---------
 
     /// @dev Exchange: PToken exchanges the underlying asset

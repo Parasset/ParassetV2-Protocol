@@ -11,9 +11,12 @@ async function main() {
 	// await upgrades.upgradeProxy(contracts.PUSDInsPool, InsurancePool);
 	// await upgrades.upgradeProxy(contracts.PETHInsPool, InsurancePool);
 
-  const MortgagePool = await ethers.getContractFactory("MortgagePool");
-  await upgrades.upgradeProxy(contracts.PUSDMorPool, MortgagePool);
-  await upgrades.upgradeProxy(contracts.PETHMorPool, MortgagePool);
+  // const MortgagePool = await ethers.getContractFactory("MortgagePool");
+  // await upgrades.upgradeProxy(contracts.PUSDMorPool, MortgagePool);
+  // await upgrades.upgradeProxy(contracts.PETHMorPool, MortgagePool);
+
+  const PTokenFactory = await ethers.getContractFactory("PTokenFactory");
+  await upgrades.upgradeProxy(contracts.PTokenFactory, PTokenFactory);
 }
 
 main()
