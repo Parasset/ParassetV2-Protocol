@@ -12,6 +12,7 @@ Contract | Address | Description
 ---|---|---
 USDTContract | 0xdac17f958d2ee523a2206206994597c13d831ec7 | USDT-Token
 NESTContract | 0x04abEdA201850aC0124161F037Efd70c74ddC74C | NEST-Token
+HBTCContract | 0x0316EB71485b0Ab14103307bf65a021042c6d380 | HBTC-Token
 ASETContract | 0x139cec55d1ec47493dfa25ca77c9208aba4d3c68 | ASET-Token
 PTokenFactory | 0xa6F7E15e38a5ba0435E5af06326108204cD175DA | P Asset Factory Contract
 PUSD | 0xCCEcC702Ec67309Bc3DDAF6a42E9e5a6b8Da58f0 | PUSD-Token
