@@ -13,11 +13,11 @@ contract PriceController is IPriceController {
     INestPriceFacadeForNest4 _nestBatchPlatform;
     INestPriceFacade _nestPriceFacade;
     // TODO:usdt address
-    address constant USDT_ADDRESS = address(0x0);
+    address constant USDT_ADDRESS = address(0x813369c81AfdB2C84fC5eAAA38D0a64B34BaE582);
     // TODO:nest address
-    address constant NEST_ADDRESS = address(0x0);
+    address constant NEST_ADDRESS = address(0x2Eb7850D7e14d3E359ce71B5eBbb03BbE732d6DD);
     // TODO:HBTC address
-    address constant HBTC_ADDRESS = address(0x0);
+    address constant HBTC_ADDRESS = address(0x8eF7Eec35b064af3b38790Cd0Afd3CF2FF5203A4);
     // nest4 base usdt amount
     uint256 constant BASE_USDT_AMOUNT = 2000 ether;
     // nest4 channel id
@@ -86,6 +86,7 @@ contract PriceController is IPriceController {
         uint256 tokenPrice, 
         uint256 pTokenPrice
     ) {
+        require(uToken == HBTC_ADDRESS, "Log:PriceController:!uToken");
         if (token == address(0x0)) {
             // The mortgage asset is ETH，get USDT-ETH price
             (,,uint256 avg,) = _nestPriceFacade.triggeredPriceInfo{value:nest3Fee}(USDT_ADDRESS, payback);
@@ -96,8 +97,8 @@ contract PriceController is IPriceController {
             // get HBTC-USDT price
             uint256[] memory prices = _nestBatchPlatform.triggeredPriceInfo{value:msg.value - nest3Fee}(CHANNELID, pricesIndex, payback);
             require(prices[2] > 0, "Log:PriceController:!avg nest4");
-            uint256 price2000 = 1 ether * BASE_USDT_AMOUNT / (getDecimalConversion(uToken, avg, address(0x0)));
-            return (price2000, prices[2]);
+            uint256 priceETH = getDecimalConversion(USDT_ADDRESS, avg, address(0x0)) * prices[2] / BASE_USDT_AMOUNT;
+            return (avg, priceETH);
         } else if (token == NEST_ADDRESS) {
             // The mortgage asset is nest，get USDT-NEST price
             (,,uint256 avg1,,,,uint256 avg2,) = _nestPriceFacade.triggeredPriceInfo2{value:nest3Fee}(USDT_ADDRESS, payback);
@@ -108,8 +109,8 @@ contract PriceController is IPriceController {
             // get HBTC-USDT price
             uint256[] memory prices = _nestBatchPlatform.triggeredPriceInfo{value:msg.value - nest3Fee}(CHANNELID, pricesIndex, payback);
             require(prices[2] > 0, "Log:PriceController:!avg nest4");
-            uint256 price2000 = avg2 * BASE_USDT_AMOUNT / (getDecimalConversion(uToken, avg1, address(0x0)));
-            return (price2000, prices[2]);
+            uint256 priceETH = getDecimalConversion(USDT_ADDRESS, avg1, address(0x0)) * prices[2] / BASE_USDT_AMOUNT;
+            return (avg2, priceETH);
         } else {
             revert('Log:PriceController:no token');
         }
