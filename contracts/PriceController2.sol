@@ -24,9 +24,9 @@ contract PriceController is IPriceController {
 	constructor (address nestBatchPlatform) {
 		_nestBatchPlatform = INestPriceFacadeForNest4(nestBatchPlatform);
         // TODO
-        addressToPriceIndex[address(0x0)] = 0;
+        addressToPriceIndex[address(0x8eF7Eec35b064af3b38790Cd0Afd3CF2FF5203A4)] = 0;
         addressToPriceIndex[address(0x0)] = 1;
-        addressToPriceIndex[address(0x0)] = 2;
+        addressToPriceIndex[address(0x2Eb7850D7e14d3E359ce71B5eBbb03BbE732d6DD)] = 2;
     }
 
     function getAddressToPriceIndex(
@@ -39,8 +39,8 @@ contract PriceController is IPriceController {
     /// @param token mortgage asset address
     /// @param uToken underlying asset address
     /// @param payback return address of excess fee
-    /// @return tokenPrice Mortgage asset price(1 ETH = ? token)
-    /// @return pTokenPrice PToken price(1 ETH = ? pToken)
+    /// @return tokenPrice Mortgage asset price(2000U = ? token)
+    /// @return pTokenPrice PToken price(2000U = ? pToken)
     function getPriceForPToken(
         address token, 
         address uToken,
