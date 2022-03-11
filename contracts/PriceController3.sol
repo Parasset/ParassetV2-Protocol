@@ -98,7 +98,7 @@ contract PriceController is IPriceController {
             uint256[] memory prices = _nestBatchPlatform.triggeredPriceInfo{value:msg.value - nest3Fee}(CHANNELID, pricesIndex, payback);
             require(prices[2] > 0, "Log:PriceController:!avg nest4");
             uint256 priceETH = getDecimalConversion(USDT_ADDRESS, avg, address(0x0)) * prices[2] / BASE_USDT_AMOUNT;
-            return (avg, priceETH);
+            return (1 ether, priceETH);
         } else if (token == NEST_ADDRESS) {
             // The mortgage asset is nest，get USDT-NEST price
             (,,uint256 avg1,,,,uint256 avg2,) = _nestPriceFacade.triggeredPriceInfo2{value:nest3Fee}(USDT_ADDRESS, payback);
