@@ -7,17 +7,17 @@ import "./iface/INestPriceFacade.sol";
 import "./iface/IPriceController.sol";
 import "./iface/IERC20.sol";
 
-contract PriceController is IPriceController {
+contract PriceController3 is IPriceController {
 
     // Nest price contract
     INestPriceFacadeForNest4 _nestBatchPlatform;
     INestPriceFacade _nestPriceFacade;
-    // TODO:usdt address
-    address constant USDT_ADDRESS = address(0x813369c81AfdB2C84fC5eAAA38D0a64B34BaE582);
-    // TODO:nest address
-    address constant NEST_ADDRESS = address(0x2Eb7850D7e14d3E359ce71B5eBbb03BbE732d6DD);
-    // TODO:HBTC address
-    address constant HBTC_ADDRESS = address(0x8eF7Eec35b064af3b38790Cd0Afd3CF2FF5203A4);
+    // usdt address
+    address constant USDT_ADDRESS = address(0xdAC17F958D2ee523a2206206994597C13D831ec7);
+    // nest address
+    address constant NEST_ADDRESS = address(0x04abEdA201850aC0124161F037Efd70c74ddC74C);
+    // HBTC address
+    address constant HBTC_ADDRESS = address(0x0316EB71485b0Ab14103307bf65a021042c6d380);
     // nest4 base usdt amount
     uint256 constant BASE_USDT_AMOUNT = 2000 ether;
     // nest4 channel id
@@ -35,7 +35,7 @@ contract PriceController is IPriceController {
 	constructor (address nestBatchPlatform,address nestPriceFacade) {
 		_nestBatchPlatform = INestPriceFacadeForNest4(nestBatchPlatform);
         _nestPriceFacade = INestPriceFacade(nestPriceFacade);
-        // TODO
+
         addressToPriceIndex[HBTC_ADDRESS] = 0;
         owner = msg.sender;
     }
