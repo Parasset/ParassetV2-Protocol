@@ -29,7 +29,7 @@ PETHInsPool | 0x0bd32fFC80d5B98E403985D4446AE3BA67528C2e | Insurance-ETH pool co
 PBTCInsPool | 0x1dc9a3856e04ed012F27e021fA7052F62FBB2832 | Insurance-BTC pool contract
 StakingMiningPool | 0xbA01258Eb8e133EACE55F5f6ec76907ADdf7797f | Staking contract
 PriceController | 0x54397e5869323aA28CC4aA76F5E5f21ef39BC575 | Price call contract
-PriceController3 | 0xa26d42d89a67720fd5522Adf3E3f640cCf335657 | Price call contract
+PriceController3 | 0x82Fe6c1c2Bd0bE9917fe57A6120056868d3073aE | Price call contract
 Governance | 0x175d282Bc8249a3b92682365118f693380cA31F4 | Governance contract
 
 #### MortgagePool
