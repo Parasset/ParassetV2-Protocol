@@ -53,7 +53,7 @@ Nest r0 | 0.02
 Nest maxRate | 40%
 Nest settlement Rate | 90%
 
-##### PETH
+##### PBTC
 Parameter | Value
 ---|---
 Nest k value | 1.33
