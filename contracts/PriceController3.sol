@@ -9,8 +9,8 @@ import "./iface/IERC20.sol";
 
 contract PriceController3 is IPriceController {
     // Nest price contract
-    INestPriceFacadeForNest4 _nestBatchPlatform;
-    INestPriceFacade _nestPriceFacade;
+    INestPriceFacadeForNest4 immutable _nestBatchPlatform;
+    INestPriceFacade immutable _nestPriceFacade;
     // usdt address
     address constant USDT_ADDRESS =
         address(0xdAC17F958D2ee523a2206206994597C13D831ec7);
@@ -80,8 +80,8 @@ contract PriceController3 is IPriceController {
     /// @param token mortgage asset address
     /// @param uToken underlying asset address
     /// @param payback return address of excess fee
-    /// @return tokenPrice Mortgage asset price(2000U = ? token)
-    /// @return pTokenPrice PToken price(2000U = ? pToken)
+    /// @return tokenPrice Mortgage asset price(1 ETH = ? token)
+    /// @return pTokenPrice PToken price(1 ETH = ? pToken)
     function getPriceForPToken(
         address token,
         address uToken,
