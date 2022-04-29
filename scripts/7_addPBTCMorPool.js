@@ -21,7 +21,7 @@ async function main() {
     const PBTCINSPOOL = await InsurancePool.attach(PBTCInsPoolAdd);
 
     // creat PriceController
-    const PriceController = await PriceController3.deploy(nest3Add, nest4Add);
+    const PriceController = await PriceController3.deploy(nest4Add, nest3Add);
     console.log(`PriceController + "${PriceController.address}"`);
     // create morPool
     const PBTCMORPOOL = await upgrades.deployProxy(MortgagePool, [GovernanceAdd], { initializer: 'initialize' });

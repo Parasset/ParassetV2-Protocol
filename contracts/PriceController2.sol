@@ -6,17 +6,17 @@ import "./iface/INestPriceFacadeForNest4.sol";
 import "./iface/IPriceController.sol";
 import "./iface/IERC20.sol";
 
-contract PriceController is IPriceController {
+contract PriceController2 is IPriceController {
 
-    // Nest价格合约
+    // Nest price
     INestPriceFacadeForNest4 _nestBatchPlatform;
-    // TODO:usdt address
+    // usdt address
     address constant USDT_ADDRESS = address(0x0);
-    // TODO:usdt报价单位
+    // usdt base amount
     uint256 constant BASE_USDT_AMOUNT = 2000 ether;
-    // TODO:报价轨道id
+    // Channel id
     uint256 constant CHANNELID = 0;
-    // 资产地址对应的报价对编号
+    // pair index
     mapping(address => uint256) addressToPriceIndex;
 
     /// @dev Initialization method
