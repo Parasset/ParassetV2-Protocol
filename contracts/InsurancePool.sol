@@ -49,9 +49,9 @@ contract InsurancePool is ParassetBase, IInsurancePool, ParassetERC20 {
 
     function initialize(address governance) public override {
         super.initialize(governance);
-        _redemptionCycle = 15 minutes;
-        _waitCycle = 30 minutes;
-        _feeRate = 2;
+        _redemptionCycle = 2 days;
+        _waitCycle = 7 days;
+        _feeRate = 4;
         _totalSupply = 0;
     }
 
